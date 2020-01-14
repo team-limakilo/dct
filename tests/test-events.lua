@@ -4,7 +4,7 @@ require("dcttestlibs")
 require("dct")
 
 local testcases = {
-	[1] = {
+	{
 		["event"] = {
 			["id"] = world.event.S_EVENT_HIT,
 			["object"] = {
@@ -13,14 +13,21 @@ local testcases = {
 				["life"] = 1,
 			},
 		},
-	},
-	[2] = {
+	}, {
 		["event"] = {
 			["id"] = world.event.S_EVENT_DEAD,
 			["object"] = {
 				["name"] = "Test region_Abu Musa Ammo Dump 1 STRUCTURE 1",
 				["objtype"] = Object.Category.STATIC,
 			},
+		},
+	}, {
+		["event"] = {
+			["id"] = world.event.S_EVENT_BIRTH,
+		},
+	}, {
+		["event"] = {
+			["id"] = world.event.S_EVENT_EJECTION,
 		},
 	},
 }
@@ -29,17 +36,19 @@ local function createEvent(eventdata, player)
 	local event = {}
 	local objref
 
-	if eventdata.object.objtype == Object.Category.UNIT then
-		objref = Unit.getByName(eventdata.object.name)
-	elseif eventdata.object.objtype == Object.Category.STATIC then
-		objref = StaticObject.getByName(eventdata.object.name)
-	elseif eventdata.object.objtype == Object.Category.GROUP then
-		objref = Group.getByName(eventdata.object.name)
-	else
-		assert(false, "other object types not supported")
+	if eventdata.object ~= nil then
+		if eventdata.object.objtype == Object.Category.UNIT then
+			objref = Unit.getByName(eventdata.object.name)
+		elseif eventdata.object.objtype == Object.Category.STATIC then
+			objref = StaticObject.getByName(eventdata.object.name)
+		elseif eventdata.object.objtype == Object.Category.GROUP then
+			objref = Group.getByName(eventdata.object.name)
+		else
+			assert(false, "other object types not supported")
+		end
+		assert(objref, "objref is nil")
 	end
 
-	assert(objref, "objref is nil")
 	event.id = eventdata.id
 	event.time = 2345
 	if event.id == world.event.S_EVENT_DEAD then
@@ -50,6 +59,9 @@ local function createEvent(eventdata, player)
 		event.weapon = nil
 		event.target = objref
 		objref.clife = objref.clife - eventdata.object.life
+	elseif event.id == world.event.S_EVENT_EJECTION or
+		event.id == world.event.S_EVENT_BIRTH then
+		event.initiator = player
 	else
 		assert(false, "other event types not supported: "..tostring(event.id))
 	end

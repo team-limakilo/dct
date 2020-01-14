@@ -50,6 +50,8 @@ function AssetManager:factory(assettype)
 		asset = require("dct.assets.Airspace")
 	elseif assettype == enum.assetType.AIRBASE then
 		asset = require("dct.assets.Airbase")
+	elseif assettype == enum.assetType.DOWNEDPILOT then
+		asset = require("dct.assets.DownedPilot")
 	elseif enum.assetClass.STRATEGIC[assettype] or
 	       assettype == enum.assetType.BASEDEFENSE then
 		asset = require("dct.assets.StaticAsset")
@@ -192,9 +194,15 @@ local function handleAssetDeath(self, event)
 	end
 end
 
+local function handleEject(self, event)
+	local DownedPilot = self:factory(enum.assetType.DOWNEDPILOT)
+	self:add(DownedPilot.create(event.initiator))
+end
+
 local handlers = {
 	[world.event.S_EVENT_DEAD] = handleDead,
 	[enum.event.DCT_EVENT_DEAD] = handleAssetDeath,
+	[world.event.S_EVENT_EJECTION] = handleEject,
 }
 
 function AssetManager:doOneObject(obj, event)
