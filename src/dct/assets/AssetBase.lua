@@ -5,15 +5,6 @@
 -- An Asset is a group of virtual or real objects in the game world
 -- that can be interacted with.
 --
-Class Hierarchy:
-
-            AssetBase----Airspace
-                |
-   Airbase------+------Squadron
-				|
-			  Static-----IAgent-----Player
-
-An AIAgent is an Asset that is movable.
 --]]
 
 require("math")

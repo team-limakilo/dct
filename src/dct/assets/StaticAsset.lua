@@ -311,4 +311,17 @@ function StaticAsset:marshal()
 	return tbl
 end
 
+function StaticAsset:doTasks(tasktbl)
+--[[
+--  {
+--    id = cmd|action|task,
+--    tbl = { specific table },
+--  },
+--  {
+--	  ...
+--	},
+--]]
+
+end
+
 return StaticAsset
