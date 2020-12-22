@@ -5,6 +5,7 @@ require("dcttestlibs")
 require("dct")
 local utils = require("dct.utils")
 local json  = require("libs.json")
+local dcsenum  = require("dct.dcs.enum")
 
 local deg = '°'
 local testll = {
@@ -148,6 +149,9 @@ local function main()
 		"failed: "..os.date("!%F %Rl", utils.time(3600)))
 	assert("2001-06-22 22:00z" == os.date("!%F %Rz", utils.zulutime(3600)),
 		"failed: "..os.date("!%F %Rz", utils.zulutime(3600)))
+
+	assert(utils.calcTACANFreq(74, dcsenum.BEACON.TACANMODE.X) == 1161000000,
+		"TACAN frequency invalid")
 	return 0
 end
 
