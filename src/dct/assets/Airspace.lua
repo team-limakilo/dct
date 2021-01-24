@@ -12,7 +12,6 @@ local Airspace = require("libs.namedclass")("Airspace", AssetBase)
 function Airspace:__init(template, region)
 	AssetBase.__init(self, template, region)
 	self:_addMarshalNames({
-		"_location",
 		"_volume",
 	})
 end

@@ -141,7 +141,7 @@ function StaticAsset:getLocation()
 		end
 		self._location = vector.Vector3D(vec2, land.getHeight(vec2))
 	end
-	return self._location
+	return AssetBase.getLocation(self)
 end
 
 function StaticAsset:getStatus()

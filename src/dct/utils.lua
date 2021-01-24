@@ -82,6 +82,7 @@ function utils.zulutime(abstime)
 end
 
 function utils.centroid(point, pcentroid, n)
+	check.table(point)
 	if pcentroid == nil or n == nil then
 		return {["x"] = point.x, ["y"] = point.y, ["z"] = point.z,}, 1
 	end

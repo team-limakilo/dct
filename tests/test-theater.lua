@@ -254,7 +254,7 @@ local function main()
 
 	theater:export()
 	local f = io.open(settings.statepath, "r")
-	local sumorig = md5.sum(f:read("*all"))
+	local sumorig = md5.sumhexa(f:read("*all"))
 	f:close()
 	if DEBUG == true then
 		copyfile(settings.statepath, settings.statepath..".orig")
@@ -301,13 +301,18 @@ local function main()
 
 	newtheater:export()
 	f = io.open(settings.statepath, "r")
-	local sumsave = md5.sum(f:read("*all"))
+	local sumsave = md5.sumhexa(f:read("*all"))
 	f:close()
 	if DEBUG == true then
 		copyfile(settings.statepath, settings.statepath..".new")
 	end
 	os.remove(settings.statepath)
 
+	if DEBUG == true then
+		print("sumorig: "..tostring(sumorig))
+		print("sumsave: "..tostring(sumsave))
+		print(" sumorig == sumsave: "..tostring(sumorig == sumsave))
+	end
 	assert(newtheater.statef == true and sumorig == sumsave,
 		"state saving didn't produce the same md5sum")
 	return 0

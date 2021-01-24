@@ -113,6 +113,7 @@ function AssetBase:__init(template, region)
 		"_dead",
 		"_intel",
 		"_priority",
+		"_location",
 		"type",
 		"briefing",
 		"owner",
@@ -294,7 +295,7 @@ end
 -- Returns: nil - if not supported otherwise a DCS Vec3
 --]]
 function AssetBase:getLocation()
-	return self._location
+	return assert(self._location, "asset location is nil")
 end
 
 --[[
