@@ -30,6 +30,7 @@ local settings = _G.dct.settings
 local norenametype = {
 	[dctenum.assetType.SQUADRONPLAYER] = true,
 	[dctenum.assetType.PLAYERGROUP]    = true,
+	[dctenum.assetType.SQUADRONAI]     = true,
 	[dctenum.assetType.AIRBASE]        = true,
 }
 

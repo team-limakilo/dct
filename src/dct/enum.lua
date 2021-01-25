@@ -40,6 +40,7 @@ enum.assetType = {
 	["SPECIALFORCES"] = 22,
 	["FOB"]           = 23,
 	["SQUADRONPLAYER"]= 24,
+	["SQUADRONAI"]    = 25,
 }
 
 --[[

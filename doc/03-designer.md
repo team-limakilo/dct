@@ -789,6 +789,63 @@ there is no limit. The format of the table is as follows:
 
 See "Payload Limits" section for further details.
 
+**AI Squadron:**
+
+##### `max`
+
+ * _required:_ no
+ * _value:_ number
+ * _default:_ `-1`
+
+Maximum number of airframes the squadron can have, by default unlimited (-1).
+
+##### `current`
+
+ * _required:_ no
+ * _value:_ number
+ * _default:_ `-1`
+
+Current number of airframes a squadron has on hand, by default unlimited (-1).
+
+##### `flightsize`
+
+ * _required:_ no
+ * _value:_ number
+ * _default:_ `1`
+
+The size of the flight, used for calculating available number of possible
+missions the squadron can take.
+
+##### `experience`
+
+ * _required:_ no
+ * _value:_ table
+ * _default:_ `{2, 1}`
+
+Average experience level of the squadron, of the form `{<mean>,<sigma>}`,
+where `<mean>` is the average experience level and `<sigma>` is the
+variability from the mean.
+
+##### `readytime`
+
+ * _required:_ no
+ * _value:_ table
+ * _default:_ `{300, 90}`
+
+Amount of time it takes to ready a plane for takeoff, of the form
+`{<mean>,<sigma>}`, where `<mean>` is the average time and `<sigma>`
+is the variability from the mean.
+
+##### `alerttime`
+
+ * _required:_ no
+ * _value:_ table
+ * _default:_ `{120, 45}`
+
+Amount of time it takes to ready a plane on alert status, of the form
+`{<mean>,<sigma>}`, where `<mean>` is the average time and `<sigma>`
+is the variability from the mean.
+
 ### Template and Asset Examples
 
  * [Airbase](04-api/assets/airbase.md)
