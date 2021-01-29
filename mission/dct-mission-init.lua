@@ -35,5 +35,6 @@ do
 		package.path = package.path .. ";" .. modpath .. "\\lua\\?.lua;"
 		require("dct")
 		dct.init()
+		dct.modpath = modpath
 	end
 end
