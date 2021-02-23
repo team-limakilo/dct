@@ -10,12 +10,19 @@ local class      = require("libs.class")
 local utils      = require("libs.utils")
 local dctenums   = require("dct.enum")
 local dctutils   = require("dct.utils")
+local vector     = require("dct.libs.vector")
 local Template   = require("dct.templates.Template")
 local Logger     = dct.Logger.getByName("Region")
 
 local tplkind = {
 	["TEMPLATE"]  = 1,
 	["EXCLUSION"] = 2,
+}
+
+local DOMAIN = {
+	["AIR"]  = 1,
+	["LAND"] = 2,
+	["SEA"]  = 3,
 }
 
 local function processlimits(_, tbl)
@@ -36,28 +43,41 @@ local function processlimits(_, tbl)
 	return true
 end
 
+local function processlinks(keydata, tbl)
+	local links = {}
+	for k, v in pairs(tbl[keydata.name]) do
+		local d = string.upper(k)
+		if DOMAIN[d] ~= nil then
+			links[DOMAIN[d]] = v
+		end
+	end
+	tbl[keydata.name] = links
+	return true
+end
+
 local function loadMetadata(self, regiondefpath)
 	Logger:debug("=> regiondefpath: "..regiondefpath)
 	local keys = {
-		[1] = {
+		{
 			["name"] = "name",
 			["type"] = "string",
-		},
-		[2] = {
+		}, {
 			["name"] = "priority",
 			["type"] = "number",
-		},
-		[3] = {
+		}, {
 			["name"] = "limits",
 			["type"] = "table",
 			["default"] = {},
 			["check"] = processlimits,
-		},
-		[4] = {
-			["name"] = "airspace",
-			["type"] = "boolean",
-			["default"] = true,
-		},
+		}, {
+			["name"] = "altitude_floor",
+			["type"] = "number",
+			["default"] = 914.4, -- meters; 3000ft msl
+		}, {
+			["name"] = "links",
+			["type"] = "table",
+			["check"] = processlinks,
+		}
 	}
 
 	local region = utils.readlua(regiondefpath)
@@ -123,8 +143,7 @@ local function registerType(self, kind, ttype, name)
 	table.insert(self._tpltypes[ttype], entry)
 end
 
-local function addAndSpawnAsset(self, name, assetmgr, centroid)
-	centroid = centroid or {}
+local function addAndSpawnAsset(self, name, assetmgr)
 	if name == nil then
 		return nil
 	end
@@ -140,8 +159,8 @@ local function addAndSpawnAsset(self, name, assetmgr, centroid)
 	asset:generate(assetmgr, self)
 	local location = asset:getLocation()
 	if location then
-		centroid.point, centroid.n = dctutils.centroid(location,
-			centroid.point, centroid.n)
+		self.centroid.point, self.centroid.n = dctutils.centroid(location,
+			self.centroid.point, self.centroid.n)
 	end
 	return asset
 end
@@ -195,11 +214,18 @@ function Region:__init(regionpath)
 	self._templates    = {}
 	self._tpltypes     = {}
 	self._exclusions   = {}
+	self.centroid      = {
+		["point"] =  nil, -- 2D point where the center of the region is
+		["n"] = 0,
+	}
 	Logger:debug("=> regionpath: "..regionpath)
 	loadMetadata(self, regionpath..utils.sep.."region.def")
 	getTemplates(self, self.path)
 	Logger:debug("'"..self.name.."' Loaded")
+	self.DOMAIN = nil
 end
+
+Region.DOMAIN = DOMAIN
 
 function Region:addTemplate(tpl)
 	assert(self._templates[tpl.name] == nil,
@@ -222,7 +248,7 @@ function Region:getTemplateByName(name)
 	return self._templates[name]
 end
 
-function Region:_generate(assetmgr, objtype, names, centroid)
+function Region:_generate(assetmgr, objtype, names)
 	local limits = {
 		["min"]     = #names,
 		["max"]     = #names,
@@ -239,7 +265,7 @@ function Region:_generate(assetmgr, objtype, names, centroid)
 	for i, tpl in ipairs(names) do
 		if tpl.kind ~= tplkind.EXCLUSION and
 			self._templates[tpl.name].spawnalways == true then
-			addAndSpawnAsset(self, tpl.name, assetmgr, centroid)
+			addAndSpawnAsset(self, tpl.name, assetmgr)
 			table.remove(names, i)
 			limits.current = 1 + limits.current
 		end
@@ -252,7 +278,7 @@ function Region:_generate(assetmgr, objtype, names, centroid)
 			local i = math.random(1, #self._exclusions[name].names)
 			name = self._exclusions[name]["names"][i]
 		end
-		addAndSpawnAsset(self, name, assetmgr, centroid)
+		addAndSpawnAsset(self, name, assetmgr)
 		table.remove(names, idx)
 		limits.current = 1 + limits.current
 	end
@@ -265,39 +291,45 @@ end
 -- be limited to mission startup.
 function Region:generate(assetmgr)
 	local tpltypes = utils.deepcopy(self._tpltypes)
-	local centroid = {}
 
 	for objtype, _ in pairs(dctenums.assetClass["STRATEGIC"]) do
 		local names = tpltypes[objtype]
 		if names ~= nil then
-			self:_generate(assetmgr, objtype, names, centroid)
+			self:_generate(assetmgr, objtype, names)
 		end
 	end
+end
 
-	-- do not create an airspace object if not wanted
-	if self.airspace ~= true then
-		return
-	end
+-- TODO: getting the center-point of a region might be a problem
+-- because the only time this is valid is after the generate function
+-- has run. How do we preserve the center of a region?
+function Region:getPoint()
+	return self.centroid.point
+end
 
-	-- create airspace asset based on the centroid of this region
-	if centroid.point == nil then
-		centroid.point = { ["x"] = 0, ["y"] = 0, ["z"] = 0, }
+local function calcCost(thisrgn, otherrgn)
+	if thisrgn == nil or otherrgn == nil then
+		return nil
 	end
-	self.location = centroid.point
-	local airspacetpl = Template({
-		["objtype"]    = "airspace",
-		["name"]       = "airspace",
-		["regionname"] = self.name,
-		["desc"]       = "airspace",
-		["coalition"]  = coalition.side.NEUTRAL,
-		["location"]   = self.location,
-		["volume"]     = {
-			["point"]  = self.location,
-			["radius"] = 55560,  -- 30NM
-		},
-	})
-	self:addTemplate(airspacetpl)
-	addAndSpawnAsset(self, airspacetpl.name, assetmgr)
+	return vector.distance(vector.Vector2D(thisrgn:getPoint()),
+		vector.Vector2D(otherrgn:getPoint()))
+end
+
+function Region:validateEdges(regions)
+	local links = {}
+	for domain, lnks in pairs(self.links) do
+		links[domain] = {}
+		for _, rgnname in pairs(lnks) do
+			links[domain][rgnname] = calcCost(self, regions[rgnname])
+		end
+	end
+	self.links = links
+end
+
+function Region:getEdges(domain)
+	assert(utils.getkey(Region.DOMAIN, domain),
+		"value error: invalid domain")
+	return utils.deepcopy(self.links[domain])
 end
 
 return Region
