@@ -24,6 +24,12 @@ local loadout = require("dct.systems.loadouts")
 local addmenu = missionCommands.addSubMenuForGroup
 local addcmd  = missionCommands.addCommandForGroup
 
+local function emptycmd() end
+
+local function addemptycmd(gid, path)
+	addcmd(gid, "", path, emptycmd)
+end
+
 local menus = {}
 function menus.createMenu(asset)
 	local theater = require("dct.Theater").singleton()
@@ -67,11 +73,61 @@ function menus.createMenu(asset)
 			})
 	end
 
-	addcmd(gid, "Join", msnmenu, theater.playerRequest, theater,
-		{
-			["name"]   = name,
-			["type"]   = enum.uiRequestType.MISSIONJOIN,
-		})
+	-- addcmd(gid, "Join", msnmenu, theater.playerRequest, theater,
+	-- 	{
+	-- 		["name"]   = name,
+	-- 		["type"]   = enum.uiRequestType.MISSIONJOIN,
+	-- 	})
+
+	-- Take a seat, this is going to be a long ride
+	local msnjoin = addmenu(gid, "Join", msnmenu);
+	local totalmissions = 0
+	local emptyentries = 0
+	for d1 = 1, 10 do
+		-- Mission types only go up to 5
+		if d1 % 10 <= 5 then
+			local missioncode = tostring(d1 % 10)
+			local msndigit1 = addmenu(gid, "Mission "..missioncode.."__0", msnjoin)
+			for d2 = 1, 10 do
+				-- Specific mission code only goes up to 63
+				if d2 % 10 <= 6 then
+					local missioncode = missioncode..(d2 % 10)
+					local msndigit2 = addmenu(gid, "Mission "..missioncode.."_0", msndigit1)
+					for d3 = 1, 10 do
+						-- Don't include missions 64+
+						if d2 % 10 < 6 or d2 == 6 and d3 % 10 <= 3 then
+							local missioncode = missioncode..(d3 % 10).."0"
+							-- Last mission code digit is always zero
+							addcmd(gid, "Mission "..missioncode, msndigit2, theater.playerRequest, theater, {
+								["name"]  = name,
+								["type"]  = enum.uiRequestType.MISSIONJOIN,
+								["value"] = missioncode
+							})
+							totalmissions = totalmissions + 1
+						else
+							addemptycmd(gid, msndigit2)
+							emptyentries = emptyentries + 1
+						end
+					end
+				else
+					addemptycmd(gid, msndigit1)
+					emptyentries = emptyentries + 1
+				end
+			end
+		elseif d1 == 9 then
+			-- Allow joining through scratchpad
+			addcmd(gid, "Use Scratchpad Code", msnjoin, theater.playerRequest, theater, {
+				["name"]  = name,
+				["type"]  = enum.uiRequestType.MISSIONJOIN
+			})
+		else
+			addemptycmd(gid, msnjoin)
+			emptyentries = emptyentries + 1
+		end
+	end
+
+	Logger:debug("createMenu - total missions: "..tostring(totalmissions))
+	Logger:debug("createMenu - empty entries: "..tostring(emptyentries))
 
 	addcmd(gid, "Briefing", msnmenu, theater.playerRequest, theater,
 		{
