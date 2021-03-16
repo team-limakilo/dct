@@ -7,7 +7,6 @@
 local class    = require("libs.namedclass")
 local dctutils = require("dct.utils")
 local vector   = require("dct.libs.vector")
-local Command  = require("dct.Command")
 local Logger   = require("dct.libs.Logger").getByName("System")
 
 -- Only units that are not air defence and are firing
@@ -62,7 +61,7 @@ function DCTWeapon:getImpactPoint()
 	return self.impactpt
 end
 
-function DCTWeapon:update(time)
+function DCTWeapon:update(time, lookahead)
 	assert(time, "value error: time must be a non-nil value")
 	if not self:exist() then
 		return
@@ -81,24 +80,26 @@ function DCTWeapon:update(time)
 	-- search 5 seconds into the future
 	self.impactpt = land.getIP(self.pos:raw(),
 	                           self.dir:raw(),
-	                           self.vel:magnitude()*5)
+	                           self.vel:magnitude() * lookahead)
 end
 
 local WeaponsTracker = class("WeaponsTracker")
 function WeaponsTracker:__init(theater)
-	self.updatefreq = theater.cmdmindelay
+	self.updatefreq = 0.1
+	self.periods = self.updatefreq * 5
 	self.trackedwpns = {}
 	self._theater = theater
 	theater:addObserver(self.event, self, self.__clsname..".event")
-	theater:queueCommand(self.updatefreq,
-		Command(self.__clsname..".update", self.update, self))
+	timer.scheduleFunction(self.update, self,
+		timer.getTime() + self.updatefreq)
 	Logger:debug("init "..self.__clsname)
 end
 
 function WeaponsTracker:update(time)
+	local tstart = os.clock()
 	local impacts = {}
 	for id, wpn in pairs(self.trackedwpns) do
-		wpn:update(time)
+		wpn:update(time, self.periods)
 		if wpn:hasImpacted() then
 			table.insert(impacts, wpn)
 			self.trackedwpns[id] = nil
@@ -110,7 +111,9 @@ function WeaponsTracker:update(time)
 	for _, wpn in pairs(impacts) do
 		self._theater:notify(dctutils.buildevent.impact(wpn))
 	end
-	return self.updatefreq
+	Logger:warn(string.format("'%s' exec time: %5.2fms",
+		self.__clsname..".update", (os.clock()-tstart)*1000))
+	return time + self.updatefreq
 end
 
 function WeaponsTracker:event(event)
