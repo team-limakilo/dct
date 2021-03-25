@@ -102,6 +102,28 @@ local OccupiedState = class("OccupiedState", State)
 local EmptyState    = class("EmptyState", State)
 function EmptyState:enter(asset)
 	asset:kick()
+	if asset.missionid ~= dctenum.missionInvalidID and
+	   settings.server.emptyslottimeout > 0 then
+		self.timer =
+			require("dct.libs.Timer")(settings.server.emptyslottimeout,
+				timer.getAbsTime)
+	end
+end
+
+function EmptyState:update(asset)
+	if self.timer == nil then
+		return
+	end
+
+	self.timer:update()
+	if self.timer:expired() then
+		self.timer = nil
+		local cmdr = dct.Theater.singleton():getCommander(asset.owner)
+		local msn = cmdr:getMission(asset.missionid)
+		if msn then
+			msn:abort(asset)
+		end
+	end
 end
 
 function EmptyState:onDCTEvent(asset, event)
@@ -249,6 +271,8 @@ end
 local Player = class("Player", AssetBase)
 function Player:__init(template, region)
 	AssetBase.__init(self, template, region)
+	self._operstate = false
+	self.missionid = dctenum.missionInvalidID
 	trigger.action.setUserFlag(self.name, false)
 	trigger.action.setUserFlag(build_kick_flagname(self.name), false)
 	trigger.action.setUserFlag(build_oper_flagname(self.name), false)
