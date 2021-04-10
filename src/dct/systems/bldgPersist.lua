@@ -23,10 +23,11 @@ function SceneryTracker:postinit(theater)
 end
 
 function SceneryTracker:_unmarshalpost()
-	for bldg, _ in pairs(self.destroyed) do
-		local pt = Object.getPoint({id_ = tonumber(bldg)})
-		trigger.action.explosion(pt, 250)
-	end
+	-- Temp disabled until fix is found for server startup hang
+	-- for bldg, _ in pairs(self.destroyed) do
+	-- 	local pt = Object.getPoint({id_ = tonumber(bldg)})
+	-- 	trigger.action.explosion(pt, 250)
+	-- end
 end
 
 function SceneryTracker:addObject(id)
