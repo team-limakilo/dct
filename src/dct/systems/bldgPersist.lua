@@ -26,8 +26,9 @@ function bldgPersist:blowBuildings()
 end
 
 function bldgPersist:restoreState(destroyedBldgs)
-	self.destroyedBldgs = destroyedBldgs
-	self:blowBuildings()
+	-- Temp disabled until fix is found for server startup hang
+	-- self.destroyedBldgs = destroyedBldgs
+	-- self:blowBuildings()
 end
 
 function bldgPersist:onDCSEvent(event)
