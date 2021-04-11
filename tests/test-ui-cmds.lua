@@ -135,6 +135,62 @@ local testcmds = {
 		},
 		["assert"]     = true,
 		["expected"]   = "Mission 5720 aborted",
+	}, {
+		["data"] = {
+			["name"]   = grp:getName(),
+			["type"]   = enum.uiRequestType.CHECKPAYLOAD,
+		},
+		["ammo"] = {
+			{
+				["desc"] = {
+					["displayName"] = "AIM-120C",
+				},
+				["count"] = 4,
+			}
+		},
+		["assert"]     = true,
+		["expected"]   = "Valid loadout, you may depart. Good luck!\n"..
+			"== Loadout Summary:\n"..
+			"\tAA cost: 4 / 5\n"..
+			"\tAG cost: 0 / 20",
+	}, {
+		-- Allowed payload
+		["data"] = {
+			["name"]   = grp:getName(),
+			["type"]   = enum.uiRequestType.CHECKPAYLOAD,
+		},
+		["ammo"] = {
+			{
+				["desc"] = {
+					["displayName"] = "AIM-120C",
+				},
+				["count"] = 4,
+			}
+		},
+		["assert"]     = true,
+		["expected"]   = "Valid loadout, you may depart. Good luck!\n"..
+			"== Loadout Summary:\n"..
+			"\tAA cost: 4 / 5\n"..
+			"\tAG cost: 0 / 20",
+	}, {
+		-- Over limit with forbidden weapon
+		["data"] = {
+			["name"]   = grp:getName(),
+			["type"]   = enum.uiRequestType.CHECKPAYLOAD,
+		},
+		["ammo"] = {
+			{
+				["desc"] = {
+					["displayName"] = "RN-28",
+				},
+				["count"] = 1,
+			}
+		},
+		["assert"]     = true,
+		["expected"]   = "You are over budget! Re-arm before departing, or you will be kicked to spectator!\n"..
+			"== Loadout Summary:\n"..
+			"\tAA cost: 0 / 5\n"..
+			"\tAG cost: 5000 / 20",
 	},
 }
 
@@ -150,6 +206,9 @@ local function main()
 	for _, v in ipairs(testcmds) do
 		if v.modelTime ~= nil then
 			timer.stub_setTime(v.modelTime)
+		end
+		if v.ammo ~= nil then
+			unit1.ammo = v.ammo
 		end
 		trigger.action.setassert(v.assert)
 		trigger.action.setmsgbuffer(v.expected)
