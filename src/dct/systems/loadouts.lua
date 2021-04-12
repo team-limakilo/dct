@@ -20,20 +20,31 @@ local function totalPayload(grp, limits)
 	for _, v in pairs(enum.weaponCategory) do
 		total[v] = {
 			["current"] = 0,
-			["max"]     = limits[v],
+			["max"]     = limits[v] or 0,
+			["payload"] = {}
 		}
 	end
 
-	-- tally restricted weapon cost
+	-- tally weapon costs
 	for _, wpn in ipairs(payload or {}) do
 		local wpnname = dctutils.trimTypeName(wpn.desc.typeName)
 		local wpncnt  = wpn.count
-		local restricted = restrictedWeapons[wpnname]
+		local restriction = restrictedWeapons[wpnname] or {}
+		local cost = restriction.cost or 0
+		local category = restriction.category
+			or enum.weaponCategory.UNRESTRICTED
 
-		if restricted then
-			total[restricted.category].current =
-				total[restricted.category].current +
-				(wpncnt * restricted.cost)
+		total[category].current =
+			total[category].current + (wpncnt * cost)
+
+		-- TODO: it seems cannons have an internal category of 0,
+		-- what are the other categories?
+		if wpn.desc.category > 0 then
+			table.insert(total[category].payload, {
+				["name"] = wpn.desc.displayName,
+				["count"] = wpncnt,
+				["cost"] = cost,
+			})
 		end
 	end
 	return total

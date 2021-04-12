@@ -132,17 +132,49 @@ function CheckPayloadCmd:_execute(_ --[[time]], _ --[[cmdr]])
 	local msg
 	local ok, costs = loadout.check(self.asset)
 	if ok then
-		msg = "Valid loadout, you may depart. Good luck!"
+		msg = "Valid loadout, you may depart. Good luck!\n\n"
 	else
 		msg = "You are over budget! Re-arm before departing, or "..
-			"you will be kicked to spectator!"
+			"you will be kicked to spectator!\n\n"
 	end
 
 	-- print cost summary
-	msg = msg.."\n== Loadout Summary:"
+	msg = msg.."== Loadout Summary:"
+	for cat, id in pairs(enum.weaponCategory) do
+		if id ~= enum.weaponCategory.UNRESTRICTED then
+			if costs[id].current < enum.WPNINFCOST then
+				msg = msg..string.format("\n  %s cost: %d / %d",
+					cat, costs[id].current, costs[id].max)
+			else
+				msg = msg..string.format("\n  %s cost: ∞ / %d", cat, costs[id].max)
+			end
+		end
+	end
+
+	-- group weapons by type
 	for cat, val in pairs(enum.weaponCategory) do
-		msg = msg ..string.format("\n\t%s cost: %d / %d",
-			cat, costs[val].current, costs[val].max)
+		if #costs[val].payload > 0 then
+			msg = msg..string.format("\n\n== %s Weapons:", cat)
+			for _, wpn in pairs(costs[val].payload) do
+				if wpn.cost < enum.WPNINFCOST then
+					-- tally the costs of each weapon
+					msg = msg..string.format(
+						"\n  %s        %d * %d pts = %d pts",
+						wpn.name,
+						wpn.count,
+						wpn.cost,
+						wpn.count * wpn.cost
+					)
+				else
+					-- show special lines for forbidden weapons
+					msg = msg..string.format(
+						"\n  %s        %d * ∞ pts = ∞ pts (FORBIDDEN)",
+						wpn.name,
+						wpn.count
+					)
+				end
+			end
+		end
 	end
 
 	return msg
