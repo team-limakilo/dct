@@ -136,24 +136,6 @@ local testcmds = {
 		["assert"]     = true,
 		["expected"]   = "Mission 5720 aborted",
 	}, {
-		["data"] = {
-			["name"]   = grp:getName(),
-			["type"]   = enum.uiRequestType.CHECKPAYLOAD,
-		},
-		["ammo"] = {
-			{
-				["desc"] = {
-					["displayName"] = "AIM-120C",
-				},
-				["count"] = 4,
-			}
-		},
-		["assert"]     = true,
-		["expected"]   = "Valid loadout, you may depart. Good luck!\n"..
-			"== Loadout Summary:\n"..
-			"\tAA cost: 4 / 5\n"..
-			"\tAG cost: 0 / 20",
-	}, {
 		-- Allowed payload
 		["data"] = {
 			["name"]   = grp:getName(),
@@ -162,16 +144,35 @@ local testcmds = {
 		["ammo"] = {
 			{
 				["desc"] = {
+					["displayName"] = "Cannon Shells",
+					["category"] = 0,
+				},
+				["count"] = 600,
+			}, {
+				["desc"] = {
 					["displayName"] = "AIM-120C",
+					["category"] = 1,
 				},
 				["count"] = 4,
+			}, {
+				["desc"] = {
+					["displayName"] = "AIM-9M",
+					["category"] = 1,
+				},
+				["count"] = 2,
 			}
 		},
 		["assert"]     = true,
 		["expected"]   = "Valid loadout, you may depart. Good luck!\n"..
 			"== Loadout Summary:\n"..
-			"\tAA cost: 4 / 5\n"..
-			"\tAG cost: 0 / 20",
+			"  AA cost: 4 / 5\n"..
+			"  AG cost: 0 / 20\n"..
+			"\n"..
+			"== UNRESTRICTED Weapons:\n"..
+			"  AIM-9M        2 * 0 pts = 0 pts\n"..
+			"\n"..
+			"== AA Weapons:\n"..
+			"  AIM-120C        4 * 1 pts = 4 pts",
 	}, {
 		-- Over limit with forbidden weapon
 		["data"] = {
@@ -182,6 +183,7 @@ local testcmds = {
 			{
 				["desc"] = {
 					["displayName"] = "RN-28",
+					["category"] = 3,
 				},
 				["count"] = 1,
 			}
@@ -189,8 +191,11 @@ local testcmds = {
 		["assert"]     = true,
 		["expected"]   = "You are over budget! Re-arm before departing, or you will be kicked to spectator!\n"..
 			"== Loadout Summary:\n"..
-			"\tAA cost: 0 / 5\n"..
-			"\tAG cost: 5000 / 20",
+			"  AA cost: 0 / 5\n"..
+			"  AG cost: 5000 / 20\n"..
+			"\n"..
+			"== AG Weapons:\n"..
+			"  RN-28        1 * 5000 pts = 5000 pts",
 	},
 }
 
