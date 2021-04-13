@@ -203,7 +203,7 @@ function AssetManager:doOneObject(obj, event)
 
 	local name = tostring(obj:getName())
 	if obj:getCategory() == Object.Category.UNIT then
-		name = obj:getGroup():getName()
+		name = Unit.getGroup(obj):getName()
 	end
 
 	local assetname = self._object2asset[name]
