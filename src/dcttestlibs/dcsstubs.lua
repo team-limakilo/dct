@@ -448,6 +448,7 @@ function coalition.addGroup(cntryid, groupcat, groupdata)
 		unitdata.exists = true
 		Unit(unitdata, grp)
 	end
+	return grp
 end
 
 function coalition.addStaticObject(cntryid, groupdata)
