@@ -151,12 +151,14 @@ local testcmds = {
 			}, {
 				["desc"] = {
 					["displayName"] = "AIM-120C",
+					["typeName"] = "AIM_120",
 					["category"] = 1,
 				},
 				["count"] = 4,
 			}, {
 				["desc"] = {
 					["displayName"] = "AIM-9M",
+					["typeName"] = "AIM_9M",
 					["category"] = 1,
 				},
 				["count"] = 2,
@@ -183,13 +185,15 @@ local testcmds = {
 			{
 				["desc"] = {
 					["displayName"] = "RN-28",
+					["typeName"] = "RN-28",
 					["category"] = 3,
 				},
 				["count"] = 1,
 			}
 		},
 		["assert"]     = true,
-		["expected"]   = "You are over budget! Re-arm before departing, or you will be kicked to spectator!\n"..
+		["expected"]   = "You are over budget! Re-arm before departing, or "..
+			"you will be kicked to spectator!\n"..
 			"== Loadout Summary:\n"..
 			"  AA cost: 0 / 5\n"..
 			"  AG cost: 5000 / 20\n"..

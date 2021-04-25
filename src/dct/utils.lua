@@ -237,7 +237,9 @@ function utils.fmtposition(position, precision, fmt)
 end
 
 function utils.trimTypeName(typename)
-	return string.match(typename, "[^.]-$")
+	if typename ~= nil then
+		return string.match(typename, "[^.]-$")
+	end
 end
 
 utils.buildevent = {}
