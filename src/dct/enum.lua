@@ -184,6 +184,7 @@ enum.uiRequestType = {
 }
 
 enum.weaponCategory = {
+	["UNRESTRICTED"] = 0,
 	["AA"] = 1,
 	["AG"] = 2,
 }

@@ -141,8 +141,26 @@ function CheckPayloadCmd:_execute(_ --[[time]], _ --[[cmdr]])
 	-- print cost summary
 	msg = msg.."\n== Loadout Summary:"
 	for cat, val in pairs(enum.weaponCategory) do
-		msg = msg ..string.format("\n\t%s cost: %d / %d",
-			cat, costs[val].current, costs[val].max)
+		if val ~= enum.weaponCategory.UNRESTRICTED then
+			msg = msg..string.format("\n  %s cost: %d / %d",
+				cat, costs[val].current, costs[val].max)
+		end
+	end
+
+	-- print weapons by type
+	for cat, val in pairs(enum.weaponCategory) do
+		if #costs[val].payload > 0 then
+			msg = msg..string.format("\n\n== %s Weapons:", cat)
+			for _, wpn in pairs(costs[val].payload) do
+				msg = msg..string.format(
+					"\n  %s        %d * %d pts = %d pts",
+					wpn.name,
+					wpn.count,
+					wpn.cost,
+					wpn.count * wpn.cost
+				)
+			end
+		end
 	end
 
 	return msg
