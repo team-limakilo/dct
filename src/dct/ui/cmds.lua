@@ -159,6 +159,10 @@ function CheckPayloadCmd:_execute(_ --[[time]], _ --[[cmdr]])
 					wpn.cost,
 					wpn.count * wpn.cost
 				)
+				-- show extra qualifier on forbidden weapons
+				if wpn.cost >= enum.WPNINFCOST then
+					msg = msg.." (FORBIDDEN)"
+				end
 			end
 		end
 	end
