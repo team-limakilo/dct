@@ -4,9 +4,11 @@ on:
   pull_request:
     branches:
     - master
+    - syria-at-war
   push:
     branches:
     - master
+    - syria-at-war
 
 env:
   PACKAGES: lua5.1 lua-md5 lua-filesystem lua-check
