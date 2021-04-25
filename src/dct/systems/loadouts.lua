@@ -41,7 +41,7 @@ local function totalPayload(grp, limits)
 		-- what are the other categories?
 		if wpn.desc.category > 0 then
 			table.insert(total[category].payload, {
-				["name"] = wpnname,
+				["name"] = wpn.desc.displayName,
 				["count"] = wpncnt,
 				["cost"] = cost,
 			})
