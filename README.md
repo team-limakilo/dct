@@ -32,6 +32,9 @@ are eventually merged into master, base your features and fixes off master.
 
 ## Contact Us
 
-You can join the VMFA-169 discord(https://discord.gg/6z8uERVW5Y) if you
+You can join the VMFA-169 discord (https://discord.gg/6z8uERVW5Y) if you
 would like to discuss DCT topics. The channel is
 `#dynamic-campaign-tools-discussion`.
+
+This branch is maintained by kukiric#5535 on Discord for Hoggit's Syria
+at War server.
