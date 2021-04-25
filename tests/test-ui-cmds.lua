@@ -199,7 +199,7 @@ local testcmds = {
 			"  AG cost: 5000 / 20\n"..
 			"\n"..
 			"== AG Weapons:\n"..
-			"  RN-28        1 * 5000 pts = 5000 pts",
+			"  RN-28        1 * 5000 pts = 5000 pts (FORBIDDEN)",
 	},
 }
 
