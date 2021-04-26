@@ -81,6 +81,7 @@ local wpnmass = {
 	["AN-M64"]       = tnt_equiv_mass(180),
 	["AN-M65"]       = tnt_equiv_mass(295),
 	["AN-M66A2"]     = tnt_equiv_mass(536),
+	["SMERCH_9M55F"] = tnt_equiv_mass(148),
 }
 
 -- weapons that use the same warheads
