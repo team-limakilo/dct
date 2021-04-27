@@ -39,7 +39,6 @@ local function totalPayload(grp, limits)
 			total[category].current + (wpncnt * cost)
 
 		if restriction.nuclear then
-			env.info("NUCLEAR WEAPON DETECTED")
 			nuke = true
 		end
 
