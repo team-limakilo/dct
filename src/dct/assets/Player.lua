@@ -246,6 +246,7 @@ function OccupiedState:_tickLoadoutTimer(asset)
 			end
 		else
 			-- ¯\_(ツ)_/¯
+			self.loseticket = false
 			local grp = Group.getByName(asset.name)
 			local unit = grp:getUnit(1):getName()
 			trigger.action.setUnitInternalCargo(unit, 1000000)
