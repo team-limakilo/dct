@@ -149,10 +149,12 @@ local function theatercfgs(config)
 				["RN-24"] = {
 					["cost"]     = enum.WPNINFCOST,
 					["category"] = enum.weaponCategory.AG,
+					["nuclear"]  = true,
 				},
 				["RN-28"] = {
 					["cost"]     = enum.WPNINFCOST,
 					["category"] = enum.weaponCategory.AG,
+					["nuclear"]  = true,
 				},
 			},
 			["env"] = {
