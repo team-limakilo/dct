@@ -231,16 +231,16 @@ function OccupiedState:_tickLoadoutTimer(asset)
 		self.loadouttimer:update()
 		local remain, _ = self.loadouttimer:remain()
 		if remain > 0 then
-			trigger.action.outTextForGroup(asset.groupId,
-				string.format("TIME LEFT: %d seconds\n\n", math.floor(remain))..
-				"You have taken off with an invalid loadout! Jettison all stores "..
-				"immediately and then land to re-arm!", 10, true)
 			local _, ok = self:_checkPayload(asset, false)
 			if ok then
 				self.loadouttimer = nil
 				trigger.action.outTextForGroup(asset.groupId, "You are now "..
-					"within payload limits and can safely land to re-arm.", 20, true)
+					"within payload limits and can safely land to re-arm.", 30, true)
 			else
+				trigger.action.outTextForGroup(asset.groupId,
+					"You have taken off with an illegal loadout! Jettison all stores "..
+					"immediately and then land to re-arm!\n\n"..
+					string.format("TIME LEFT: %d seconds", math.floor(remain)), 10, true)
 				timer.scheduleFunction(function() self:_tickLoadoutTimer(asset) end,
 					nil, timer.getTime() + 1)
 			end
@@ -249,10 +249,10 @@ function OccupiedState:_tickLoadoutTimer(asset)
 			local grp = Group.getByName(asset.name)
 			local unit = grp:getUnit(1):getName()
 			trigger.action.setUnitInternalCargo(unit, 1000000)
-			trigger.action.outTextForGroup(asset.groupId, "TIME LEFT: 0 seconds\n\n"..
+			trigger.action.outTextForGroup(asset.groupId,
 				"You have taken off with an invalid loadout and failed to comply "..
-				"with orders in time. Your aircraft has been deprived of its lift.",
-				20, true)
+				"with orders in time. Your aircraft has been made unflyable.\n\n"..
+				"TIME LEFT: 0 seconds\n\n", 30, true)
 		end
 	end
 end
