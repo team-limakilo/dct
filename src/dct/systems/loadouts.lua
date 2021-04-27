@@ -76,8 +76,14 @@ end
 local loadout = {}
 
 function loadout.check(player)
-	return validatePayload(Group.getByName(player.name),
-		player.payloadlimits)
+	local group = Group.getByName(player.name)
+	if group ~= nil then
+		return validatePayload(Group.getByName(player.name),
+			player.payloadlimits)
+	else
+		-- TODO: log something here
+		return true, {}, false
+	end
 end
 
 function loadout.addmenu(asset, menu, handler, context)
