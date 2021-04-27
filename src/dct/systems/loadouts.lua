@@ -16,6 +16,7 @@ local function totalPayload(grp, limits)
 	local unit = grp:getUnit(1)
 	local restrictedWeapons = settings.restrictedweapons
 	local payload = unit:getAmmo()
+	local nuke = false
 	local total = {}
 	for _, v in pairs(enum.weaponCategory) do
 		total[v] = {
@@ -37,6 +38,11 @@ local function totalPayload(grp, limits)
 		total[category].current =
 			total[category].current + (wpncnt * cost)
 
+		if restriction.nuclear then
+			env.info("NUCLEAR WEAPON DETECTED")
+			nuke = true
+		end
+
 		-- TODO: it seems cannons have an internal category of 0,
 		-- what are the other categories?
 		if wpn.desc.category > 0 then
@@ -47,23 +53,24 @@ local function totalPayload(grp, limits)
 			})
 		end
 	end
-	return total
+	return total, nuke
 end
 
--- returns a two tuple;
+-- returns a triple:
 --   first arg (boolean) is payload valid
 --   second arg (table) total cost per category of the payload, also
 --       includes the max allowed for the airframe
+--   third arg (boolean) payload contains a nuclear weapon
 local function validatePayload(grp, limits)
-	local total = totalPayload(grp, limits)
+	local total, nuke = totalPayload(grp, limits)
 
 	for _, cost in pairs(total) do
 		if cost.current > cost.max then
-			return false, total
+			return false, total, nuke
 		end
 	end
 
-	return true, total
+	return true, total, nuke
 end
 
 local loadout = {}
