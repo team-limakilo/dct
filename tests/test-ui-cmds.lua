@@ -190,7 +190,7 @@ local testcmds = {
 		},
 		["assert"]     = true,
 		["expected"]   = "You are over budget! Re-arm before departing, or "..
-			"you will be kicked to spectator!\n\n"..
+			"you will be punished!\n\n"..
 			"== Loadout Summary:\n"..
 			"  AA cost: 0 / 20\n"..
 			"  AG cost: ∞ / 60\n"..

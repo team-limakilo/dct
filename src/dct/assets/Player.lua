@@ -37,9 +37,11 @@ local class   = require("libs.namedclass")
 local dctenum = require("dct.enum")
 local dctutils= require("dct.utils")
 local AssetBase = require("dct.assets.AssetBase")
+local cmds    = require("dct.ui.cmds")
 local uimenu  = require("dct.ui.groupmenu")
 local loadout = require("dct.systems.loadouts")
 local State   = require("dct.libs.State")
+local Timer   = require("dct.libs.Timer")
 local settings = _G.dct.settings
 
 local notifymsg =
@@ -137,6 +139,7 @@ end
 function OccupiedState:__init(inair)
 	self.inair = inair
 	self.loseticket = false
+	self.loadouttimer = nil
 	self.bleedctr = 0
 	self.bleedperiod = 5
 	self.bleedwarn = false
@@ -157,6 +160,7 @@ function OccupiedState:enter(asset)
 end
 
 function OccupiedState:exit(asset)
+	asset.loadouttimer = nil
 	if self.loseticket then
 		asset:setDead(true)
 	end
@@ -199,10 +203,71 @@ function OccupiedState:_bleed(asset)
 	return state
 end
 
+function OccupiedState:_kickForNuke(asset)
+	trigger.action.outTextForGroup(asset.groupId,
+		"You have been kicked for carrying a nuclear weapon.", 20, true)
+	return EmptyState(dctenum.kickCode.NUKE)
+end
+
+function OccupiedState:_checkPayload(asset, display)
+	local ok, costs, nuke = loadout.check(asset)
+	if nuke then
+		return self:_kickForNuke(asset), ok
+	end
+	if display and not ok then
+		-- Show the current loadout to the player
+		local CheckPayloadCmd = cmds[dctenum.uiRequestType.CHECKPAYLOAD]
+		local msg = "You are over budget! Re-arm and re-check before departing, "..
+			"or you will be punished!\n"..CheckPayloadCmd.buildSummary(costs)
+		trigger.action.outTextForGroup(asset.groupId, msg, 60, false)
+	end
+	return nil, ok
+end
+
+function OccupiedState:_tickLoadoutTimer(asset)
+	-- FIXME: this function does not obey DCT runtime quotas,
+	-- so very slow loadout checks can slow down the server
+	if self.loadouttimer ~= nil then
+		self.loadouttimer:update()
+		local remain, _ = self.loadouttimer:remain()
+		if remain > 0 then
+			local _, ok = self:_checkPayload(asset, false)
+			if ok then
+				self.loadouttimer = nil
+				trigger.action.outTextForGroup(asset.groupId, "You are now "..
+					"within payload limits and can safely land to re-arm.", 30, true)
+			else
+				trigger.action.outTextForGroup(asset.groupId,
+					"You have taken off with an illegal loadout! Jettison all stores "..
+					"immediately and then land to re-arm!\n\n"..
+					string.format("TIME LEFT: %d seconds", math.floor(remain)), 10, true)
+				timer.scheduleFunction(function() self:_tickLoadoutTimer(asset) end,
+					nil, timer.getTime() + 1)
+			end
+		else
+			-- ¯\_(ツ)_/¯
+			local grp = Group.getByName(asset.name)
+			local unit = grp:getUnit(1):getName()
+			trigger.action.setUnitInternalCargo(unit, 1000000)
+			trigger.action.outTextForGroup(asset.groupId,
+				"You have taken off with an invalid loadout and failed to comply "..
+				"with orders in time. Your aircraft has been made unflyable.\n\n"..
+				"TIME LEFT: 0 seconds\n\n", 30, true)
+		end
+	end
+end
+
 function OccupiedState:update(asset)
 	local grp = Group.getByName(asset.name)
 	if grp == nil then
 		return EmptyState(dctenum.kickCode.EMPTY)
+	end
+	-- Periodic ground loadout check
+	if not self.inair then
+		local newstate, _ = self:_checkPayload(asset, true)
+		if newstate ~= nil then
+			return newstate
+		end
 	end
 	return self:_bleed(asset)
 end
@@ -222,13 +287,13 @@ end
 function OccupiedState:handleTakeoff(asset, _ --[[event]])
 	self.loseticket = true
 	self.inair = true
-	local ok = loadout.check(asset)
+	local ok, _, nuke = loadout.check(asset)
+	if nuke then
+		return self:_kickForNuke(asset)
+	end
 	if not ok then
-		trigger.action.outTextForGroup(asset.groupId,
-			"You have been removed to spectator for flying with an "..
-			"invalid loadout. "..notifymsg,
-			20, true)
-		return EmptyState(dctenum.kickCode.LOADOUT)
+		self.loadouttimer = Timer(60)
+		self:_tickLoadoutTimer(asset)
 	end
 	return nil
 end
@@ -246,6 +311,7 @@ function OccupiedState:handleLand(asset, event)
 
 	if (airbase and airbase.owner == asset.owner) or
 	   event.place:getName() == asset.airbase then
+		self.loadouttimer = nil
 		self.loseticket = false
 		self.inair = false
 		trigger.action.outTextForGroup(asset.groupId,
