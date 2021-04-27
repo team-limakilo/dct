@@ -146,10 +146,10 @@ function OccupiedState:__init(inair)
 	self._eventhandlers = {
 		[world.event.S_EVENT_BIRTH]             = self.handleSwitchOccupied,
 		[world.event.S_EVENT_TAKEOFF]           = self.handleTakeoff,
-		[world.event.S_EVENT_EJECTION]          = self.handleLoseTicket,
-		[world.event.S_EVENT_DEAD]              = self.handleLoseTicket,
-		[world.event.S_EVENT_PILOT_DEAD]        = self.handleLoseTicket,
-		[world.event.S_EVENT_CRASH]             = self.handleLoseTicket,
+		[world.event.S_EVENT_EJECTION]          = self.handleDead,
+		[world.event.S_EVENT_DEAD]              = self.handleDead,
+		[world.event.S_EVENT_PILOT_DEAD]        = self.handleDead,
+		[world.event.S_EVENT_CRASH]             = self.handleDead,
 		[world.event.S_EVENT_LAND]              = self.handleLand,
 	}
 end
@@ -322,8 +322,7 @@ function OccupiedState:handleLand(asset, event)
 	return nil
 end
 
-function OccupiedState:handleLoseTicket(--[[asset, event]])
-	self.loseticket = true
+function OccupiedState:handleDead(--[[asset, event]])
 	return EmptyState(dctenum.kickCode.DEAD)
 end
 
