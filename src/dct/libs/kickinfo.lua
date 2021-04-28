@@ -14,6 +14,7 @@ enum.kickCode = {
 	["DEAD"]    = 4,
 	["LOADOUT"] = 5,
 	["MISSION"] = 6,
+	["NUKE"]    = 7,
 }
 
 enum.kickReason = {
@@ -28,10 +29,12 @@ enum.kickReason = {
 	[enum.kickCode.DEAD] =
 		"you died, re-slot to continue.",
 	[enum.kickCode.LOADOUT] =
-		"payload violation, you attempted to takeoff with restricted "..
+		"payload violation, you took off with restricted "..
 		"weapons. Check the loadout limits.",
 	[enum.kickCode.MISSION] =
 		"no mission assigned. Must have a mission assigned.",
+	[enum.kickCode.NUKE] =
+		"you are not allowed to use nukes in this server.",
 }
 
 return enum

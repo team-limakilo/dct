@@ -128,18 +128,9 @@ function CheckPayloadCmd:__init(theater, data)
 	self.name = "CheckPayloadCmd:"..data.name
 end
 
-function CheckPayloadCmd:_execute(_ --[[time]], _ --[[cmdr]])
-	local msg
-	local ok, costs = loadout.check(self.asset)
-	if ok then
-		msg = "Valid loadout, you may depart. Good luck!"
-	else
-		msg = "You are over budget! Re-arm before departing, or "..
-			"you will be kicked to spectator!"
-	end
-
+function CheckPayloadCmd.buildSummary(costs)
 	-- print cost summary
-	msg = msg.."\n== Loadout Summary:"
+	local msg = "== Loadout Summary:"
 	for cat, val in pairs(enum.weaponCategory) do
 		if val ~= enum.weaponCategory.UNRESTRICTED then
 			msg = msg..string.format("\n  %s cost: %d / %d",
@@ -168,6 +159,18 @@ function CheckPayloadCmd:_execute(_ --[[time]], _ --[[cmdr]])
 	end
 
 	return msg
+end
+
+function CheckPayloadCmd:_execute(_ --[[time]], _ --[[cmdr]])
+	local ok, totals = loadout.check(self.asset)
+	if ok then
+		return "Valid loadout, you may depart. Good luck!\n"
+			..self.buildSummary(totals)
+	else
+		return "You are over budget! Re-arm before departing, or "..
+			"you will be punished!\n"
+			..self.buildSummary(totals)
+	end
 end
 
 
