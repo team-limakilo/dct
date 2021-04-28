@@ -19,9 +19,9 @@
 --]]
 
 local enum    = require("dct.enum")
+local Theater = require("dct.Theater")
 local Logger  = dct.Logger.getByName("UI")
 local loadout = require("dct.systems.loadouts")
-local Theater = require("dct.Theater")
 local addmenu = missionCommands.addSubMenuForGroup
 local addcmd  = missionCommands.addCommandForGroup
 
