@@ -148,6 +148,7 @@ function Theater:__init()
 	self.cmdrs     = {}
 	self.startdate = os.date("!*t")
 	self.namecntr  = 1000
+	self.scratchpad = {}
 
 	Systems.__init(self)
 	for _, val in pairs(coalition.side) do
