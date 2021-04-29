@@ -77,7 +77,7 @@ function ScratchPadSet:_execute(_, _)
 	local mrkid = human.getMarkID()
 	local pos   = Group.getByName(self.asset.name):getUnit(1):getPoint()
 
-	self.theater.scratchpad[mrkid] = self.asset.name
+	self.theater:getSystem("dct.ui.scratchpad"):set(mrkid, self.asset.name)
 	trigger.action.markToGroup(mrkid, "edit me", pos,
 		self.asset.groupId, false)
 	local msg = "Look on F10 MAP for user mark with contents \"edit me\"\n "..
