@@ -19,7 +19,8 @@ end
 
 local ScratchPad = class("ScratchPad")
 function ScratchPad:__init(theater)
-	self._scratchpad = {}
+	-- 🤫
+	self._scratchpad = theater.scratchpad
 	self._theater = theater
 	theater:addObserver(self.event, self, self.__clsname)
 	Logger:debug("init "..self.__clsname)
