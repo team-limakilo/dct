@@ -88,7 +88,7 @@ end
 function loadout.addmenu(asset, menu, handler)
 	local gid  = asset.groupId
 	local name = asset.name
-	missionCommands.addCommandForGroup(gid,
+	return missionCommands.addCommandForGroup(gid,
 		"Check Payload", menu, handler, {
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.CHECKPAYLOAD,

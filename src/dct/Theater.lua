@@ -110,6 +110,8 @@ function Theater:__init()
 		self.delayedInit, self))
 	self:queueCommand(100, Command(self.__clsname..".export",
 		self.export, self))
+	self.singleton = nil
+	self.playerRequest = nil
 end
 
 function Theater.singleton()
@@ -381,8 +383,7 @@ function Theater:getTickets()
 end
 
 function Theater.playerRequest(data)
-	local self = require("dct.Theater").singleton()
-
+	local self = Theater.singleton()
 	if data == nil then
 		Logger:error("playerRequest(); value error: data must be "..
 			"provided; "..debug.traceback())
