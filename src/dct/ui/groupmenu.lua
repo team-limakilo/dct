@@ -19,7 +19,6 @@
 --]]
 
 local enum    = require("dct.enum")
-local Theater = require("dct.Theater")
 local Logger  = dct.Logger.getByName("UI")
 local loadout = require("dct.systems.loadouts")
 local addmenu = missionCommands.addSubMenuForGroup
@@ -27,6 +26,7 @@ local addcmd  = missionCommands.addCommandForGroup
 
 local menus = {}
 function menus.createMenu(asset)
+	local theater = require("dct.Theater").singleton()
 	local gid  = asset.groupId
 	local name = asset.name
 
@@ -43,14 +43,14 @@ function menus.createMenu(asset)
 	for k, v in pairs({
 		["DISPLAY"] = enum.uiRequestType.SCRATCHPADGET,
 		["SET"] = enum.uiRequestType.SCRATCHPADSET}) do
-		addcmd(gid, k, padmenu, Theater.playerRequest,
+		addcmd(gid, k, padmenu, theater.playerRequest,
 			{
 				["name"]   = name,
 				["type"]   = v,
 			})
 	end
 
-	addcmd(gid, "Theater Update", nil, Theater.playerRequest,
+	addcmd(gid, "Theater Update", nil, theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.THEATERSTATUS,
@@ -59,7 +59,7 @@ function menus.createMenu(asset)
 	local msnmenu = addmenu(gid, "Mission", nil)
 	local rqstmenu = addmenu(gid, "Request", msnmenu)
 	for k, v in pairs(asset.ato) do
-		addcmd(gid, k, rqstmenu, Theater.playerRequest,
+		addcmd(gid, k, rqstmenu, theater.playerRequest,
 			{
 				["name"]   = name,
 				["type"]   = enum.uiRequestType.MISSIONREQUEST,
@@ -67,35 +67,35 @@ function menus.createMenu(asset)
 			})
 	end
 
-	addcmd(gid, "Join", msnmenu, Theater.playerRequest,
+	addcmd(gid, "Join", msnmenu, theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.MISSIONJOIN,
 		})
 
-	addcmd(gid, "Briefing", msnmenu, Theater.playerRequest,
+	addcmd(gid, "Briefing", msnmenu, theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.MISSIONBRIEF,
 		})
-	addcmd(gid, "Status", msnmenu, Theater.playerRequest,
+	addcmd(gid, "Status", msnmenu, theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.MISSIONSTATUS,
 		})
-	addcmd(gid, "Abort", msnmenu, Theater.playerRequest,
+	addcmd(gid, "Abort", msnmenu, theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.MISSIONABORT,
 			["value"]  = enum.missionAbortType.ABORT,
 		})
-	addcmd(gid, "Rolex +30", msnmenu, Theater.playerRequest,
+	addcmd(gid, "Rolex +30", msnmenu, theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.MISSIONROLEX,
 			["value"]  = 30*60,  -- seconds
 		})
-	loadout.addmenu(asset, nil, Theater.playerRequest)
+	loadout.addmenu(asset, nil, theater.playerRequest)
 end
 
 return menus
