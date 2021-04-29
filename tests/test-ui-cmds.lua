@@ -84,9 +84,9 @@ local testcmds = {
 			["type"]   = enum.uiRequestType.MISSIONSTATUS,
 		},
 		["assert"]     = true,
-		["expected"]   = "Mission State: Preparing\n"..
+		["expected"]   = "Mission State: Active\n"..
 			"Package: 5720\n"..
-			"Timeout: 2016-06-21 12:30z (in 90 mins)\n"..
+			"Timeout: 2016-06-21 14:00z (in 180 mins)\n"..
 			"BDA: 0% complete\n",
 	}, {
 		["data"] = {
@@ -120,9 +120,9 @@ local testcmds = {
 		},
 		["modelTime"]  = 300,
 		["assert"]     = true,
-		["expected"]   = "Mission State: Preparing\n"..
+		["expected"]   = "Mission State: Active\n"..
 			"Package: 5720\n"..
-			"Timeout: 2016-06-21 12:32z (in 87 mins)\n"..
+			"Timeout: 2016-06-21 14:02z (in 177 mins)\n"..
 			"BDA: 0% complete\n",
 	}, {
 		["data"] = {

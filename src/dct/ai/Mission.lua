@@ -181,7 +181,7 @@ function Mission:__init(cmdr, missiontype, tgt, plan)
 	self.id        = self.iffcodes.id
 	self.assigned  = {}
 	self:_setComplete(false)
-	self.state = PrepState()
+	self.state = ActiveState()
 	self.state:enter(self)
 
 	-- compose the briefing at mission creation to represent
