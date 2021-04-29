@@ -26,8 +26,9 @@ local function isWpnValid(event)
 	   return false
 	end
 
-	if wpndesc.warhead.type ~= Weapon.WarheadType.HE then
-		return false
+	if wpndesc.warhead == nil or
+		wpndesc.warhead.type ~= Weapon.WarheadType.HE then
+			return false
 	end
 	return true
 end
