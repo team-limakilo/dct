@@ -216,6 +216,11 @@ function Commander:requestMission(grpname, missiontype)
 	local mission = Mission(self, missiontype, tgt, plan)
 	mission:addAssigned(assetmgr:getAsset(grpname))
 	self:addMission(mission)
+
+	Logger:debug(string.format(
+		"requestMission() - assigned target %s to mission %d",
+		tgt.name, mission.id))
+
 	return mission
 end
 
@@ -238,6 +243,7 @@ function Commander:removeMission(id)
 	local mission = self.missions[id]
 	self.missions[id] = nil
 	self.missionstats:dec(mission.type)
+	Logger:debug(string.format("removeMission(%d)", id))
 end
 
 function Commander:getAssigned(asset)
