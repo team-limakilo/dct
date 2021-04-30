@@ -74,6 +74,8 @@ end
 function AssetManager:remove(asset)
 	assert(asset ~= nil, "value error: asset object must be provided")
 
+	Logger:debug("Removing asset: "..asset.name)
+
 	asset:removeObserver(self)
 	self._assetset[asset.name] = nil
 
@@ -92,10 +94,12 @@ function AssetManager:add(asset)
 		asset.name.."') already exists")
 
 	if asset:isDead() then
-		Logger:debug("AssetManager:add - not adding dead asset:"..
+		Logger:debug("AssetManager:add - not adding dead asset: "..
 			asset.name)
 		return
 	end
+
+	Logger:debug("Adding asset: "..asset.name)
 
 	self._assetset[asset.name] = asset
 	asset:addObserver(self.onDCSEvent, self, "AssetManager.onDCSEvent")
