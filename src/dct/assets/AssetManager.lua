@@ -190,7 +190,8 @@ function AssetManager:update()
 		if type(asset.update) == "function" then
 			asset:update()
 		end
-		if asset:isDead() then
+		if asset:isDead() and
+		   asset.type ~= enum.assetType.PLAYERGROUP then
 			deletionq[asset.name] = true
 		end
 	end
