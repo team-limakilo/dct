@@ -64,6 +64,22 @@ local function location(point)
     }
 end
 
+-- Expand assigned groups into a table containing the group and player name
+local function withPlayerNames(assigned)
+    local output = {}
+    for id, groupname in pairs(assigned) do
+        local unit = Group.getByName(groupname):getUnit(1)
+        -- Protect against dead/removed units during data export
+        if unit ~= nil then
+            output[id] = {
+                group = groupname,
+                player = unit:getPlayerName(),
+            }
+        end
+    end
+    return output
+end
+
 -- List strategic assets per coalition
 local function getAssetsByRegion(theater, coalition)
     local assetmgr = theater:getAssetMgr()
@@ -92,7 +108,7 @@ local function getMissions(commander)
     for id, mission in pairs(commander.missions) do
         missions[tostring(id)] = {
             id = tostring(mission.id),
-            assigned = mission.assigned,
+            assigned = withPlayerNames(mission.assigned),
             coalition = tostring(mission.cmdr.owner),
             type = MISSION_TYPE[mission.type],
             target = {
