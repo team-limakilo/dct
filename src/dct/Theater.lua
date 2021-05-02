@@ -44,6 +44,7 @@ function Systems:__init()
 		"dct.systems.bldgPersist",
 		"dct.systems.weaponstracking",
 		"dct.systems.blasteffects",
+		"dct.systems.dataExport",
 		"dct.systems.playerslots",
 		"dct.templates.RegionManager",
 	}
