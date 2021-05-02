@@ -158,6 +158,7 @@ function Theater:loadSystems()
 		"dct.systems.bldgPersist",
 		"dct.systems.weaponstracking",
 		"dct.systems.blasteffects",
+		"dct.systems.dataExport"
 	}
 
 	for _, syspath in pairs(systems) do
