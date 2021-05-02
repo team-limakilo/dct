@@ -133,7 +133,7 @@ local function export(data)
             string.format("unable to open '%s'; msg: %s", path, tostring(msg)))
 	end
 
-    file:write(json:encode_pretty(data))
+    file:write(json:encode(data))
     file:close()
 end
 
