@@ -72,7 +72,9 @@ function AssetManager:factory(assettype)
 end
 
 function AssetManager:remove(asset)
-	assert(asset ~= nil, "value error: asset object must be provided")
+	if asset == nil then
+		return
+	end
 
 	Logger:debug("Removing asset: "..asset.name)
 
@@ -190,8 +192,7 @@ function AssetManager:update()
 		if type(asset.update) == "function" then
 			asset:update()
 		end
-		if asset:isDead() and
-		   asset.type ~= enum.assetType.PLAYERGROUP then
+		if asset:isDead() then
 			deletionq[asset.name] = true
 		end
 	end
@@ -205,13 +206,10 @@ local function handleDead(self, event)
 	self._object2asset[tostring(event.initiator:getName())] = nil
 end
 
-local function handleAssetDeath(self, event)
+local function handleAssetDeath(_ --[[self]], event)
 	local asset = event.initiator
 	dct.Theater.singleton():getTickets():loss(asset.owner,
 		asset.cost, false)
-	if asset.type ~= enum.assetType.PLAYERGROUP then
-		self:remove(asset)
-	end
 end
 
 local handlers = {
