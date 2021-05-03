@@ -68,12 +68,16 @@ end
 local function withPlayerNames(assigned)
     local output = {}
     for id, groupname in pairs(assigned) do
-        local unit = Group.getByName(groupname):getUnit(1)
+        local group = Group.getByName(groupname)
         -- Protect against dead/removed units during data export
-        if unit ~= nil then
+        if group ~= nil and group:getUnit(1) ~= nil then
             output[id] = {
                 group = groupname,
-                player = unit:getPlayerName(),
+                player = group:getUnit(1):getPlayerName(),
+            }
+        else
+            output[id] = {
+                group = groupname,
             }
         end
     end
@@ -133,7 +137,7 @@ local function export(data)
             string.format("unable to open '%s'; msg: %s", path, tostring(msg)))
 	end
 
-    file:write(json:encode(data))
+    file:write(json:encode_pretty(data))
     file:close()
 end
 
