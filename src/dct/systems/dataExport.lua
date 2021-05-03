@@ -18,7 +18,7 @@ local COALITIONS = {
     2, -- Blue
 }
 
--- Reverse maps for asset and missiont types
+-- Reverse maps for asset and mission types
 local ASSET_TYPE = {}
 local MISSION_TYPE = {}
 
