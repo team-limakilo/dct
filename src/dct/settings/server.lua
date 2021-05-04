@@ -90,6 +90,10 @@ local function validate_server_config(cfgdata, tbl)
 			["name"] = "emptyslottimeout",
 			["type"] = "number",
 			["default"] = cfgdata.default["emptyslottimeout"],
+		}, {
+			["name"] = "exportperiod",
+			["type"] = "number",
+			["default"] = cfgdata.default["exportperiod"],
 		},
 	}
 	tbl.path = cfgdata.file
@@ -138,6 +142,7 @@ local function servercfgs(config)
 				["statServerPort"] = 8095,
 				["dctid"] = "changeme",
 				["emptyslottimeout"] = 0, -- seconds
+				["exportperiod"] = 0, -- seconds
 			},
 		},}, config)
 	return config
