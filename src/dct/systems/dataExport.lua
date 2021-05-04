@@ -110,17 +110,20 @@ end
 local function getMissions(commander)
     local missions = {}
     for id, mission in pairs(commander.missions) do
-        missions[tostring(id)] = {
-            id = tostring(mission.id),
+        local tgtinfo = mission:getTargetInfo()
+        id = tostring(id)
+        missions[id] = {
+            id = id,
             assigned = withPlayerNames(mission.assigned),
             coalition = tostring(mission.cmdr.owner),
             type = MISSION_TYPE[mission.type],
             target = {
                 name = mission.target,
-                codename = mission.tgtinfo.callsign,
-                location = location(mission.tgtinfo.location),
-                intel = mission.tgtinfo.intellvl,
-                status = mission.tgtinfo.status,
+                intel = tgtinfo.intellvl,
+                codename = tgtinfo.callsign,
+                location = location(tgtinfo.location),
+                status = tgtinfo.status,
+                region = tgtinfo.region,
             },
         }
     end
@@ -160,7 +163,7 @@ function DataExport.update(theater)
     end
 
     export(data)
-    return PERIOD
+    return settings.exportperiod
 end
 
 return DataExport
