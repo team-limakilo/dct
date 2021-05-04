@@ -12,7 +12,6 @@ local Command  = require("dct.Command")
 local Logger   = require("dct.libs.Logger").getByName("dataExport")
 local settings = _G.dct.settings.server
 
-local PERIOD = 30 -- Run every half a minute
 local COALITIONS = {
     1, -- Red
     2, -- Blue
@@ -32,8 +31,14 @@ end
 
 local DataExport = class()
 function DataExport:__init(theater)
-    theater:queueCommand(PERIOD,
-        Command("DataExport.update", self.update, theater))
+    if settings.exportperiod > 0 then
+        Logger:debug(string.format(
+            "enabling data export every %d seconds", settings.exportperiod))
+        theater:queueCommand(settings.exportperiod,
+            Command("DataExport.update", self.update, theater))
+    else
+        Logger:debug("data export disabled")
+    end
 end
 
 -- Get the ticket counts for each coalition
