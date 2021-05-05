@@ -22,6 +22,7 @@ local utils    = require("libs.utils")
 local dctenum  = require("dct.enum")
 local dctutils = require("dct.utils")
 local Goal     = require("dct.Goal")
+local ShuffledList = require("dct.libs.ShuffledList")
 local Marshallable = require("dct.libs.Marshallable")
 local Observable   = require("dct.libs.Observable")
 local Logger   = require("dct.libs.Logger")
@@ -39,14 +40,20 @@ local function generateCodename(template)
 	end
 
 	local codenamedb = settings.codenamedb
-	local typetbl = codenamedb[template.objtype]
-
-	if typetbl == nil then
-		typetbl = codenamedb.default
+	if not codenamedb.shuffled then
+		for type, codenames in pairs(codenamedb) do
+			codenamedb[type] = ShuffledList(codenames)
+		end
+		codenamedb.shuffled = true
 	end
 
-	local idx = math.random(1, #typetbl)
-	return typetbl[idx]
+	local codenames = codenamedb[template.objtype]
+
+	if codenames == nil then
+		codenames = codenamedb.default
+	end
+
+	return codenames:next()
 end
 
 
