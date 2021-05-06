@@ -50,15 +50,6 @@ local function getTickets(tickets, coalition)
     }
 end
 
--- Create a filter function to fetch all strategic assets of a coalition in a
--- given region
-local function getFilter(region, coalition)
-    return function(asset)
-        return dctenum.assetClass["STRATEGIC"][asset.type]
-           and asset.rgnname == region and asset.owner == coalition
-    end
-end
-
 -- Convert DCS coordinates to a table with latitude, longitude, and altitude
 local function location(point)
     local latitude, longitude, altitude = coord.LOtoLL(point)
@@ -89,18 +80,18 @@ local function withPlayerNames(assigned)
     return output
 end
 
--- List strategic assets per coalition
+-- List all tracked assets of a coalition in each region
 local function getAssetsByRegion(theater, coalition)
     local assetmgr = theater:getAssetMgr()
-    local regions = theater.regions
     local export = {}
-    for region, _ in pairs(regions) do
+    for region, _ in pairs(theater.regions) do
         export[region] = {}
-        local filter = getFilter(region, coalition)
-        local assets = assetmgr:filterAssets(filter)
-        for assetname, _ in pairs(assets) do
-            local asset = assetmgr:getAsset(assetname)
-            export[region][assetname] = {
+    end
+    for name, asset in pairs(assetmgr._assetset) do
+        local region = asset.rgnname
+        if asset.owner == coalition and
+           dctenum.assetClass["STRATEGIC"][asset.type] then
+            export[region][name] = {
                 dead = asset._dead,
                 codename = asset.codename,
                 type = ASSET_TYPE[asset.type],
