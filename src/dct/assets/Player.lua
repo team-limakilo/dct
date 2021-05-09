@@ -41,7 +41,6 @@ local cmds    = require("dct.ui.cmds")
 local uimenu  = require("dct.ui.groupmenu")
 local loadout = require("dct.systems.loadouts")
 local State   = require("dct.libs.State")
-local Timer   = require("dct.libs.Timer")
 local settings = _G.dct.settings
 
 local notifymsg =
@@ -139,7 +138,6 @@ end
 function OccupiedState:__init(inair)
 	self.inair = inair
 	self.loseticket = false
-	self.loadouttimer = nil
 	self.bleedctr = 0
 	self.bleedperiod = 5
 	self.bleedwarn = false
@@ -160,7 +158,6 @@ function OccupiedState:enter(asset)
 end
 
 function OccupiedState:exit(asset)
-	asset.loadouttimer = nil
 	if self.loseticket then
 		asset:setDead(true)
 	end
@@ -224,36 +221,26 @@ function OccupiedState:_checkPayload(asset, display)
 	return nil, ok
 end
 
-function OccupiedState:_tickLoadoutTimer(asset)
-	-- FIXME: this function does not obey DCT runtime quotas,
-	-- so very slow loadout checks can slow down the server
-	if self.loadouttimer ~= nil then
-		self.loadouttimer:update()
-		local remain, _ = self.loadouttimer:remain()
-		if remain > 0 then
-			local _, ok = self:_checkPayload(asset, false)
-			if ok then
-				self.loadouttimer = nil
-				trigger.action.outTextForGroup(asset.groupId, "You are now "..
-					"within payload limits and can safely land to re-arm.", 30, true)
-			else
-				trigger.action.outTextForGroup(asset.groupId,
-					"You have taken off with an illegal loadout! Jettison all stores "..
-					"immediately and then land to re-arm!\n\n"..
-					string.format("TIME LEFT: %d seconds", math.floor(remain)), 10, true)
-				timer.scheduleFunction(function() self:_tickLoadoutTimer(asset) end,
-					nil, timer.getTime() + 1)
-			end
+function OccupiedState:_checkLoadoutInAir(asset)
+	local group = Group.getByName(asset.name)
+	-- Possible race condition: if the player takes off with an invalid
+	-- loadout, lands, and then takes off again in the span of one minute,
+	-- the first timer will still be counting and they will be punished earlier.
+	-- Very few aircraft (eg. the Harrier) can do that, and if they do, they
+	-- deserve to be whacked.
+	if self.inair and group ~= nil then
+		local _, ok = self:_checkPayload(asset, false)
+		if ok then
+			trigger.action.outTextForGroup(asset.groupId, "You are "..
+				"within payload limits and can safely land to re-arm.", 30, true)
 		else
 			-- ¯\_(ツ)_/¯
 			self.loseticket = false
-			local grp = Group.getByName(asset.name)
-			local unit = grp:getUnit(1):getName()
+			local unit = group:getUnit(1):getName()
 			trigger.action.setUnitInternalCargo(unit, 1000000)
 			trigger.action.outTextForGroup(asset.groupId,
 				"You have taken off with an invalid loadout and failed to comply "..
-				"with orders in time. Your aircraft has been made unflyable.\n\n"..
-				"TIME LEFT: 0 seconds\n\n", 30, true)
+				"with orders in time. Your aircraft has been made unflyable.", 30, true)
 		end
 	end
 end
@@ -293,8 +280,14 @@ function OccupiedState:handleTakeoff(asset, _ --[[event]])
 		return self:_kickForNuke(asset)
 	end
 	if not ok then
-		self.loadouttimer = Timer(60)
-		self:_tickLoadoutTimer(asset)
+		-- Give the player one minute to jettison
+		-- weapons if they go over the loadout limit
+		local loadouttimer = 60
+		timer.scheduleFunction(function() self:_checkLoadoutInAir(asset) end,
+			nil, timer.getTime() + loadouttimer)
+		trigger.action.outTextForGroup(asset.groupId, string.format("You have "..
+			"taken off with an illegal loadout!\nIf stores are not jettisoned within "..
+			"[%d SECONDS] from takeoff, you will be punished!", loadouttimer), 30, true)
 	end
 	return nil
 end
@@ -312,7 +305,6 @@ function OccupiedState:handleLand(asset, event)
 
 	if (airbase and airbase.owner == asset.owner) or
 	   event.place:getName() == asset.airbase then
-		self.loadouttimer = nil
 		self.loseticket = false
 		self.inair = false
 		trigger.action.outTextForGroup(asset.groupId,
