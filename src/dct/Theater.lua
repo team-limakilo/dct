@@ -45,6 +45,7 @@ function Systems:__init()
 		"dct.systems.weaponstracking",
 		"dct.systems.blasteffects",
 		"dct.systems.dataExport",
+		"dct.systems.overlordBotRPC",
 		"dct.systems.playerslots",
 		"dct.templates.RegionManager",
 	}
