@@ -43,6 +43,7 @@ files["src/dct/Template.lua"] = {
 	globals = {"staticTemplate", "metadata",},
 }
 files["src/dct/Theater.lua"] = { globals = {"theatergoals",} }
+files["src/dct/systems/overlordBotRPC.lua"] = { globals = {"GRPC",} }
 files["src/dcttestlibs/dcsstubs.lua"] = {
 	globals = {"lfs"},
 	read_globals = {"socket",},
@@ -50,6 +51,7 @@ files["src/dcttestlibs/dcsstubs.lua"] = {
 files["tests/test-0001-data.lua"] = {
 	globals = {"staticTemplate", "metadata",}
 }
+files["tests/test-overlordbot-rpc.lua"] = { globals = {"GRPC",} }
 files["tests/*"] = {
 	globals = {"dctcheck", "dct"},
 }
