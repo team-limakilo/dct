@@ -45,6 +45,7 @@ function StaticAsset.assettypes()
 		enum.assetType.MISSILE,
 		enum.assetType.PORT,
 		enum.assetType.SAM,
+		enum.assetType.SEA,
 		enum.assetType.FACILITY,
 		enum.assetType.BUNKER,
 		enum.assetType.CHECKPOINT,
