@@ -81,6 +81,7 @@ enum.missionType = {
 	["BAI"]      = 5,
 	["OCA"]      = 6,
 	["ARMEDRECON"] = 7,
+	["ANTISHIP"] = 8,
 }
 
 enum.assetClass = {
@@ -91,6 +92,7 @@ enum.assetClass = {
 		[enum.assetType.EWR]         = true,
 		[enum.assetType.MISSILE]     = true,
 		[enum.assetType.OCA]         = true,
+		[enum.assetType.SEA]         = true,
 		[enum.assetType.PORT]        = true,
 		[enum.assetType.SAM]         = true,
 		[enum.assetType.FACILITY]    = true,
@@ -114,6 +116,7 @@ enum.assetClass = {
 		[enum.assetType.MISSILE]     = true,
 		[enum.assetType.PORT]        = true,
 		[enum.assetType.SAM]         = true,
+		[enum.assetType.SEA]         = true,
 		[enum.assetType.FACILITY]    = true,
 		[enum.assetType.BUNKER]      = true,
 		[enum.assetType.CHECKPOINT]  = true,
@@ -159,6 +162,9 @@ enum.missionTypeMap = {
 	[enum.missionType.ARMEDRECON] = {
 		[enum.assetType.SPECIALFORCES] = true,
 		[enum.assetType.FOB]           = true,
+	},
+	[enum.missionType.ANTISHIP] = {
+		[enum.assetType.SEA] = true,
 	},
 }
 
