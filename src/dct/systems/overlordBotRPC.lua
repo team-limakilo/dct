@@ -7,6 +7,7 @@
 local class   = require("libs.class")
 local Logger  = require("dct.libs.Logger").getByName("OverlordBotRPC")
 local Theater = require("dct.Theater")
+local Command = require("dct.Command")
 local dctEnum = require("dct.enum")
 
 local function getGroup(unitName)
@@ -24,7 +25,11 @@ local function getGroup(unitName)
 end
 
 local OverlordBotRPC = class()
-function OverlordBotRPC:__init()
+function OverlordBotRPC:__init(theater)
+	theater:queueCommand(5, Command("OverlordBotRPC.init", self.init, self))
+end
+
+function OverlordBotRPC:init()
 	if GRPC then
 		Logger:info("loaded")
 
