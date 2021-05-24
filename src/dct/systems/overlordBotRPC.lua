@@ -43,6 +43,7 @@ function OverlordBotRPC:__init()
 				["BAI"] = dctEnum.missionType.BAI,
 				["OCA"] = dctEnum.missionType.OCA,
 				["Recon"] = dctEnum.missionType.ARMEDRECON,
+				["ASuW"] = dctEnum.missionType.ANTISHIP,
 			}
 
 			if missionTypeMap[params.missionType] == nil then
