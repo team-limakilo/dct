@@ -758,6 +758,27 @@ A static codename can be assigned to a template overriding the normally
 random codename. Codenames are displayed in mission briefings and other
 player UI elements.
 
+### `minagents`
+
+ * _required:_ no
+ * _value:_ number
+ * _default:_ 1
+
+Minimum number of agents (players) which need to be assigned to this target at
+the same time before the AI commander assigns the next target. Once this quota
+is reached, the target will not be assigned to new mission requests again
+unless all players abort the mission.
+
+Any number of players can still engage the target via a mission code,
+regardless of this setting.
+
+Recommended for very large targets which cannot be realistically eliminated by
+small groups, and "final" missions which are always assigned last during a
+campaign.
+
+Note: if a higher-priority target becomes non-targeted, it will be assigned
+to players again normally even if this target did not reach its quota yet.
+
 ### Attributes - Type Specific
 
 #### Airspace
