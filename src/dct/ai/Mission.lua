@@ -179,7 +179,9 @@ function Mission:__init(cmdr, missiontype, tgt, plan)
 	self.plan      = createPlanQ(plan)
 	self.iffcodes  = cmdr:genMissionCodes(missiontype)
 	self.id        = self.iffcodes.id
+	self.minagents = tgt.minagents or 1
 	self.assigned  = {}
+	self.isfull    = false
 	self:_setComplete(false)
 	self.state = ActiveState()
 	self.state:enter(self)
@@ -222,6 +224,9 @@ function Mission:addAssigned(asset)
 		return
 	end
 	table.insert(self.assigned, asset.name)
+	if #self.assigned >= self.minagents then
+		self.isfull = true
+	end
 	asset.missionid = self:getID()
 end
 
