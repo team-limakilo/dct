@@ -324,6 +324,10 @@ local function getkeys(objtype)
 			["name"]    = "theater",
 			["type"]    = "string",
 			["default"] = env.mission.theatre,
+		}, {
+			["name"]    = "minagents",
+			["type"]    = "number",
+			["default"] = 1,
 		},
 	}
 

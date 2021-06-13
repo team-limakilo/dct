@@ -13,15 +13,15 @@ local Stats      = require("dct.libs.Stats")
 local Command    = require("dct.Command")
 local Logger     = dct.Logger.getByName("Commander")
 
-local function heapsort_tgtlist(assetmgr, owner, filterlist)
-	local tgtlist = assetmgr:getTargets(owner, filterlist)
+local function heapsort_tgtlist(assetmgr, cmdr, filterlist)
+	local tgtlist = assetmgr:getTargets(cmdr.owner, filterlist)
 	local pq = containers.PriorityQueue()
 
 	-- priority sort target list
 	for tgtname, _ in pairs(tgtlist) do
 		local tgt = assetmgr:getAsset(tgtname)
-		if tgt ~= nil and not tgt:isDead() and not tgt:isTargeted(owner) then
-			pq:push(tgt:getPriority(owner), tgt)
+		if tgt ~= nil and cmdr:canTarget(tgt) then
+			pq:push(tgt:getPriority(cmdr.owner), tgt)
 		end
 	end
 
@@ -47,6 +47,10 @@ function Commander:__init(theater, side)
 	self.missionstats = Stats(genstatids())
 	self.missions     = {}
 	self.aifreq       = 2*60 -- 2 minutes in seconds
+
+	-- In addition to mapping missions by id in `missions`, they are
+	-- also mapped by asset name
+	self.missionsByTarget = {}
 
 	theater:queueCommand(120, Command(
 		"Commander.startIADS:"..tostring(self.owner),
@@ -172,8 +176,7 @@ function Commander:recommendMissionType(allowedmissions)
 	end
 
 	local pq = heapsort_tgtlist(
-		require("dct.Theater").singleton():getAssetMgr(),
-		self.owner, assetfilter)
+		require("dct.Theater").singleton():getAssetMgr(), self, assetfilter)
 
 	local tgt = pq:pop()
 	if tgt == nil then
@@ -185,7 +188,7 @@ end
 --[[
 -- requestMission - get a new mission
 --
--- Creates a new mission where the target conforms to the mission type
+-- Creates or joins a mission where the target conforms to the mission type
 -- specified and is of the highest priority. The Commander will track
 -- the mission and handling tracking which asset is assigned to the
 -- mission.
@@ -200,8 +203,7 @@ end
 --]]
 function Commander:requestMission(grpname, missiontype)
 	local assetmgr = require("dct.Theater").singleton():getAssetMgr()
-	local pq = heapsort_tgtlist(assetmgr, self.owner,
-		enum.missionTypeMap[missiontype])
+	local pq = heapsort_tgtlist(assetmgr, self, enum.missionTypeMap[missiontype])
 
 	-- if no target, there is no mission to assign so return back
 	-- a nil object
@@ -212,8 +214,16 @@ function Commander:requestMission(grpname, missiontype)
 	Logger:debug(string.format("requestMission() - tgt name: '%s'; "..
 		"isTargeted: %s", tgt.name, tostring(tgt:isTargeted())))
 
+	-- chosen target already has a mission assigned
+	local mission = self.missionsByTarget[tgt.name]
+	if mission ~= nil then
+		mission:addAssigned(assetmgr:getAsset(grpname))
+		return mission
+	end
+
+	-- no mission for target, create a new one
 	local plan = { require("dct.ai.actions.KillTarget")(tgt) }
-	local mission = Mission(self, missiontype, tgt, plan)
+	mission = Mission(self, missiontype, tgt, plan)
 	mission:addAssigned(assetmgr:getAsset(grpname))
 	self:addMission(mission)
 
@@ -233,6 +243,7 @@ end
 
 function Commander:addMission(mission)
 	self.missions[mission:getID()] = mission
+	self.missionsByTarget[mission.target] = mission
 	self.missionstats:inc(mission.type)
 end
 
@@ -242,10 +253,36 @@ end
 function Commander:removeMission(id)
 	local mission = self.missions[id]
 	self.missions[id] = nil
+	self.missionsByTarget[mission.target] = nil
 	self.missionstats:dec(mission.type)
 	Logger:debug(string.format("removeMission(%d)", id))
 end
 
+--[[
+-- Checks if an asset can be targeted by a mission
+-- Returns: boolean
+--]]
+function Commander:canTarget(asset)
+	Logger:debug("asset: "..asset.name)
+	Logger:debug("owner: "..asset.owner)
+	if asset.owner == self.owner then
+		return false
+	end
+	if asset:isDead() then
+		return false
+	end
+	local mission = self.missionsByTarget[asset.name]
+	Logger:debug("mission: "..tostring(mission))
+	if mission ~= nil and mission.isfull then
+		Logger:debug("mission is full")
+		return false
+	end
+	return true
+end
+
+--[[
+-- Get the mission assigned to an agent asset
+--]]
 function Commander:getAssigned(asset)
 	local msn = self.missions[asset.missionid]
 
