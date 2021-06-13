@@ -218,8 +218,8 @@ function Commander:requestMission(grpname, missiontype)
 	self:addMission(mission)
 
 	Logger:debug(string.format(
-		"requestMission() - assigned target %s to mission %d",
-		tgt.name, mission.id))
+		"requestMission() - assigned target %s to mission %d (codename: %s)",
+		tgt.name, mission.id, tgt.codename))
 
 	return mission
 end
