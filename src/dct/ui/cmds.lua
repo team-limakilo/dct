@@ -289,6 +289,7 @@ local MissionStatusCmd = class(MissionCmd)
 function MissionStatusCmd:__init(theater, data)
 	MissionCmd.__init(self, theater, data)
 	self.name = "MissionStatusCmd:"..data.name
+	self.assetmgr = theater:getAssetMgr()
 end
 
 function MissionStatusCmd:_mission(_, _, msn)
@@ -302,12 +303,24 @@ function MissionStatusCmd:_mission(_, _, msn)
 	end
 	minsleft = minsleft / 60
 
+	local players = {}
+	for _, assigned in pairs(msn:getAssigned()) do
+		local asset = self.assetmgr:getAsset(assigned)
+		if type(asset.getPlayerName) == "function" then
+			local player = asset:getPlayerName()
+			if player ~= nil then
+				table.insert(players, player)
+			end
+		end
+	end
+
 	msg = string.format("Mission State: %s\n", msn:getStateName())..
 		string.format("Package: %s\n", msn:getID())..
 		string.format("Timeout: %s (in %d mins)\n",
 			os.date("%F %Rz", dctutils.zulutime(timeout)),
 			minsleft)..
-		string.format("BDA: %d%% complete\n", tgtinfo.status)
+		string.format("BDA: %d%% complete\n\n", tgtinfo.status)..
+		string.format("Assigned players:\n")..table.concat(players, "\n")
 
 	return msg
 end

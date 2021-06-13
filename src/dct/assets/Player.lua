@@ -473,6 +473,17 @@ function Player:despawn()
 	self:doEnable()
 end
 
+function Player:getPlayerName()
+	local grp = Group.getByName(self.name)
+	if grp ~= nil then
+		local unit = grp:getUnit(1)
+		if unit ~= nil then
+			return unit:getPlayerName()
+		end
+	end
+	return nil
+end
+
 --[[
 -- kick - request player to be kicked from slot
 --

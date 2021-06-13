@@ -90,7 +90,10 @@ local testcmds = {
 		["expected"]   = "Mission State: Active\n"..
 			"Package: 5720\n"..
 			"Timeout: 2001-06-23 00:00z (in 180 mins)\n"..
-			"BDA: 0% complete\n",
+			"BDA: 0% complete\n"..
+			"\n"..
+			"Assigned players:\n"..
+			"bobplayer",
 	}, {
 		["data"] = {
 			["name"]   = grp:getName(),
@@ -126,7 +129,10 @@ local testcmds = {
 		["expected"]   = "Mission State: Active\n"..
 			"Package: 5720\n"..
 			"Timeout: 2001-06-23 00:02z (in 177 mins)\n"..
-			"BDA: 0% complete\n",
+			"BDA: 0% complete\n"..
+			"\n"..
+			"Assigned players:\n"..
+			"bobplayer",
 	}, {
 		["data"] = {
 			["name"]   = grp:getName(),
