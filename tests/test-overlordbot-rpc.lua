@@ -59,7 +59,7 @@ local function main()
 
     -- Start mission
     _, err, msg = GRPC.methods.requestMissionAssignment({
-        unitName = "pilot1",
+        groupName = grp:getName(),
         missionType = "Strike",
     })
     checkError(err, msg)
@@ -81,7 +81,7 @@ local function main()
     cmdr:addMission(mission)
 
     _, err, msg = GRPC.methods.joinMission({
-        unitName = unit1:getName(),
+        groupName = grp:getName(),
         missionCode = tostring(mission.id),
     })
     checkError(err, msg)
