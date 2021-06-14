@@ -10,20 +10,6 @@ local Theater = require("dct.Theater")
 local Command = require("dct.Command")
 local dctEnum = require("dct.enum")
 
-local function getGroup(unitName)
-	local unit = Unit.getByName(unitName)
-	if unit == nil then
-		return nil, GRPC.errorNotFound(string.format(
-			"Could not find unit with name '%s'", unitName))
-	end
-	local group = unit:getGroup()
-	if group == nil then
-		return nil, GRPC.errorNotFound(string.format(
-			"Could not find group of unit '%s'", unitName))
-	end
-	return group:getName(), nil
-end
-
 local OverlordBotRPC = class()
 function OverlordBotRPC:__init(theater)
 	theater:queueCommand(5, Command("OverlordBotRPC.init", self.init, self))
@@ -34,10 +20,8 @@ function OverlordBotRPC:init()
 		Logger:info("loaded")
 
 		function GRPC.methods.requestMissionAssignment(params)
-			local group, err = getGroup(params.unitName)
-			if err ~= nil then
-				return err
-			end
+			-- Backwards compatible with previous API
+			local group = params.groupName or params.unitName
 
 			local missionTypeMap = {
 				["CAS"] = dctEnum.missionType.CAS,
@@ -67,10 +51,8 @@ function OverlordBotRPC:init()
 
 
 		function GRPC.methods.joinMission(params)
-			local group, err = getGroup(params.unitName)
-			if err ~= nil then
-				return err
-			end
+			-- Backwards compatible with previous API
+			local group = params.groupName or params.unitName
 
 			Theater.playerRequest({
 				name = group,
@@ -81,6 +63,8 @@ function OverlordBotRPC:init()
 			return GRPC.success(nil)
 		end
 
+	else
+		Logger:info("aborting: GRPC not in global scope")
 	end
 end
 
