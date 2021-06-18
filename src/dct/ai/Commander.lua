@@ -211,8 +211,8 @@ function Commander:requestMission(grpname, missiontype)
 	if tgt == nil then
 		return nil
 	end
-	Logger:debug(string.format("requestMission() - tgt name: '%s'; "..
-		"isTargeted: %s", tgt.name, tostring(tgt:isTargeted())))
+	Logger:debug("requestMission() - tgt name: '%s'; isTargeted: %s",
+		tgt.name, tostring(tgt:isTargeted()))
 
 	-- chosen target already has a mission assigned
 	local mission = self.missionsByTarget[tgt.name]
@@ -227,9 +227,9 @@ function Commander:requestMission(grpname, missiontype)
 	mission:addAssigned(assetmgr:getAsset(grpname))
 	self:addMission(mission)
 
-	Logger:debug(string.format(
+	Logger:debug(
 		"requestMission() - assigned target %s to mission %d (codename: %s)",
-		tgt.name, mission.id, tgt.codename))
+		tgt.name, mission.id, tgt.codename)
 
 	return mission
 end
@@ -255,7 +255,7 @@ function Commander:removeMission(id)
 	self.missions[id] = nil
 	self.missionsByTarget[mission.target] = nil
 	self.missionstats:dec(mission.type)
-	Logger:debug(string.format("removeMission(%d)", id))
+	Logger:debug("removeMission(%d)", id)
 end
 
 --[[
@@ -263,8 +263,8 @@ end
 -- Returns: boolean
 --]]
 function Commander:canTarget(asset)
-	Logger:debug("asset: "..asset.name)
-	Logger:debug("owner: "..asset.owner)
+	Logger:debug("Commander:canTarget() - asset: %, owner: %d",
+		asset.name, asset.owner)
 	if asset.owner == self.owner then
 		return false
 	end
@@ -272,9 +272,9 @@ function Commander:canTarget(asset)
 		return false
 	end
 	local mission = self.missionsByTarget[asset.name]
-	Logger:debug("mission: "..tostring(mission))
+	Logger:debug("Commander:canTarget() - mission: %s", tostring(mission))
 	if mission ~= nil and mission.isfull then
-		Logger:debug("mission is full")
+		Logger:debug("Commander:canTarget() - mission is full")
 		return false
 	end
 	return true
