@@ -34,9 +34,9 @@ local function isPlayerGroup(grp, _, _)
 	end
 	if slotcnt > 0 then
 		if slotcnt > 1 then
-			Logger:warn(string.format("DCT requires 1 slot groups. Group "..
+			Logger:warn("DCT requires 1 slot groups. Group "..
 				"'%s' of type a/c (%s) has more than one player slot.",
-				grp.name, grp.units[1].type))
+				grp.name, grp.units[1].type)
 		end
 		return true
 	end
@@ -60,15 +60,15 @@ local function isStateValid(state)
 	end
 
 	if state.theater ~= env.mission.theatre then
-		Logger:warn(string.format("isStateValid(); wrong theater; "..
-			"state: '%s'; mission: '%s'", state.theater, env.mission.theatre))
+		Logger:warn("isStateValid(); wrong theater; "..
+			"state: '%s'; mission: '%s'", state.theater, env.mission.theatre)
 		return false
 	end
 
 	if state.sortie ~= env.getValueDictByKey(env.mission.sortie) then
-		Logger:warn(string.format("isStateValid(); wrong sortie; "..
+		Logger:warn("isStateValid(); wrong sortie; "..
 			"state: '%s'; mission: '%s'", state.sortie,
-			env.getValueDictByKey(env.mission.sortie)))
+			env.getValueDictByKey(env.mission.sortie))
 		return false
 	end
 
@@ -140,7 +140,7 @@ function Theater:addSystem(path)
 		return
 	end
 	self._systems[path] = require(path)(self)
-	Logger:info("init "..path)
+	Logger:info("init %s", path)
 end
 
 function Theater:postinitSystems()
@@ -207,7 +207,7 @@ function Theater:loadPlayerSlots()
 			cnt = cnt + 1
 		end
 	end
-	Logger:info(string.format("loadPlayerSlots(); found %d slots", cnt))
+	Logger:info("loadPlayerSlots(); found %d slots", cnt)
 end
 
 function Theater:loadOrGenerate()
@@ -387,12 +387,12 @@ end
 function Theater.playerRequest(data)
 	local self = Theater.singleton()
 	if data == nil then
-		Logger:error("playerRequest(); value error: data must be "..
-			"provided; "..debug.traceback())
+		Logger:error("playerRequest(); value error: data must be provided; %s",
+			debug.traceback())
 		return
 	end
 
-	Logger:debug("playerRequest(); Received player request: "..
+	Logger:debug("playerRequest(); Received player request: %s",
 		json:encode_pretty(data))
 
 	local playerasset = self:getAssetMgr():getAsset(data.name)
@@ -426,14 +426,14 @@ end
 --]]
 function Theater:queueCommand(delay, cmd)
 	if delay < self.cmdmindelay then
-		Logger:warn(string.format("queueCommand(); delay(%2.2f) less than "..
+		Logger:warn("queueCommand(); delay(%2.2f) less than "..
 			"schedular minimum(%2.2f), setting to schedular minumum",
-			delay, self.cmdmindelay))
+			delay, self.cmdmindelay)
 		delay = self.cmdmindelay
 	end
 	self.cmdq:push(self.ctime + delay, cmd)
-	Logger:debug(string.format("queueCommand(); cmd(%s) cmdq size: %d",
-		cmd.name, self.cmdq:size()))
+	Logger:debug("queueCommand(); cmd(%s) cmdq size: %d",
+		cmd.name, self.cmdq:size())
 end
 
 function Theater:_exec(time)
@@ -458,14 +458,12 @@ function Theater:_exec(time)
 
 		tdiff = os.clock() - tstart
 		if tdiff >= self.quanta then
-			Logger:debug(
-				string.format("exec(); quanta reached, quanta: %5.2fms",
-					self.quanta*1000))
+			Logger:debug("exec(); quanta reached, quanta: %5.2fms", self.quanta*1000)
 			break
 		end
 	end
-	Logger:debug(string.format("exec(); time taken: %4.2fms;"..
-		" cmds executed: %d", tdiff*1000, cmdctr))
+	Logger:debug("exec(); time taken: %4.2fms; cmds executed: %d",
+		tdiff*1000, cmdctr)
 end
 
 function Theater:exec(time)
