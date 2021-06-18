@@ -32,8 +32,8 @@ end
 local DataExport = class()
 function DataExport:__init(theater)
     if settings.exportperiod > 0 then
-        Logger:debug(string.format(
-            "enabling data export every %d seconds", settings.exportperiod))
+        Logger:debug("enabling data export every %d seconds",
+            settings.exportperiod)
         theater:queueCommand(settings.exportperiod,
             Command("DataExport.update", self.update, theater))
     else
@@ -132,8 +132,7 @@ local function export(data)
     local file, msg = io.open(path, "w+")
 
 	if file == nil then
-		return Logger:error(
-            string.format("unable to open '%s'; msg: %s", path, tostring(msg)))
+		return Logger:error("unable to open '%s'; msg: %s", path, tostring(msg))
 	end
 
     file:write(json:encode_pretty(data))
