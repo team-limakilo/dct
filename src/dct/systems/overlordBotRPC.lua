@@ -16,7 +16,7 @@ function OverlordBotRPC:__init(theater)
 end
 
 function OverlordBotRPC:init()
-	if GRPC then
+	if GRPC and GRPC.methods then
 		Logger:info("loaded")
 
 		function GRPC.methods.requestMissionAssignment(params)
