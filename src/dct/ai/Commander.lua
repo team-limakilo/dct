@@ -43,6 +43,7 @@ end
 local Commander = require("libs.namedclass")("Commander")
 
 function Commander:__init(theater, side)
+	self.theater      = theater
 	self.owner        = side
 	self.missionstats = Stats(genstatids())
 	self.missions     = {}
@@ -175,8 +176,7 @@ function Commander:recommendMissionType(allowedmissions)
 		utils.mergetables(assetfilter, enum.missionTypeMap[v])
 	end
 
-	local pq = heapsort_tgtlist(
-		require("dct.Theater").singleton():getAssetMgr(), self, assetfilter)
+	local pq = heapsort_tgtlist(self.theater:getAssetMgr(), self, assetfilter)
 
 	local tgt = pq:pop()
 	if tgt == nil then
@@ -202,7 +202,7 @@ end
 --   meets the mission criteria
 --]]
 function Commander:requestMission(grpname, missiontype)
-	local assetmgr = require("dct.Theater").singleton():getAssetMgr()
+	local assetmgr = self.theater:getAssetMgr()
 	local pq = heapsort_tgtlist(assetmgr, self, enum.missionTypeMap[missiontype])
 
 	-- if no target, there is no mission to assign so return back
@@ -300,7 +300,7 @@ function Commander:getAssigned(asset)
 end
 
 function Commander:getAsset(name)
-	return require("dct.Theater").singleton():getAssetMgr():getAsset(name)
+	return self.theater:getAssetMgr():getAsset(name)
 end
 
 return Commander
