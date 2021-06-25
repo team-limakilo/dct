@@ -462,8 +462,10 @@ function Theater:_exec(time)
 			break
 		end
 	end
-	Logger:debug("exec(); time taken: %4.2fms; cmds executed: %d",
-		tdiff*1000, cmdctr)
+	if settings.profile then
+		Logger:debug("exec(); time taken: %4.2fms; cmds executed: %d",
+			tdiff*1000, cmdctr)
+	end
 end
 
 function Theater:exec(time)
