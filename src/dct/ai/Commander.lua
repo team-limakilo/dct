@@ -263,7 +263,7 @@ end
 -- Returns: boolean
 --]]
 function Commander:canTarget(asset)
-	Logger:debug("Commander:canTarget() - asset: %, owner: %d",
+	Logger:debug("Commander:canTarget() - asset: %s, owner: %d",
 		asset.name, asset.owner)
 	if asset.owner == self.owner then
 		return false
