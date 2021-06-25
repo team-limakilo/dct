@@ -241,6 +241,42 @@ function Commander:getMission(id)
 	return self.missions[id]
 end
 
+--[[
+-- return the number of missions that can be assigned per given type
+--]]
+function Commander:getAvailableMissions(missionTypes)
+	local assetmgr = self.theater:getAssetMgr()
+
+	-- map asset types to the given mission type names
+	local assetTypeMap = {}
+	for missionTypeName, missionTypeId in pairs(missionTypes) do
+		for assetType, _ in pairs(enum.missionTypeMap[missionTypeId]) do
+			assetTypeMap[assetType] = missionTypeName
+		end
+	end
+
+	local tgts = assetmgr:getTargets(self.owner, assetTypeMap)
+	local counts = {}
+
+	-- build a user-friendly mapping using the mission type names as keys
+	for name, assetTypeId in pairs(tgts) do
+		local asset = assetmgr:getAsset(name)
+		local type = assetTypeMap[assetTypeId]
+		if asset ~= nil and self:canTarget(asset) then
+			if counts[type] ~= nil then
+				counts[type] = counts[type] + 1
+			else
+				counts[type] = 1
+			end
+		end
+	end
+
+	return counts
+end
+
+--[[
+-- start tracking a given mission internally
+--]]
 function Commander:addMission(mission)
 	self.missions[mission:getID()] = mission
 	self.missionsByTarget[mission.target] = mission
