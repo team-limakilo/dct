@@ -18,31 +18,32 @@ local function get_scenery_life(obj)
 		return SceneryObject.getLife(obj)
 	end
 	-- Undamaged scenery objects don't "exist" yet in the MSE,
-	-- so we return a safe full health value
+	-- so we return a placeholder full health value
 	return initial_scenery_life()
+end
+
+local function get_scenery_id(id)
+	return { id_ = tonumber(id), }
 end
 
 local function getobject(objtype, name, init)
 	local switch = {
-		[enums.objtype.UNIT]   = Unit.getByName,
-		[enums.objtype.STATIC] = StaticObject.getByName,
-		[enums.objtype.GROUP]  = Group.getByName,
-		[enums.objtype.SCENERY]=
-			function(n)
-				return { id_ = tonumber(n), }
-			end
+		[enums.objtype.UNIT]    = Unit.getByName,
+		[enums.objtype.STATIC]  = StaticObject.getByName,
+		[enums.objtype.GROUP]   = Group.getByName,
+		[enums.objtype.SCENERY] = get_scenery_id,
 	}
 	local lifestartfncs = {
-		[enums.objtype.UNIT]   = Unit.getLife0,
-		[enums.objtype.STATIC] = StaticObject.getLife,
-		[enums.objtype.GROUP]  = Group.getInitialSize,
-		[enums.objtype.SCENERY]= initial_scenery_life,
+		[enums.objtype.UNIT]    = Unit.getLife0,
+		[enums.objtype.STATIC]  = StaticObject.getLife,
+		[enums.objtype.GROUP]   = Group.getInitialSize,
+		[enums.objtype.SCENERY] = initial_scenery_life,
 	}
 	local getlifefncs = {
-		[enums.objtype.UNIT]   = Unit.getLife,
-		[enums.objtype.STATIC] = StaticObject.getLife,
-		[enums.objtype.GROUP]  = Group.getSize,
-		[enums.objtype.SCENERY]= get_scenery_life,
+		[enums.objtype.UNIT]    = Unit.getLife,
+		[enums.objtype.STATIC]  = StaticObject.getLife,
+		[enums.objtype.GROUP]   = Group.getSize,
+		[enums.objtype.SCENERY] = get_scenery_life,
 	}
 
 	local obj = nil
