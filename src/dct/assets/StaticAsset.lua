@@ -168,7 +168,15 @@ function StaticAsset:getLocation()
 end
 
 function StaticAsset:getStatus()
-	return math.floor((1 - (self._curdeathgoals / self._maxdeathgoals)) * 100)
+	if self._curdeathgoals > 0 then
+		local total = 0
+		for _, goal in pairs(self._deathgoals) do
+			total = total + goal:getStatus()
+		end
+		return math.ceil(total / self._maxdeathgoals)
+	else
+		return 100
+	end
 end
 
 function StaticAsset:getObjectNames()
