@@ -8,8 +8,9 @@
 
 local dctenum = require("dct.enum")
 local Action = require("dct.ai.actions.Action")
+local Class = require("libs.namedclass")
 
-local KillTarget = require("libs.namedclass")("KillTarget", Action)
+local KillTarget = Class("KillTarget", Action)
 function KillTarget:__init(tgtasset)
 	assert(tgtasset ~= nil and tgtasset:isa(require("dct.assets.AssetBase")),
 		"tgtasset is not a BaseAsset")
@@ -27,6 +28,7 @@ function KillTarget:onDCTEvent(event)
 	self._logger:debug("%s.onDCTEvent: target dead", self.__clsname)
 	self._complete = true
 	event.initiator:removeObserver(self)
+	self:notify(event)
 	return nil
 end
 
