@@ -186,6 +186,11 @@ function Mission:__init(cmdr, missiontype, tgt, plan)
 	self.state = ActiveState()
 	self.state:enter(self)
 
+	-- update the mission when individual stages are completed
+	for _, action in pairs(plan) do
+		action:addObserver(self.onDCTEvent, self, self.__clsname..".onDCSEvent")
+	end
+
 	-- compose the briefing at mission creation to represent
 	-- known intel the pilots were given before departing
 	self.briefing  = composeBriefing(self, tgt, timer.getAbsTime())
@@ -345,6 +350,13 @@ function Mission:getDescription(fmt)
 			fmt)
 	}
 	return dctutils.interp(self.briefing, interptbl)
+end
+
+function Mission:onDCTEvent(event)
+	if event.id == enum.event.DCT_EVENT_DEAD then
+		self:update()
+	end
+	return nil
 end
 
 return Mission

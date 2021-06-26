@@ -6,11 +6,14 @@
 -- to be completed for mission progression.
 --]]
 
+local Observable = require("dct.libs.Observable")
 local State = require("dct.libs.State")
+local Class = require("libs.namedclass")
 
-local Action = require("libs.namedclass")("Action", State)
+local Action = Class("Action", State, Observable)
 function Action:__init(--[[tgtasset]])
 	self._logger = require("dct.libs.Logger").getByName("Action")
+	Observable.__init(self, self._logger)
 end
 
 Action.update = nil
