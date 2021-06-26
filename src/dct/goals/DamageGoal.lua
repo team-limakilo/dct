@@ -105,6 +105,18 @@ end
 -- verify the lookup by name yields an object before using it
 function DamageGoal:checkComplete()
 	if self:isComplete() then return true end
+	local status = self:getStatus()
+
+	Logger:debug("DamageGoal:checkComplete() - status: %.2f%%", status)
+
+	if status >= self._tgtdamage then
+		return self:_setComplete()
+	end
+end
+
+-- returns the completion percentage of the damage goal
+function DamageGoal:getStatus()
+	if self:isComplete() then return 100 end
 
 	local health = 0
 	local obj, getlife = getobject(self.objtype, self.name, false)
@@ -113,14 +125,10 @@ function DamageGoal:checkComplete()
 	end
 
 	Logger:debug(
-		"DamageGoal:checkComplete() - name: '%s'; health: %3.2f; maxlife: %d",
+		"DamageGoal:getStatus() - name: '%s'; health: %.2f; maxlife: %.2f",
 		self.name, health, self._maxlife)
 
-	local damagetaken = (1 - (health/self._maxlife)) * 100
-	if damagetaken > self._tgtdamage then
-		return self:_setComplete()
-	end
-	return false
+	return (1 - (health/self._maxlife)) * 100
 end
 
 return DamageGoal
