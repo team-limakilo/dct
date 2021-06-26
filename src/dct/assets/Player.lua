@@ -88,7 +88,7 @@ local function reset_slot(asset)
 		local missions = cmdr:getAvailableMissions(asset.ato)
 		local missionsfmt = {}
 		for type, count in pairs(missions) do
-			table.insert(missionsfmt, string.format("  %6s:  %2d", type, count))
+			table.insert(missionsfmt, string.format("  %s:  %d", type, count))
 		end
 		trigger.action.outTextForGroup(asset.groupId,
 			"Welcome. Use the F10 Menu to get a theater update and "..
