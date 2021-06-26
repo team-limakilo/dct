@@ -61,4 +61,12 @@ function BaseGoal:checkComplete()
 		" overridden")
 end
 
+function BaseGoal:getStatus()
+	if self:isComplete() then
+		return 100
+	else
+		return 0
+	end
+end
+
 return BaseGoal
