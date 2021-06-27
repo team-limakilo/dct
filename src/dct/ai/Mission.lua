@@ -229,6 +229,7 @@ function Mission:addAssigned(asset)
 		return
 	end
 	table.insert(self.assigned, asset.name)
+	Logger:debug("Mission %d: addAssigned(%s)", self.id, asset.name)
 	if #self.assigned >= self.minagents then
 		self.isfull = true
 	end
@@ -241,6 +242,7 @@ function Mission:removeAssigned(asset)
 		return
 	end
 	table.remove(self.assigned, i)
+	Logger:debug("Mission %d: removeAssigned(%s)", self.id, asset.name)
 	asset.missionid = enum.misisonInvalidID
 end
 
