@@ -228,7 +228,7 @@ function Commander:requestMission(grpname, missiontype)
 	self:addMission(mission)
 
 	Logger:debug(
-		"requestMission() - assigned target %s to mission %d (codename: %s)",
+		"requestMission() - assigned target '%s' to mission %d (codename: %s)",
 		tgt.name, mission.id, tgt.codename)
 
 	return mission
