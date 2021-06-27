@@ -299,20 +299,21 @@ end
 -- Returns: boolean
 --]]
 function Commander:canTarget(asset)
-	Logger:debug("Commander:canTarget() - asset: %s, owner: %d",
-		asset.name, asset.owner)
+	-- ignore friendly assets
 	if asset.owner == self.owner then
 		return false
 	end
+	-- ignore assets that are scheduled for cleanup
 	if asset:isDead() then
 		return false
 	end
 	local mission = self.missionsByTarget[asset.name]
-	Logger:debug("Commander:canTarget() - mission: %s", tostring(mission))
+	-- ignore assets that are assigned to missions that have reached the
+	-- minimum agent quota
 	if mission ~= nil and mission.isfull then
-		Logger:debug("Commander:canTarget() - mission is full")
 		return false
 	end
+	-- accept asset as mission target
 	return true
 end
 
