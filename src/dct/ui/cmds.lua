@@ -208,11 +208,27 @@ local function briefingmsg(msn, asset)
 	return msg
 end
 
+local function assignedPilots(msn, assetmgr)
+	local pilots = {}
+	for _, name in pairs(msn:getAssigned()) do
+		local asset = assetmgr:getAsset(name)
+		if asset:isa(require("dct.assets.Player")) then
+			local playerName = asset:getPlayerName()
+			if playerName then
+				local aircraft = asset:getAircraftName()
+				table.insert(pilots, string.format("%s (%s)", playerName, aircraft))
+			end
+		end
+	end
+	return table.concat(pilots, "\n")
+end
+
 local MissionJoinCmd = class(MissionCmd)
 function MissionJoinCmd:__init(theater, data)
 	MissionCmd.__init(self, theater, data)
 	self.name = "MissionJoinCmd:"..data.name
 	self.missioncode = data.missioncode
+	self.assetmgr = theater:getAssetMgr()
 end
 
 function MissionJoinCmd:_execute(_, cmdr)
@@ -235,6 +251,7 @@ function MissionJoinCmd:_execute(_, cmdr)
 		msg = string.format("Mission %s assigned, use F10 menu "..
 			"to see this briefing again\n", msn:getID())
 		msg = msg..briefingmsg(msn, self.asset)
+		msg = msg.."\n\nAssigned Pilots:\n"..assignedPilots(msn, self.assetmgr)
 		human.drawTargetIntel(msn, self.asset.groupId, false)
 	end
 	return msg
@@ -246,6 +263,7 @@ function MissionRqstCmd:__init(theater, data)
 	self.name = "MissionRqstCmd:"..data.name
 	self.missiontype = data.value
 	self.displaytime = 120
+	self.assetmgr = theater:getAssetMgr()
 end
 
 function MissionRqstCmd:_execute(_, cmdr)
@@ -266,6 +284,7 @@ function MissionRqstCmd:_execute(_, cmdr)
 		msg = string.format("Mission %s assigned, use F10 menu "..
 			"to see this briefing again\n", msn:getID())
 		msg = msg..briefingmsg(msn, self.asset)
+		msg = msg.."\n\nAssigned Pilots:\n"..assignedPilots(msn, self.assetmgr)
 		human.drawTargetIntel(msn, self.asset.groupId, false)
 	end
 	return msg
@@ -302,24 +321,13 @@ function MissionStatusCmd:_mission(_, _, msn)
 	end
 	minsleft = minsleft / 60
 
-	local players = {}
-	for _, assigned in pairs(msn:getAssigned()) do
-		local asset = self.assetmgr:getAsset(assigned)
-		if type(asset.getPlayerName) == "function" then
-			local player = asset:getPlayerName()
-			if player ~= nil then
-				table.insert(players, player)
-			end
-		end
-	end
-
 	msg = string.format("Mission State: %s\n", msn:getStateName())..
 		string.format("Package: %s\n", msn:getID())..
 		string.format("Timeout: %s (in %d mins)\n",
 			os.date("%F %Rz", dctutils.zulutime(timeout)),
 			minsleft)..
 		string.format("BDA: %d%% complete\n\n", tgtinfo.status)..
-		string.format("Assigned players:\n")..table.concat(players, "\n")
+		string.format("Assigned Pilots:\n")..assignedPilots(msn, self.assetmgr)
 
 	return msg
 end

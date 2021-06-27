@@ -20,6 +20,7 @@ local unit1 = Unit({
 	["exists"] = true,
 	["desc"] = {
 		["typeName"] = "FA-18C_hornet",
+		["displayName"] = "F/A-18C Hornet",
 		["attributes"] = {},
 	},
 }, grp, "bobplayer")
@@ -39,6 +40,8 @@ local briefingtxt = "Package: #5720\n"..
 			"    Recommended Pilots: 2\n    \n"..
 			"    Recommended Ordnance: Heavy ordnance required for bunker"..
 			" targets, e.g. Mk-84s or PGM Variants."
+
+local assignedPilots = "Assigned Pilots:\nbobplayer (F/A-18C Hornet)"
 
 local testcmds = {
 	{
@@ -61,7 +64,9 @@ local testcmds = {
 		},
 		["assert"]     = true,
 		["expected"]   = "Mission 5720 assigned, use F10 menu to "..
-			"see this briefing again\n"..briefingtxt,
+			"see this briefing again\n"..
+			briefingtxt.."\n\n"..
+			assignedPilots
 	}, {
 		["data"] = {
 			["name"]   = grp:getName(),
@@ -90,10 +95,8 @@ local testcmds = {
 		["expected"]   = "Mission State: Active\n"..
 			"Package: 5720\n"..
 			"Timeout: 2001-06-23 00:00z (in 180 mins)\n"..
-			"BDA: 0% complete\n"..
-			"\n"..
-			"Assigned players:\n"..
-			"bobplayer",
+			"BDA: 0% complete\n\n"..
+			assignedPilots
 	}, {
 		["data"] = {
 			["name"]   = grp:getName(),
@@ -129,10 +132,8 @@ local testcmds = {
 		["expected"]   = "Mission State: Active\n"..
 			"Package: 5720\n"..
 			"Timeout: 2001-06-23 00:02z (in 177 mins)\n"..
-			"BDA: 0% complete\n"..
-			"\n"..
-			"Assigned players:\n"..
-			"bobplayer",
+			"BDA: 0% complete\n\n"..
+			assignedPilots
 	}, {
 		["data"] = {
 			["name"]   = grp:getName(),
