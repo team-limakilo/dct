@@ -273,8 +273,7 @@ local function __spawn(grp)
 	if grp.category == Unit.Category.STRUCTURE then
 		coalition.addStaticObject(grp.countryid, grp.data)
 	else
-		local group = coalition.addGroup(grp.countryid, grp.category, grp.data)
-		group:getController():setOption(AI.Option.Ground.id.DISPERSE_ON_ATTACK, false)
+		coalition.addGroup(grp.countryid, grp.category, grp.data)
 	end
 end
 
