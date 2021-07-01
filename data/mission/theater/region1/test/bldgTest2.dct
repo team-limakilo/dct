@@ -16,4 +16,5 @@ metadata = {
 		},
 	},
 	["alwaysSpawn"] = false,
+	["desc"]        = "bldgTest2",
 }
