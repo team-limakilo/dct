@@ -4,7 +4,7 @@ BUILDPATH  ?= $(CURDIR)/build
 VERSION    ?= $(shell git describe)
 LUALIBSVER := 4
 LUALIBSAR  := v$(LUALIBSVER).zip
-LUALIBSURL := https://github.com/jtoppins/lua-libs/archive/$(LUALIBSAR)
+LUALIBSURL := https://github.com/ricmzn/lua-libs/archive/$(LUALIBSAR)
 LUALIBSDIR := lua-libs-$(LUALIBSVER)
 
 .PHONY: check build

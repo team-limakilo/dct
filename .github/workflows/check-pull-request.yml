@@ -40,7 +40,7 @@ jobs:
     - name: Checkout lua-libs
       uses: actions/checkout@v2
       with:
-        repository: jtoppins/lua-libs
+        repository: ricmzn/lua-libs
         path: lua-libs
 
     - name: Run Tests
