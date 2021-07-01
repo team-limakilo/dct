@@ -49,6 +49,14 @@ local function generateCodename(template)
 	return typetbl[idx]
 end
 
+local function isMissionTarget(assetType)
+	for _, missionType in pairs(dctenum.missionTypeMap) do
+		if missionType[assetType] then
+			return true
+		end
+	end
+	return false
+end
 
 local function genLocationMethod()
 	local txt = {
@@ -62,6 +70,7 @@ local function genLocationMethod()
 	local idx = math.random(1,#txt)
 	return txt[idx]
 end
+
 
 local AssetLogger = namedclass("AssetLogger", Logger)
 function AssetLogger:__init(name, cls)
@@ -148,22 +157,23 @@ function AssetBase:__init(template)
 end
 
 function AssetBase:_completeinit(template)
-	self.type     = template.objtype
-	if template.desc then
+	if isMissionTarget(template.objtype) then
+		if template.desc == nil then
+			error(string.format(
+				"Template(%s) is a mission target but has no 'desc' field", template.name))
+		end
 		self.briefing = dctutils.interp(template.desc, {
 			["LOCATIONMETHOD"] = genLocationMethod(),
 		})
-	else
-		print(string.format("Template(%s) has nil 'desc' field",
-			template.name))
 	end
-	self._location = template.location
-	self.regenerate = template.regenerate
+	self.type     = template.objtype
 	self.ignore   = template.ignore
 	self.owner    = template.coalition
 	self.rgnname  = template.regionname
 	self.tplname  = template.name
 	self.cost     = math.abs(template.cost)
+	self.regenerate = template.regenerate
+	self._location  = template.location
 	if norenametype[self.type] == true then
 		self.name = self.tplname
 	else
