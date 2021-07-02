@@ -187,16 +187,14 @@ function AssetBase:_completeinit(template)
 	end
 	self.codename = generateCodename(template)
 
-	self._intel[self.owner] = dctutils.INTELMAX
-	if self.owner ~= coalition.side.NEUTRAL and template.intel then
-		self._intel[dctutils.getenemy(self.owner)] = template.intel
-	end
 	for _, side in pairs(coalition.side) do
+		self._intel[side] = template.intel or 0
 		self._priority[side] = {
 			["region"] = template.regionprio,
 			["asset"]  = template.priority,
 		}
 	end
+	self._intel[self.owner] = dctutils.INTELMAX
 end
 
 --[[
