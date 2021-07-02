@@ -27,7 +27,7 @@ local unit1 = Unit({
 
 local briefingtxt = "Package: #5720\n"..
 			"IFF Codes: M1(05), M3(5720)\n"..
-			"Target AO: 88°07.38'N 063°27.36'W (CAIRO)\n"..
+			"Target AO: 88°07.38'N 063°27.36'W (MELBOURNE)\n"..
 			"Briefing:\n"..
 			"A recon flight earlier today discovered"..
 			" a fuel storage facility at 88°07.38'N 063°27.36'W,"..
@@ -37,6 +37,15 @@ local briefingtxt = "Package: #5720\n"..
 			"Secondary Objectives: Destroy the white storage hangars.\n\n"..
 			"Recommended Pilots: 2\n\n"..
 			"Recommended Ordnance: Pilot discretion."
+
+local capbriefingtxt = "Package: #2730\n"..
+			"IFF Codes: M1(02), M3(2730)\n"..
+			"Station AO: 88°06'N 063°24'W (BERLIN)\n"..
+			"Briefing:\n"..
+			"Cover friendly forces in Novorossiysk airspace for as long as "..
+			"possible.\n"..
+			"The mission status shows how many ground missions have been completed "..
+			"in the region. You can RTB at any time."
 
 local assignedPilots = "Assigned Pilots:\nbobplayer (F/A-18C Hornet)"
 
@@ -139,6 +148,17 @@ local testcmds = {
 		},
 		["assert"]     = true,
 		["expected"]   = "Mission 5720 aborted",
+	}, {
+		["data"] = {
+			["name"]   = grp:getName(),
+			["type"]   = enum.uiRequestType.MISSIONREQUEST,
+			["value"]  = enum.missionType.CAP,
+		},
+		["assert"]     = true,
+		["expected"]   = "Mission 2730 assigned, use F10 menu to "..
+			"see this briefing again\n"..
+			capbriefingtxt.."\n\n"..
+			assignedPilots
 	}, {
 		-- Allowed payload
 		["data"] = {

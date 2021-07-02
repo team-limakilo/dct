@@ -174,6 +174,7 @@ function AssetBase:_completeinit(template)
 	self.tplname  = template.name
 	self.cost     = math.abs(template.cost)
 	self.minagents  = template.minagents
+	self.backfill   = template.backfill
 	self.regenerate = template.regenerate
 	self.extramarks = template.extramarks
 	self._location  = template.location

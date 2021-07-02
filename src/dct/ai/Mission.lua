@@ -180,6 +180,7 @@ function Mission:__init(cmdr, missiontype, tgt, plan)
 	self.iffcodes  = cmdr:genMissionCodes(missiontype)
 	self.id        = self.iffcodes.id
 	self.minagents = tgt.minagents or 1
+	self.backfill  = tgt.backfill
 	self.assigned  = {}
 	self.isfull    = false
 	self:_setComplete(false)
@@ -244,6 +245,9 @@ function Mission:removeAssigned(asset)
 	end
 	table.remove(self.assigned, i)
 	Logger:debug("Mission %d: removeAssigned(%s)", self.id, asset.name)
+	if self.backfill and #self.assigned < self.minagents then
+		self.isfull = false
+	end
 	asset.missionid = enum.misisonInvalidID
 end
 

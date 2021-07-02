@@ -299,8 +299,8 @@ end
 -- Returns: boolean
 --]]
 function Commander:canTarget(asset)
-	-- ignore friendly assets
-	if asset.owner == self.owner then
+	-- only attack enemy assets
+	if asset.owner ~= dctutils.getenemy(self.owner) then
 		return false
 	end
 	-- ignore assets that are scheduled for cleanup
