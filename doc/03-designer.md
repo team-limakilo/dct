@@ -807,7 +807,7 @@ CAP missions to maximize cohesion.
 ### `location`
 
  * _required:_ no
- * _value:_ table
+ * _value:_ `{ x = number, z = number }`
  * _default:_ calculated based on the average position of the units
 
 Defines the center position of the template. Must be a table containing
@@ -820,13 +820,13 @@ on the Mission Editor's top info bar.
 ### `extramarks`
 
  * _required:_ no
- * _value:_ table
+ * _value:_ multiple tables (see example)
  * _default:_ empty
 
 Extra marks that are displayed on the map when this asset is the mission target.
-Each item of the table must be a table with a descriptive label and the DCS
-coordinates of where it should be displayed. The label can contain `%TARGET%`
-as a placeholder for the target's codename.
+This must be an array-like table of tables, where each inner table contains a
+descriptive label and DCS coordinates of where the mark should be displayed.
+The label string can contain `%TARGET%` as a placeholder for the target's codename.
 
 <details>
 <summary>Example (Click to expand)</summary>
