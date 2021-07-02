@@ -187,6 +187,11 @@ local function checkside(keydata, tbl)
 	return false
 end
 
+local function checkDesc(keydata, tbl)
+	local val = tbl[keydata.name]
+	return val == nil or type(val) == "string"
+end
+
 local function checktakeoff(keydata, tpl)
 	local allowed = {
 		["inair"]   = AI.Task.WaypointType.TURNING_POINT,
@@ -259,6 +264,24 @@ local function check_payload_limits(keydata, tbl)
 	return true
 end
 
+local function checkLocation(keydata, tbl)
+	local val = tbl[keydata.name]
+	return val == nil or
+		type(val) == "table" and type(val.x) == "number" and type(val.z) == "number"
+end
+
+local function checkExtraMarks(keydata, tbl)
+	for _, val in ipairs(tbl[keydata.name]) do
+		if type(val.label) ~= "string" or
+		   type(val.x) ~= "number" or
+		   type(val.z) ~= "number" then
+			return false
+		end
+	end
+	return true
+end
+
+
 local function getkeys(objtype)
 	local notpldata = {
 		[enum.assetType.AIRSPACE]       = true,
@@ -314,8 +337,7 @@ local function getkeys(objtype)
 			["default"] = 0,
 		}, {
 			["name"]    = "desc",
-			["type"]    = "string",
-			["default"] = "false",
+			["check"]   = checkDesc,
 		}, {
 			["name"]    = "codename",
 			["type"]    = "string",
@@ -328,6 +350,13 @@ local function getkeys(objtype)
 			["name"]    = "minagents",
 			["type"]    = "number",
 			["default"] = 1,
+		}, {
+			["name"]    = "location",
+			["check"]   = checkLocation,
+		}, {
+			["name"]    = "extramarks",
+			["default"] = {},
+			["check"]   = checkExtraMarks,
 		},
 	}
 
@@ -482,9 +511,6 @@ function Template.fromFile(region, dctfile, stmfile)
 	template.regionname = region.name
 	template.regionprio = region.priority
 	template.path = dctfile
-	if template.desc == "false" then
-		template.desc = nil
-	end
 	if stmfile ~= nil then
 		template = utils.mergetables(
 			STM.transform(utils.readlua(stmfile, "staticTemplate")),

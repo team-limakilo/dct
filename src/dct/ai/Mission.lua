@@ -202,6 +202,7 @@ function Mission:__init(cmdr, missiontype, tgt, plan)
 	self.tgtinfo.status   = tgt:getStatus()
 	self.tgtinfo.intellvl = tgt:getIntel(self.cmdr.owner)
 	self.tgtinfo.region   = tgt.rgnname
+	self.tgtinfo.extramarks = tgt.extramarks
 end
 
 function Mission:getStateName()

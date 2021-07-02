@@ -16,5 +16,6 @@ metadata = {
 		},
 	},
 	["alwaysSpawn"] = false,
+	["location"]    = { x = -180000, z = 120000 },
 	["desc"]        = "bldgTest2",
 }

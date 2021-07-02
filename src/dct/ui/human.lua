@@ -16,6 +16,8 @@ function human.getMarkID()
 	markindex = markindex + 1
 	return markindex
 end
+
+-- mapping of inserted marks for later removal
 local marks = {}
 
 -- enemy air superiroty as defined by the US-DOD is
@@ -77,30 +79,35 @@ function human.locationhdr(msntype)
 	return hdr
 end
 
-function human.drawTargetIntel(msn, grpid, readonly)
-	local tgtinfo = msn:getTargetInfo()
-	local degpos = dctutils.degrade_position(tgtinfo.location,
-		tgtinfo.intellvl)
-	local msg = "desc: "..tostring(tgtinfo.description).."\n"..
-		string.format("status: %d%% complete\nthreats: TODO",
-			tgtinfo.status)
+local function markToGroup(label, pos, missionId, groupId, readonly)
 	local markId = human.getMarkID()
-	trigger.action.markToGroup(markId,
-		"TGT: "..tgtinfo.callsign,
-		degpos,
-		grpid,
-		readonly,
-		msg)
-	if marks[grpid] == nil then
-		marks[grpid] = {}
+	trigger.action.markToGroup(markId, label, pos, groupId, readonly)
+	if marks[groupId] == nil then
+		marks[groupId] = {}
 	end
-	marks[grpid][msn.id] = markId
+	if marks[groupId][missionId] == nil then
+		marks[groupId][missionId] = {}
+	end
+	table.insert(marks[groupId][missionId], markId)
 end
 
-function human.removeIntel(msn, grpid)
-	if marks[grpid] ~= nil and marks[grpid][msn.id] ~= nil then
-		trigger.action.removeMark(marks[grpid][msn.id])
-		marks[grpid][msn.id] = nil
+function human.drawTargetIntel(mission, groupId, readonly)
+	local tgtInfo = mission:getTargetInfo()
+	local degpos = dctutils.degrade_position(tgtInfo.location, tgtInfo.intellvl)
+	markToGroup("TGT: "..tgtInfo.callsign, degpos, mission.id, groupId, readonly)
+	for _, mark in pairs(tgtInfo.extramarks) do
+		mark.y = mark.y or 0
+		markToGroup(mark.label, mark, mission.id, groupId, readonly)
+	end
+end
+
+function human.removeIntel(missionId, groupId)
+	if marks[groupId] ~= nil and marks[groupId][missionId.id] ~= nil then
+		local marksToRemove = marks[groupId][missionId.id]
+		for i = 1, #marksToRemove do
+			trigger.action.removeMark(marksToRemove[i])
+			marksToRemove[i] = nil
+		end
 	end
 end
 

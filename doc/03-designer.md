@@ -795,13 +795,46 @@ to players again normally even if this target did not reach its quota yet.
 
 ### `location`
 
- * _required:_ no, only required for airspace templates
- * _value:_ table, with members `x` and `y`
+ * _required:_ no
+ * _value:_ table
+ * _default:_ calculated based on the average position of the units
 
-Is the center of the airspace. The location is defined as `x` is the
-east-west DCS location value while `y` is the north-south DCS value.
-_Note: These values cannot be lat-long or degrees decimal corrdinates,
-they much be DCS internal map coordinates._
+Defines the center position of the template. Must be a table containing
+`x` and `z` in DCS coordinates.
+
+Not: to find these coordinates, change the in-game coordinate system
+(in Settings -> Misc.) to "Metric", and they will be displayed
+on the Mission Editor's top info bar.
+
+### `extramarks`
+
+ * _required:_ no
+ * _value:_ table
+ * _default:_ empty
+
+Extra marks that are displayed on the map when this asset is the mission target.
+Each item of the table must be a table with a descriptive label and the DCS
+coordinates of where it should be displayed. The label can contain `%TARGET%`
+as a placeholder for the target's codename.
+
+<details>
+<summary>Example (Click to expand)</summary>
+
+```lua
+extramarks = {
+	-- Places one mark at the start and another at the end of Batumi
+	{
+		label = "%TARGET%: Start",
+		x = -355165,
+		z = -616484
+	}, {
+		label = "%TARGET%: End",
+		x = -356509,
+		z = 618370,
+	}
+}
+```
+</details>
 
 ### Attributes - Type Specific
 

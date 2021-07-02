@@ -989,12 +989,16 @@ function trigger.action.outTextForGroup(grpid, msg, time, bool)
 	end
 end
 
-function trigger.action.markToGroup(
-	_, _, _, _, _, _
-	--[[id, title, pos, grpid, readonly, msg]])
+function trigger.action.markToGroup(id, title, pos, grpid,
+	_ --[[readonly]], _ --[[msg]])
+	assert(type(id) == "number", "value error: id must be a number")
+	assert(type(title) == "string", "value error: string must be a string")
+	assert(type(pos) == "table", "value error: pos must be a table")
+	assert(type(grpid) == "number", "value error: grpid must be a number")
 end
 
-function trigger.action.removeMark(_ --[[id]])
+function trigger.action.removeMark(id)
+	assert(type(id) == "number", "value error: id must be a number")
 end
 
 function trigger.action.setUserFlag(flagname, value)
