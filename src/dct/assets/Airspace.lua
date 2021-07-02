@@ -50,13 +50,16 @@ function Airspace:_postinit()
 		Command(cmdname, self._trackStrategicAssets, self))
 end
 
+local function isStrategic(asset, inRegion)
+	return enum.assetClass["STRATEGIC"][asset.type] and asset.rgnname == inRegion
+end
+
 function Airspace:_trackStrategicAssets()
 	-- track strategic assets in the region
 	self._strategicAssets = {}
 	local theater = dct.Theater.singleton()
 	theater:getAssetMgr():filterAssets(function(asset)
-		if asset.rgnname == self.rgnname and
-			enum.assetClass["STRATEGIC"][asset.type] then
+		if isStrategic(asset, self.rgnname) then
 			self._logger:debug("add asset: %s", asset.name)
 			table.insert(self._strategicAssets, asset)
 		end
@@ -77,14 +80,15 @@ function Airspace:_trackStrategicAssets()
 		numAssets[asset.owner] = count
 	end
 	self.owner = owner.side
-	-- remove assets that are not owned by the majority owner from the count
+	self._logger:debug("set to owner: %d", self.owner)
+	-- remove assets that are not owned by the majority owner in the region
 	for idx, asset in pairs(self._strategicAssets) do
 		if asset.owner ~= self.owner then
+			self._logger:debug("not same owner: %s", asset.name)
 			table.remove(self._strategicAssets, idx)
 		end
 	end
 	self._maxStrategicAssets = self._maxStrategicAssets or #self._strategicAssets
-	self._logger:debug("owner: %d", self.owner)
 	self._logger:debug("tracking %d/%d alive strategic assets",
 		#self._strategicAssets, self._maxStrategicAssets)
 end
