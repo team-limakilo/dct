@@ -330,6 +330,10 @@ local function getkeys(objtype)
 			["type"]    = "number",
 			["default"] = 1,
 		}, {
+			["name"]    = "backfill",
+			["type"]    = "boolean",
+			["default"] = false,
+		}, {
 			["name"]    = "location",
 			["check"]   = checkLocation,
 		}, {

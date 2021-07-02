@@ -41,6 +41,14 @@ local briefingtxt = "Package: #5720\n"..
 			"    Recommended Ordnance: Heavy ordnance required for bunker"..
 			" targets, e.g. Mk-84s or PGM Variants."
 
+local capbriefingtxt = "Package: #2730\n"..
+			"IFF Codes: M1(02), M3(2730)\n"..
+			"Station AO: 88°06'N 063°24'W (MESA)\n"..
+			"Briefing:\n"..
+			"Cover friendly forces in Test region airspace for as long as possible.\n"..
+			"The mission status shows how many ground missions have been completed"..
+			" in the region. You can RTB at any time."
+
 local assignedPilots = "Assigned Pilots:\nbobplayer (F/A-18C Hornet)"
 
 local testcmds = {
@@ -142,6 +150,17 @@ local testcmds = {
 		},
 		["assert"]     = true,
 		["expected"]   = "Mission 5720 aborted",
+	}, {
+		["data"] = {
+			["name"]   = grp:getName(),
+			["type"]   = enum.uiRequestType.MISSIONREQUEST,
+			["value"]  = enum.missionType.CAP,
+		},
+		["assert"]     = true,
+		["expected"]   = "Mission 2730 assigned, use F10 menu to "..
+			"see this briefing again\n"..
+			capbriefingtxt.."\n\n"..
+			assignedPilots
 	}, {
 		-- Allowed payload
 		["data"] = {

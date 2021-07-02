@@ -18,6 +18,11 @@ local tplkind = {
 	["EXCLUSION"] = 2,
 }
 
+local airspaceDesc =
+	"Cover friendly forces in %s airspace for as long as possible.\n"..
+	"The mission status shows how many ground missions have been completed "..
+	"in the region. You can RTB at any time."
+
 local function processlimits(_, tbl)
 	-- process limits; convert the human readable asset type names into
 	-- their numerical equivalents.
@@ -289,9 +294,13 @@ function Region:generate(assetmgr)
 		["name"]       = "airspace",
 		["regionname"] = self.name,
 		["regionprio"] = 1000,
-		["desc"]       = "airspace",
+		["intel"]      = 1,
+		["cost"]       = 0,
+		["desc"]       = string.format(airspaceDesc, self.name),
 		["coalition"]  = coalition.side.NEUTRAL,
 		["location"]   = self.location,
+		["minagents"]  = 4,
+		["backfill"]   = true,
 		["volume"]     = {
 			["point"]  = self.location,
 			["radius"] = 55560,  -- 30NM

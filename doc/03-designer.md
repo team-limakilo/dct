@@ -779,6 +779,17 @@ campaign.
 Note: if a higher-priority target becomes non-targeted, it will be assigned
 to players again normally even if this target did not reach its quota yet.
 
+### `backfill`
+
+ * _required:_ no
+ * _value:_ boolean
+ * _default:_ backfill
+
+If true, overrides the behavior set by `minagents` so that once a slot is freed
+in a mission targeting this asset, it returns to the assignment pool
+immediately, instead of only when all players leave. Automatically enabled in
+CAP missions to maximize cohesion.
+
 ### `location`
 
  * _required:_ no
