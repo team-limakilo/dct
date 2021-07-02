@@ -234,23 +234,6 @@ local function checkmsntype(keydata, tbl)
 	return true
 end
 
-local function checklocation(keydata, tbl)
-	local loc = tbl[keydata.name]
-	if next(tbl[keydata.name]) == nil then
-		tbl[keydata.name] = nil
-		return true
-	end
-	for _, val in pairs({"x", "y"}) do
-		if loc[val] == nil or type(loc[val]) ~= "number" then
-			return false
-		end
-	end
-	local vec2 = vector.Vector2D(tbl[keydata.name])
-	tbl[keydata.name] =
-		vector.Vector3D(vec2, land.getHeight(vec2:raw())):raw()
-	return true
-end
-
 local function check_payload_limits(keydata, tbl)
 	local newlimits = {}
 	for wpncat, val in pairs(tbl[keydata.name]) do
@@ -266,8 +249,23 @@ end
 
 local function checkLocation(keydata, tbl)
 	local val = tbl[keydata.name]
-	return val == nil or
-		type(val) == "table" and type(val.x) == "number" and type(val.z) == "number"
+	if val == nil then
+		return true
+	end
+	if type(val) ~= "table" then
+		return false, "must be a table"
+	end
+	if type(val.y) == "number" and val.z == nil then
+		val.z = val.y
+		val.y = nil
+	end
+	if type(val.x) == "number" and type(val.z) == "number" then
+		if type(val.y) ~= "number" then
+			val.y = land.getHeight({ x = val.x, y = val.z })
+		end
+		return true
+	end
+	return false, "must contain 2 or 3 numeric coordinate values"
 end
 
 local function checkExtraMarks(keydata, tbl)
@@ -351,6 +349,10 @@ local function getkeys(objtype)
 			["type"]    = "number",
 			["default"] = 1,
 		}, {
+			["name"]    = "backfill",
+			["type"]    = "boolean",
+			["default"] = false,
+		}, {
 			["name"]    = "location",
 			["check"]   = checkLocation,
 		}, {
@@ -374,19 +376,9 @@ local function getkeys(objtype)
 
 	if objtype == enum.assetType.AIRSPACE then
 		table.insert(keys, {
-			["name"]  = "location",
-			["type"]  = "table",
-			["check"] = checklocation,})
-		table.insert(keys, {
 			["name"]  = "radius",
 			["type"]  = "number",
 			["default"] = 55560,})
-	else
-		table.insert(keys, {
-			["name"]    = "location",
-			["type"]    = "table",
-			["default"] = {},
-			["check"]   = checklocation,})
 	end
 
 	if objtype == enum.assetType.AIRBASE then
@@ -479,7 +471,7 @@ function Template:__init(data)
 	self.fromFile = nil
 end
 
-Template.checklocation = checklocation
+Template.checkLocation = checkLocation
 
 function Template:validate()
 	utils.checkkeys({ [1] = {

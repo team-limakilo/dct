@@ -9,6 +9,7 @@ require("math")
 local class      = require("libs.namedclass")
 local utils      = require("libs.utils")
 local dctenums   = require("dct.enum")
+local dctutils   = require("dct.utils")
 local vector     = require("dct.libs.vector")
 local Marshallable = require("dct.libs.Marshallable")
 local Template   = require("dct.templates.Template")
@@ -31,6 +32,11 @@ local STATUS = {
 	["RED"]       = coalition.side.RED,
 	["BLUE"]      = coalition.side.BLUE,
 }
+
+local airspaceDesc =
+	"Cover friendly forces in %s airspace for as long as possible.\n"..
+	"The mission status shows how many ground missions have been completed "..
+	"in the region. You can RTB at any time."
 
 local function processlimits(_, tbl)
 	-- process limits; convert the human readable asset type names into
@@ -74,12 +80,16 @@ local function loadMetadata(self, regiondefpath)
 		}, {
 			["name"] = "location",
 			["type"] = "table",
-			["check"] = Template.checklocation
+			["check"] = Template.checkLocation
 		}, {
 			["name"] = "limits",
 			["type"] = "table",
 			["default"] = {},
 			["check"] = processlimits,
+		}, {
+			["name"] = "airspace",
+			["type"] = "boolean",
+			["default"] = true,
 		}, {
 			["name"] = "altitude_floor",
 			["type"] = "number",
@@ -174,6 +184,11 @@ local function addAndSpawnAsset(self, name, assetmgr)
 	local d = vector.distance(vector.Vector2D(self:getPoint()),
 		vector.Vector2D(asset:getLocation()))
 	self.radius = math.max(self.radius, d)
+	local location = asset:getLocation()
+	if location then
+		self.centroid.point, self.centroid.n = dctutils.centroid2D(
+			location, self.centroid.point, self.centroid.n)
+	end
 	return asset
 end
 
@@ -332,6 +347,33 @@ function Region:generate()
 			self:_generate(assetmgr, objtype, names)
 		end
 	end
+
+	-- do not create an airspace object if not wanted
+	if self.airspace ~= true then
+		return
+	end
+
+	-- allow default region location based on the centroid of its units
+	if self.location == nil then
+		self.location = vector.Vector3D(self.centroid.point)
+	end
+
+	-- create airspace asset
+	local airspacetpl = Template({
+		["objtype"]    = "airspace",
+		["name"]       = "airspace",
+		["regionname"] = self.name,
+		["regionprio"] = 1000,
+		["intel"]      = 1,
+		["cost"]       = 0,
+		["desc"]       = string.format(airspaceDesc, self.name),
+		["coalition"]  = coalition.side.NEUTRAL,
+		["location"]   = self.location,
+		["minagents"]  = 4,
+		["backfill"]   = true,
+	})
+	self:addTemplate(airspacetpl)
+	addAndSpawnAsset(self, airspacetpl.name, assetmgr)
 end
 
 function Region:getWeight(side)
