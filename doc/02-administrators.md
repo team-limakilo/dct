@@ -250,3 +250,11 @@ itself times out, while a positive value makes empty slots time out faster.
 
 Note that because the AssetManager runs only once every 2 minutes, the actual
 timeout value can vary from moment to moment.
+
+#### `showerrors`
+
+ * _value:_ boolean (true/false)
+ * _default:_ false
+
+Shows DCT script errors in a modal message box. Meant for development use only,
+as the game will be unresponsive until the message box is closed.
