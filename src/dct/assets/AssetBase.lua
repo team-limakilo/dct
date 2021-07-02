@@ -121,6 +121,7 @@ function AssetBase:__init(template)
 		"_dead",
 		"_intel",
 		"_priority",
+		"_location",
 		"type",
 		"briefing",
 		"owner",
@@ -131,6 +132,7 @@ function AssetBase:__init(template)
 		"cost",
 		"ignore",
 		"regenerate",
+		"extramarks",
 	})
 	self._spawned    = false
 	self._dead       = false
@@ -172,6 +174,8 @@ function AssetBase:_completeinit(template)
 	self.tplname  = template.name
 	self.cost     = math.abs(template.cost)
 	self.regenerate = template.regenerate
+	self.extramarks = template.extramarks
+	self._location  = template.location
 	if norenametype[self.type] == true then
 		self.name = self.tplname
 	else

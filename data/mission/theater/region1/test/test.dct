@@ -6,4 +6,11 @@ metadata = {
         ["time"]  = 30,
     },
     ["intel"] = 2,
+    ["extramarks"] = {
+        {
+            label = "MANPADS",
+            x = -33140,
+            z = -120790,
+        },
+    },
 }
