@@ -238,3 +238,15 @@ The port number on which a UDP server is listening to receive server data.
 This is the ID by which this DCS server will be identified in UDP export
 messages. This is used to differentiate different servers that use the
 same UDP server to centralize the data.
+
+#### `emptyslottimeout`
+
+ * _value:_ time in seconds
+ * _default:_ 0
+
+Sets how long an empty player slot can be before its mission is automatically
+aborted. A value of 0 means missions will only be aborted when the mission
+itself times out, while a positive value makes empty slots time out faster.
+
+Note that because the AssetManager runs only once every 2 minutes, the actual
+timeout value can vary from moment to moment.
