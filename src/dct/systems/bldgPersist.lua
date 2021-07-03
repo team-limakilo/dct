@@ -25,7 +25,7 @@ end
 function SceneryTracker:_unmarshalpost()
 	for bldg, _ in pairs(self.destroyed) do
 		local pt = Object.getPoint({id_ = tonumber(bldg)})
-		trigger.action.explosion(pt, 250)
+		trigger.action.explosion(pt, 1000)
 	end
 end
 
