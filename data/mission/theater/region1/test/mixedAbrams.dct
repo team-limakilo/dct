@@ -1,0 +1,5 @@
+metadata = {
+    ["objtype"]   = "specialforces",
+    ["coalition"] = "RED",
+    ["intel"]     = 3,
+}

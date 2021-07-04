@@ -229,7 +229,7 @@ local function main()
 	local theater = dct.Theater()
 	_G.dct.theater = theater
 	theater:exec(50)
-	local expected = 3
+	local expected = 5
 	assert(dctcheck.spawngroups == expected,
 		string.format("group spawn broken; expected(%d), got(%d)",
 		expected, dctcheck.spawngroups))

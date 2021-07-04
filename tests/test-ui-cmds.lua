@@ -43,7 +43,7 @@ local briefingtxt = "Package: #5720\n"..
 
 local capbriefingtxt = "Package: #2730\n"..
 			"IFF Codes: M1(02), M3(2730)\n"..
-			"Station AO: 88°06'N 063°24'W (MESA)\n"..
+			"Station AO: 88°06'N 063°24'W (LISBON)\n"..
 			"Briefing:\n"..
 			"Cover friendly forces in Test region airspace for as long as possible.\n"..
 			"The mission status shows how many ground missions have been completed"..

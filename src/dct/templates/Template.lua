@@ -122,8 +122,9 @@ local function overrideGroupOptions(grp, idx, tpl)
 	if grp.data.dct_deathgoal ~= nil then
 		tpl.hasDeathGoals = true
 	end
-	grp.data.name = tpl.regionname.."_"..tpl.name.." "..tpl.coalition.." "..
-		utils.getkey(Unit.Category, grp.category).." "..tostring(idx)
+	local side = coalition.getCountryCoalition(grp.countryid)
+	grp.data.name = string.format("%s_%s %d %s %d", tpl.regionname, tpl.name,
+		side, utils.getkey(Unit.Category, grp.category), idx)
 
 	for i, unit in ipairs(grp.data.units or {}) do
 		overrideUnitOptions(unit, i, tpl, grp.data.name)
@@ -145,8 +146,7 @@ local function checkbldgdata(keydata, tpl)
 
 	for _, bldg in ipairs(tpl[keydata.name]) do
 		local bldgdata = {}
-		bldgdata.countryid = 0
-		bldgdata.category  = enum.UNIT_CAT_SCENERY
+		bldgdata.category = enum.UNIT_CAT_SCENERY
 		bldgdata.data = {
 			["dct_deathgoal"] = goalFromName(bldg.goal,
 				Goal.objtype.SCENERY),
@@ -182,6 +182,8 @@ local function checkside(keydata, tbl)
 	elseif type(tbl[keydata.name]) == "string" and
 		coalition.side[string.upper(tbl[keydata.name])] ~= nil then
 		tbl[keydata.name] = coalition.side[string.upper(tbl[keydata.name])]
+		return true
+	elseif tbl[keydata.name] == nil then
 		return true
 	end
 	return false
@@ -264,7 +266,6 @@ local function checkExtraMarks(keydata, tbl)
 	return true
 end
 
-
 local function getkeys(objtype)
 	local notpldata = {
 		[enum.assetType.AIRSPACE]       = true,
@@ -285,7 +286,6 @@ local function getkeys(objtype)
 			["type"]  = "string",
 		}, {
 			["name"]  = "coalition",
-			["type"]  = "number",
 			["check"] = checkside,
 		}, {
 			["name"]    = "uniquenames",
@@ -453,6 +453,34 @@ function Template:__init(data)
 	self.fromFile = nil
 end
 
+-- checks if either there is a manually defined coalition,
+-- or if all units in the template are of the same coalition
+function Template:_validateCoalition()
+	if self.coalition == nil then
+		for _, grp in pairs(self.tpldata) do
+			if grp.countryid ~= nil then
+				local groupCoalition = coalition.getCountryCoalition(grp.countryid)
+				self.coalition = self.coalition or groupCoalition
+				assert(self.coalition == groupCoalition, string.format(
+					"template('%s') contains mixed unit coalitions; one group belongs to "..
+					"country '%s', which is in the '%s' coalition, "..
+					"but previous groups are in the '%s' coalition\n"..
+					"note: coalition checks are made according to the .miz, not the .stm\n"..
+					"note: if this is intentional, consider setting the template's "..
+					"coalition manually",
+					self.name,
+					country.name[grp.countryid],
+					utils.getkey(coalition.side, groupCoalition),
+					utils.getkey(coalition.side, self.coalition)
+				))
+			end
+		end
+	end
+	assert(self.coalition ~= nil, string.format(
+		"cannot determine the coalition of template('%s') based on its units; "..
+		"please set it manually in the .dct", self.name))
+end
+
 function Template:validate()
 	utils.checkkeys({ [1] = {
 		["name"]  = "objtype",
@@ -461,6 +489,7 @@ function Template:validate()
 	},}, self)
 
 	utils.checkkeys(getkeys(self.objtype), self)
+	self:_validateCoalition(self)
 end
 
 -- PUBLIC INTERFACE
