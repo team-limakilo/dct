@@ -119,10 +119,10 @@ end
 
 --[[
 -- Adds a death goal, which determines when the Asset is dead.
--- If no death goals have been defined a default of 90%
--- damaged for all objects in the Asset is used.
+-- If no death goals have been defined, the default is to require 90%
+-- damage for all objects of the same coalition as the Asset.
 --]]
-function StaticAsset:_setupDeathGoal(grpdata, category)
+function StaticAsset:_setupDeathGoal(grpdata, category, country)
 	if self._hasDeathGoals then
 		if grpdata.dct_deathgoal ~= nil then
 			self:_addDeathGoal(grpdata.name, grpdata.dct_deathgoal)
@@ -132,7 +132,8 @@ function StaticAsset:_setupDeathGoal(grpdata, category)
 				self:_addDeathGoal(unit.name, unit.dct_deathgoal)
 			end
 		end
-	else
+	elseif country ~= nil and
+	       coalition.getCountryCoalition(country) == self.owner then
 		self:_addDeathGoal(grpdata.name,
 			AssetBase.defaultgoal(
 				category == Unit.Category.STRUCTURE or
@@ -146,7 +147,7 @@ end
 --]]
 function StaticAsset:_setup()
 	for _, grp in ipairs(self._tpldata) do
-		self:_setupDeathGoal(grp.data, grp.category)
+		self:_setupDeathGoal(grp.data, grp.category, grp.countryid)
 		self._assets[grp.data.name] = grp
 	end
 	if next(self._deathgoals) == nil then
