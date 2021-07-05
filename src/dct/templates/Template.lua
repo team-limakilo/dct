@@ -110,6 +110,18 @@ local function overrideGroupOptions(grp, idx, tpl)
 		if grp[k] ~= nil then grp[k] = v end
 	end
 
+	-- if the group name is a map mark spec, set it as such
+	local markLabel = string.match(grp.data.name, "^[Mm][Aa][Rr][Kk]=(.+)$")
+	if markLabel ~= nil then
+		grp.mark = {
+			label = markLabel,
+			x = grp.data.x,
+			z = grp.data.y,
+		}
+		return
+	end
+
+	-- otherwise process the group normally
 	local goaltype = Goal.objtype.GROUP
 	if grp.category == Unit.Category.STRUCTURE then
 		goaltype = Goal.objtype.STATIC
@@ -122,6 +134,7 @@ local function overrideGroupOptions(grp, idx, tpl)
 	if grp.data.dct_deathgoal ~= nil then
 		tpl.hasDeathGoals = true
 	end
+
 	local side = coalition.getCountryCoalition(grp.countryid)
 	grp.data.name = string.format("%s_%s %d %s %d", tpl.regionname, tpl.name,
 		side, utils.getkey(Unit.Category, grp.category), idx)
@@ -473,11 +486,26 @@ end
 
 Template.checkLocation = checkLocation
 
+-- filter units tagged as map marks into the mark list and out of the template
+function Template:_processMarkUnits()
+	local del = {}
+	for idx, grp in ipairs(self.tpldata or {}) do
+		if grp.mark ~= nil then
+			table.insert(self.extramarks, grp.mark)
+			table.insert(del, idx)
+		end
+	end
+	-- very naive reverse deletion algorithm, could be improved
+	for i = #del, 1, -1 do
+		table.remove(self.tpldata, del[i])
+	end
+end
+
 -- checks if either there is a manually defined coalition,
 -- or if all units in the template are of the same coalition
 function Template:_validateCoalition()
 	if self.coalition == nil then
-		for _, grp in pairs(self.tpldata) do
+		for _, grp in ipairs(self.tpldata or {}) do
 			if grp.countryid ~= nil then
 				local groupCoalition = coalition.getCountryCoalition(grp.countryid)
 				self.coalition = self.coalition or groupCoalition
@@ -509,7 +537,8 @@ function Template:validate()
 	},}, self)
 
 	utils.checkkeys(getkeys(self.objtype), self)
-	self:_validateCoalition(self)
+	self:_processMarkUnits()
+	self:_validateCoalition()
 end
 
 -- PUBLIC INTERFACE
