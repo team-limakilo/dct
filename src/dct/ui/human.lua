@@ -97,6 +97,7 @@ function human.drawTargetIntel(mission, groupId, readonly)
 	markToGroup("TGT: "..tgtInfo.callsign, degpos, mission.id, groupId, readonly)
 	for _, mark in pairs(tgtInfo.extramarks) do
 		mark.y = mark.y or 0
+		mark.label = dctutils.interp(mark.label, { ["TARGET"] = tgtInfo.callsign })
 		markToGroup(mark.label, mark, mission.id, groupId, readonly)
 	end
 end
