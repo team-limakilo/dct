@@ -2,9 +2,9 @@ MAKEFLAGS  := --no-print-directory
 SRCPATH    := $(CURDIR)
 BUILDPATH  ?= $(CURDIR)/build
 VERSION    ?= $(shell git describe)
-LUALIBSVER := 4
-LUALIBSAR  := v$(LUALIBSVER).zip
-LUALIBSURL := https://github.com/ricmzn/lua-libs/archive/$(LUALIBSAR)
+LUALIBSVER := master
+LUALIBSAR  := $(LUALIBSVER).zip
+LUALIBSURL := https://github.com/ricmzn/lua-libs/archive/refs/heads/$(LUALIBSVER).zip
 LUALIBSDIR := lua-libs-$(LUALIBSVER)
 
 .PHONY: check build
@@ -25,10 +25,10 @@ build:
 	cp $(SRCPATH)/README.md $(BUILDPATH)/
 	mkdir -p $(BUILDPATH)/temp
 	(cd $(BUILDPATH)/temp; \
-		wget -q $(LUALIBSURL) >/dev/null; \
-		unzip $(LUALIBSAR) >/dev/null; \
+		wget -nv $(LUALIBSURL) >/dev/null && \
+		unzip $(LUALIBSAR) >/dev/null && \
 		cp -a $(LUALIBSDIR)/src/libs* $(BUILDPATH)/DCT/lua)
 	(cd $(BUILDPATH); \
-		zip -r "DCT-$(VERSION).zip" HOOKS DCT README.md; \
+		zip -r "DCT-$(VERSION).zip" HOOKS DCT README.md && \
 		mv DCT-$(VERSION).zip ../)
 	rm -rf $(BUILDPATH)
