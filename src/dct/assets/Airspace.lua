@@ -73,7 +73,7 @@ function Airspace:_trackStrategicAssets()
 		[coalition.side.RED] = 0,
 		[coalition.side.BLUE] = 0,
 	}
-	local owner = { count = 0, side = 0 }
+	local owner = { count = 0, side = coalition.side.NEUTRAL }
 	for _, asset in pairs(self._strategicAssets) do
 		local count = numAssets[asset.owner] + 1
 		if count > owner.count then
