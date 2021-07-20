@@ -51,7 +51,10 @@ function Airspace:_postinit()
 end
 
 local function isStrategic(asset, inRegion)
-	return enum.assetClass["STRATEGIC"][asset.type] and asset.rgnname == inRegion
+	return enum.assetClass["STRATEGIC"][asset.type]
+		and asset.rgnname == inRegion
+		-- airbases can't be captured, so ignore them for now
+		and asset.type ~= enum.assetType.AIRBASE
 end
 
 function Airspace:_trackStrategicAssets()
