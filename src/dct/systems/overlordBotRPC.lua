@@ -57,7 +57,7 @@ function OverlordBotRPC:init()
 			Theater.playerRequest({
 				name = group,
 				type = dctEnum.uiRequestType.MISSIONJOIN,
-				missioncode = params.missionCode
+				missioncode = tostring(params.missionCode)
 			})
 
 			return GRPC.success(nil)
