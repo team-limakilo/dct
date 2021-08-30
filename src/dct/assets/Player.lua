@@ -68,7 +68,9 @@ local function reset_slot(asset)
 		local sqdn = theater:getAssetMgr():getAsset(asset.squadron)
 		if sqdn then
 			asset._logger:debug("squadron overriding ato and payload")
-			asset.ato = sqdn:getATO()
+			if sqdn:getATO() ~= nil then
+				asset.ato = sqdn:getATO()
+			end
 			asset.payloadlimits = sqdn:getPayloadLimits()
 			asset._logger:debug("payloadlimits: %s",
 				require("libs.json"):encode_pretty(asset.payloadlimits))
@@ -379,6 +381,7 @@ function Player:_completeinit(template)
 	-- we assume all slots in a player group are the same
 	self._tpldata   = template:copyData()
 	self.unittype   = self._tpldata.data.units[1].type
+	self._logger:debug("unittype: %s", tostring(self.unittype))
 	self.cmdpending = false
 	self.groupId    = self._tpldata.data.groupId
 	self.squadron   = self.name:match("(%w+)(.+)")
