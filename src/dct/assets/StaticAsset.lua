@@ -267,26 +267,11 @@ local function removeDCTKeys(grp)
 	return g
 end
 
-local function __spawn(grp)
-	if grp.category == enum.UNIT_CAT_SCENERY then
-		return
-	end
-	if grp.category == Unit.Category.STRUCTURE then
-		coalition.addStaticObject(grp.countryid, grp.data)
-	else
-		coalition.addGroup(grp.countryid, grp.category, grp.data)
-	end
-end
-
-function StaticAsset:_spawn()
-	for _, grp in ipairs(self._tpldata) do
-		__spawn(removeDCTKeys(grp))
-	end
-
-	AssetBase.spawn(self)
-	for _, goal in pairs(self._deathgoals) do
-		goal:onSpawn()
-	end
+local function isUnitCategory(category)
+	return category == Unit.Category.AIRPLANE
+		or category == Unit.Category.HELICOPTER
+		or category == Unit.Category.GROUND_UNIT
+		or category == Unit.Category.SHIP
 end
 
 function StaticAsset:spawn(ignore)
@@ -294,21 +279,34 @@ function StaticAsset:spawn(ignore)
 		self._logger:error("runtime bug - already spawned")
 		return
 	end
-	self:_spawn()
+
+	for _, tpl in ipairs(self._tpldata) do
+		local obj = removeDCTKeys(tpl)
+		if obj.category == Unit.Category.STRUCTURE then
+			coalition.addStaticObject(obj.countryid, obj.data)
+		elseif isUnitCategory(obj.category) then
+			coalition.addGroup(obj.countryid, obj.category, obj.data)
+		end
+	end
+
+	AssetBase.spawn(self)
+
+	for _, goal in pairs(self._deathgoals) do
+		goal:onSpawn()
+	end
 end
 
 function StaticAsset:despawn()
-	for name, grp in pairs(self._assets) do
-		local object
-		if grp.category == Unit.Category.STRUCTURE then
-			object = StaticObject.getByName(name)
-		else
-			object = Group.getByName(name)
-		end
-		if object then
-			object:destroy()
+	for name, obj in pairs(self._assets) do
+		if obj.category == Unit.Category.STRUCTURE then
+			local structure = StaticObject.getByName(name)
+			structure:destroy()
+		elseif isUnitCategory(obj.category) then
+			local group = Group.getByName(name)
+			group:destroy()
 		end
 	end
+
 	AssetBase.despawn(self)
 end
 
