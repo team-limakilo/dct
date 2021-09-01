@@ -79,7 +79,6 @@ local function loadMetadata(self, regiondefpath)
 			["type"] = "number",
 		}, {
 			["name"] = "location",
-			["type"] = "table",
 			["check"] = Template.checkLocation
 		}, {
 			["name"] = "limits",
@@ -167,30 +166,49 @@ local function registerType(self, kind, ttype, name)
 	table.insert(self._tpltypes[ttype], entry)
 end
 
-local function addAndSpawnAsset(self, name, assetmgr)
+local function addAndSpawnAsset(region, name, assetmgr)
 	if name == nil then
 		return nil
 	end
 
-	local tpl = self:getTemplateByName(name)
+	local tpl = region:getTemplateByName(name)
 	if tpl == nil then
 		return nil
 	end
 
 	local mgr = dct.Theater.singleton():getAssetMgr()
-	local asset = mgr:factory(tpl.objtype)(tpl, self)
+	local asset = mgr:factory(tpl.objtype)(tpl, region)
 	assetmgr:add(asset)
-	asset:generate(assetmgr, self)
-	local d = vector.distance(vector.Vector2D(self:getPoint()),
-		vector.Vector2D(asset:getLocation()))
-	self.radius = math.max(self.radius, d)
-	local location = asset:getLocation()
-	if location then
-		self.centroid.point, self.centroid.n = dctutils.centroid2D(
-			location, self.centroid.point, self.centroid.n)
-	end
+	asset:generate(assetmgr, region)
 	return asset
 end
+
+local function calculateCentroidAndRadius(region, assets)
+	local centroid = {}
+
+	-- default minimum radius
+	local radius = 25
+
+	-- centroid
+	for _, asset in pairs(assets) do
+		local location = asset:getLocation()
+		if location then
+			centroid.point, centroid.n = dctutils.centroid2D(
+				location, centroid.point, centroid.n)
+		end
+	end
+
+	-- radius
+	for _, asset in pairs(assets) do
+		local distance = vector.distance(
+			vector.Vector2D(region:getPoint() or centroid.point),
+			vector.Vector2D(asset:getLocation()))
+		radius = math.max(radius, distance)
+	end
+
+	return centroid, radius
+end
+
 
 --[[
 --  Region class
@@ -248,13 +266,11 @@ function Region:__init(regionpath)
 	self._templates    = {}
 	self._tpltypes     = {}
 	self._exclusions   = {}
-	self.centroid      = {}
 	self.weight        = {}
 	for _, side in pairs(coalition.side) do
 		self.weight[side] = 0
 	end
 	self.owner         = STATUS.NEUTRAL
-	self.radius        = 25
 	self.DOMAIN        = nil
 	self.STATUS        = nil
 
@@ -296,7 +312,7 @@ function Region:getTemplateByName(name)
 	return self._templates[name]
 end
 
-function Region:_generate(assetmgr, objtype, names)
+function Region:_generate(assetmgr, objtype, names, outAssets)
 	local limits = {
 		["min"]     = #names,
 		["max"]     = #names,
@@ -313,7 +329,8 @@ function Region:_generate(assetmgr, objtype, names)
 	for i, tpl in ipairs(names) do
 		if tpl.kind ~= tplkind.EXCLUSION and
 			self._templates[tpl.name].spawnalways == true then
-			addAndSpawnAsset(self, tpl.name, assetmgr)
+			local asset = addAndSpawnAsset(self, tpl.name, assetmgr)
+			table.insert(outAssets, asset)
 			table.remove(names, i)
 			limits.current = 1 + limits.current
 		end
@@ -326,7 +343,8 @@ function Region:_generate(assetmgr, objtype, names)
 			local i = math.random(1, #self._exclusions[name].names)
 			name = self._exclusions[name]["names"][i]
 		end
-		addAndSpawnAsset(self, name, assetmgr)
+		local asset = addAndSpawnAsset(self, name, assetmgr)
+		table.insert(outAssets, asset)
 		table.remove(names, idx)
 		limits.current = 1 + limits.current
 	end
@@ -340,11 +358,12 @@ end
 function Region:generate()
 	local assetmgr = dct.Theater.singleton():getAssetMgr()
 	local tpltypes = utils.deepcopy(self._tpltypes)
+	local assets = {}
 
 	for objtype, _ in pairs(dctenums.assetClass.INITIALIZE) do
 		local names = tpltypes[objtype]
 		if names ~= nil then
-			self:_generate(assetmgr, objtype, names)
+			self:_generate(assetmgr, objtype, names, assets)
 		end
 	end
 
@@ -353,10 +372,17 @@ function Region:generate()
 		return
 	end
 
-	-- allow default region location based on the centroid of its units
+	local centroid, radius = calculateCentroidAndRadius(self, assets)
+	self.radius = radius
+
+	-- set default location to the calculated centroid
 	if self.location == nil then
-		self.location = vector.Vector3D(self.centroid.point)
+		self.location = vector.Vector3D(
+			centroid.point, land.getHeight(centroid.point:raw())):raw()
 	end
+
+	Logger:debug("Region(%s) location - %d, %d, %d",
+		self.name, self.location.x, self.location.y, self.location.z)
 
 	-- create airspace asset
 	local airspacetpl = Template({
