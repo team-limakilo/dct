@@ -20,8 +20,8 @@ Logger.level = {
 function Logger:__init(name)
 	assert(name, "value error: name must be provided")
 	self.name   = name
-	self.fmtstr = "DCT|%s: "
-	self.dbgfmt = "DEBUG-DCT|%s: "
+	self.fmtstr = "DCT|%s: %s"
+	self.dbgfmt = "DEBUG-DCT|%s: %s"
 	self:setLevel(Logger.level["warn"])
 	if settings.logger ~= nil and settings.logger[name] ~= nil then
 		self:setLevel(Logger.level[settings.logger[name]])
@@ -39,29 +39,34 @@ function Logger:setLevel(lvl)
 	self.__lvl = lvl
 end
 
-function Logger:error(fmt, ...)
-	env.error(string.format(self.fmtstr..fmt, self.name, ...), settings.showErrors)
+function Logger:_log(sink, fmtstr, userfmt, showErrors, ...)
+	sink(string.format(fmtstr, self.name,
+		string.format(userfmt, ...)), showErrors)
 end
 
-function Logger:warn(fmt, ...)
+function Logger:error(userfmt, ...)
+	self:_log(env.error, self.fmtstr, userfmt, settings.showErrors, ...)
+end
+
+function Logger:warn(userfmt, ...)
 	if self.__lvl < Logger.level["warn"] then
 		return
 	end
-	env.warning(string.format(self.fmtstr..fmt, self.name, ...), false)
+	self:_log(env.warning, self.fmtstr, userfmt, false, ...)
 end
 
-function Logger:info(fmt, ...)
+function Logger:info(userfmt, ...)
 	if self.__lvl < Logger.level["info"] then
 		return
 	end
-	env.info(string.format(self.fmtstr..fmt, self.name, ...), false)
+	self:_log(env.info, self.fmtstr, userfmt, false, ...)
 end
 
-function Logger:debug(fmt, ...)
+function Logger:debug(userfmt, ...)
 	if self.__lvl < Logger.level["debug"] then
 		return
 	end
-	env.info(string.format(self.dbgfmt..fmt, self.name, ...), false)
+	self:_log(env.info, self.dbgfmt, userfmt, false, ...)
 end
 
 function Logger.getByName(name)
