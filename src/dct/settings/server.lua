@@ -128,7 +128,7 @@ local function servercfgs(config)
 				utils.sep.."dct.cfg",
 			["validate"] = validate_server_config,
 			["default"] = {
-				["debug"]       = false,
+				["debug"]       = _G.DCT_TEST, -- default debug logging on in tests
 				["profile"]     = false,
 				["statepath"]   =
 					lfs.writedir()..utils.sep..vars.theater.."_"..
