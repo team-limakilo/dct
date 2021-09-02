@@ -404,13 +404,16 @@ function Theater:exec(time)
 		end
 
 		local cmd = self.cmdq:pop()
-		local ok, requeue = pcall(cmd.execute, cmd, time)
-		if ok then
-			if requeue ~= nil and type(requeue) == "number" then
-				self:queueCommand(requeue, cmd)
+		local ok, requeue = xpcall(
+			function()
+				return cmd:execute(time)
+			end,
+			function(err)
+				Logger:error("protected call - %s", debug.traceback(err, 2))
 			end
-		else
-			Logger:error("protected call - "..tostring(requeue))
+		)
+		if ok and type(requeue) == "number" then
+			self:queueCommand(requeue, cmd)
 		end
 		cmdctr = cmdctr + 1
 		self.qtimer:update()
