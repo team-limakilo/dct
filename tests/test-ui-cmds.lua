@@ -195,10 +195,10 @@ local testcmds = {
 			"  AG cost: 0 / 60\n"..
 			"\n"..
 			"== UNRESTRICTED Weapons:\n"..
-			"  AIM-9M        2 * 0 pts = 0 pts\n"..
+			"  AIM-9M        2 × 0 pts = 0 pts\n"..
 			"\n"..
 			"== AA Weapons:\n"..
-			"  AIM-120B        4 * 5 pts = 20 pts",
+			"  AIM-120B        4 × 5 pts = 20 pts",
 	}, {
 		-- Over limit with forbidden weapon
 		["data"] = {
@@ -223,7 +223,7 @@ local testcmds = {
 			"  AG cost: ∞ / 60\n"..
 			"\n"..
 			"== AG Weapons:\n"..
-			"  RN-28        1 * ∞ pts = ∞ pts (FORBIDDEN)",
+			"  RN-28        1 × ∞ pts = ∞ pts (FORBIDDEN)",
 	},
 }
 
