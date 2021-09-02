@@ -147,7 +147,7 @@ function CheckPayloadCmd.buildSummary(costs)
 				if wpn.cost < enum.WPNINFCOST then
 					-- tally the costs of each weapon
 					msg = msg..string.format(
-						"\n  %s        %d * %d pts = %d pts",
+						"\n  %s        %d × %d pts = %d pts",
 						wpn.name,
 						wpn.count,
 						wpn.cost,
@@ -156,7 +156,7 @@ function CheckPayloadCmd.buildSummary(costs)
 				else
 					-- show special lines for forbidden weapons
 					msg = msg..string.format(
-						"\n  %s        %d * ∞ pts = ∞ pts (FORBIDDEN)",
+						"\n  %s        %d × ∞ pts = ∞ pts (FORBIDDEN)",
 						wpn.name,
 						wpn.count
 					)
