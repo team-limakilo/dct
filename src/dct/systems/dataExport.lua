@@ -84,7 +84,7 @@ end
 local function getAssetsByRegion(theater, coalition)
     local assetmgr = theater:getAssetMgr()
     local export = {}
-    for region, _ in pairs(theater.regions) do
+    for region, _ in pairs(theater:getRegionMgr().regions) do
         export[region] = {}
     end
     for name, asset in pairs(assetmgr._assetset) do
