@@ -161,7 +161,7 @@ function AssetManager:filterAssets(filter)
 	local list = {}
 	for name, asset in pairs(self._assetset) do
 		if filter(asset) then
-			list[name] = true
+			list[name] = asset
 		end
 	end
 	return list
@@ -219,6 +219,17 @@ function AssetManager:update()
 	for name, _ in pairs(deletionq) do
 		self:remove(self:getAsset(name))
 	end
+	local function countunits(coa)
+		local units = 0
+		for _, grp in pairs(coalition.getGroups(coa)) do
+			units = units + grp:getSize()
+		end
+		return units
+	end
+	local function countall()
+		return countunits(1) + countunits(2) + countunits(0)
+	end
+	self._logger:debug("units: %d", countall())
 	return self.updaterate
 end
 

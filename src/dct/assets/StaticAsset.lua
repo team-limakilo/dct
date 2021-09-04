@@ -361,4 +361,8 @@ function StaticAsset:marshal()
 	return tbl
 end
 
+function StaticAsset:getTemplate()
+	return self._tpldata
+end
+
 return StaticAsset

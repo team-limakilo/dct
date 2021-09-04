@@ -47,6 +47,7 @@ function Systems:__init()
 		"dct.systems.dataExport",
 		"dct.systems.overlordBotRPC",
 		"dct.systems.playerslots",
+		"dct.systems.RenderManager",
 		"dct.templates.RegionManager",
 	}
 
