@@ -378,6 +378,14 @@ local function getkeys(objtype)
 			["name"]    = "extramarks",
 			["default"] = {},
 			["check"]   = checkExtraMarks,
+		}, {
+			["name"]    = "nocull",
+			["type"]	= "boolean",
+			["default"] = false,
+		}, {
+			["name"]    = "ondemand",
+			["type"]	= "boolean",
+			["default"] = false,
 		},
 	}
 
@@ -437,7 +445,7 @@ local function getkeys(objtype)
 			["type"]  = "table",
 			["default"] = {},
 		})
-   end
+	end
 	return keys
 end
 

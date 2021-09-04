@@ -625,6 +625,14 @@ function Object:__init(objdata)
 	objects[self.category][self.name] = self
 end
 Object.Category = objectcat
+
+function Object.getDescByName(typeName)
+	return {
+		attributes = {},
+		typeName = typeName,
+	}
+end
+
 function Object:isExist()
 	return self.exists
 end
@@ -779,6 +787,12 @@ Unit.Category = {
 Unit.RefuelingSystem = {
 	["BOOM_AND_RECEPTACLE"] = 1,
 	["PROBE_AND_DROGUE"]    = 2,
+}
+Unit.SensorType = {
+	["OPTIC"] = 0,
+	["RADAR"] = 1,
+	["IRST"]  = 2,
+	["RWR"]   = 3,
 }
 
 function Unit.getByName(name)
