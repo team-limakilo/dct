@@ -310,7 +310,8 @@ end
 -- Returns: nil - if not supported otherwise a DCS Vec3
 --]]
 function AssetBase:getLocation()
-	return assert(self._location, "asset location is nil")
+	assert(self._location, "asset location is nil")
+	return self._location
 end
 
 --[[
