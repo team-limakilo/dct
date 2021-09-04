@@ -16,10 +16,18 @@ local vector   = require("dct.libs.vector")
 local Goal     = require("dct.Goal")
 local AssetBase= require("dct.assets.AssetBase")
 
+local function isUnitGroup(category)
+	return category == Unit.Category.AIRPLANE
+		or category == Unit.Category.HELICOPTER
+		or category == Unit.Category.GROUND_UNIT
+		or category == Unit.Category.SHIP
+end
+
 local StaticAsset = require("libs.namedclass")("StaticAsset", AssetBase)
 function StaticAsset:__init(template)
 	self._maxdeathgoals = 0
 	self._curdeathgoals = 0
+	self._status        = 0
 	self._deathgoals    = {}
 	self._assets        = {}
 	self._eventhandlers = {
@@ -41,10 +49,8 @@ function StaticAsset.assettypes()
 		enum.assetType.AMMODUMP,
 		enum.assetType.FUELDUMP,
 		enum.assetType.C2,
-		enum.assetType.EWR,
 		enum.assetType.MISSILE,
 		enum.assetType.PORT,
-		enum.assetType.SAM,
 		enum.assetType.SEA,
 		enum.assetType.FACILITY,
 		enum.assetType.BUNKER,
@@ -143,11 +149,21 @@ function StaticAsset:_setup()
 	for _, grp in ipairs(self._tpldata) do
 		self:_setupDeathGoal(grp.data, grp.category, grp.countryid)
 		self._assets[grp.data.name] = utils.deepcopy(grp)
+
+		local route = grp.data.route
+		if route ~= nil and route.points ~= nil and #route.points > 1 then
+			self.isMobile = true
+		end
 	end
+
 	if next(self._deathgoals) == nil then
 		self._logger:error("runtime error: must have a deathgoal, deleting")
 		self:setDead(true)
 	end
+end
+
+function StaticAsset:getTemplateData()
+	return self._tpldata
 end
 
 function StaticAsset:getLocation()
@@ -162,16 +178,30 @@ function StaticAsset:getLocation()
 	return AssetBase.getLocation(self)
 end
 
+function StaticAsset:getCurrentLocation()
+	if self:isSpawned() and self.isMobile then
+		for name, group in pairs(self._assets) do
+			if isUnitGroup(group.category) then
+				return Group.getByName(name):getUnit(1):getPoint()
+			end
+		end
+	end
+	return self:getLocation()
+end
+
 function StaticAsset:getStatus()
+	if not self:isSpawned() then
+		return self._status
+	end
 	local total = 0
-	local completed = self._maxdeathgoals
+	local goals = self._maxdeathgoals
 	for _, goal in pairs(self._deathgoals) do
 		total = total + goal:getStatus()
-		completed = completed - 1
+		goals = goals - 1
 	end
-	-- missing goals are 100% complete
-	total = total + completed * 100
-	return math.ceil(total / self._maxdeathgoals)
+	total = total + goals * 100
+	self._status = math.ceil(total / self._maxdeathgoals)
+	return self._status
 end
 
 function StaticAsset:getObjectNames()
@@ -211,7 +241,6 @@ function StaticAsset:handleDead(event)
 		local units = grp.data.units
 		for i = 1, #units do
 			if units[i].name == unitname then
-				self._logger:debug("IS DEAD: %s", unitname)
 				self:_checkDeathGoal(unitname)
 				table.remove(units, i)
 				break
@@ -231,24 +260,16 @@ function StaticAsset:handleDead(event)
 	end
 end
 
-local function isUnitCategory(category)
-	return category == Unit.Category.AIRPLANE
-		or category == Unit.Category.HELICOPTER
-		or category == Unit.Category.GROUND_UNIT
-		or category == Unit.Category.SHIP
-end
-
 function StaticAsset:spawn(ignore)
 	if not ignore and self:isSpawned() then
 		self._logger:error("runtime bug - already spawned")
 		return
 	end
 
-	for _, tpl in pairs(self._assets) do
-		local obj = tpl
+	for _, obj in pairs(self._assets) do
 		if obj.category == Unit.Category.STRUCTURE then
 			coalition.addStaticObject(obj.countryid, obj.data)
-		elseif isUnitCategory(obj.category) then
+		elseif isUnitGroup(obj.category) then
 			coalition.addGroup(obj.countryid, obj.category, obj.data)
 		end
 	end
@@ -258,6 +279,8 @@ function StaticAsset:spawn(ignore)
 	for _, goal in pairs(self._deathgoals) do
 		goal:onSpawn()
 	end
+
+	self:getStatus()
 end
 
 function StaticAsset:despawn()
@@ -265,7 +288,7 @@ function StaticAsset:despawn()
 		if obj.category == Unit.Category.STRUCTURE then
 			local structure = StaticObject.getByName(name)
 			structure:destroy()
-		elseif isUnitCategory(obj.category) then
+		elseif isUnitGroup(obj.category) then
 			local group = Group.getByName(name)
 			group:destroy()
 		end
@@ -274,11 +297,20 @@ function StaticAsset:despawn()
 	AssetBase.despawn(self)
 end
 
--- copy live groups in the same order as the original template
-local function filterTemplateData(template, alive)
+-- copies live groups in the same order as the original template,
+-- and removes group and unit ids inserted by DCS
+local function filterTemplateData(template, aliveGroups)
 	local out = {}
 	for _, grp in ipairs(template) do
-		table.insert(out, utils.deepcopy(alive[grp.data.name]))
+		table.insert(out, utils.deepcopy(aliveGroups[grp.data.name]))
+	end
+	for _, grp in ipairs(out) do
+		grp.data.groupId = nil
+		if grp.data.units ~= nil then
+			for _, unit in ipairs(grp.data.units) do
+				unit.unitId = nil
+			end
+		end
 	end
 	return out
 end

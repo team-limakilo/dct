@@ -42,7 +42,7 @@ end
 
 function Subordinates:addSubordinate(asset)
 	assert(asset ~= nil and asset:isa(AssetBase),
-		"value error: 'asset' must be a super class of AssetBase")
+		"value error: 'asset' must be an instance of an asset")
 	self._subordinates[asset.name] = asset.type
 end
 
@@ -59,10 +59,10 @@ function Subordinates:spawn_despawn(action)
 				-- have the parent observe the subordinate
 				asset:addObserver(self.onSubEvent, self, self.name)
 				if not asset:isSpawned() then
-					asset[action](asset)
+					asset:spawn()
 				end
 			else
-				asset[action](asset)
+				asset:despawn()
 			end
 		else
 			Logger:info("%s(%s):spawn_despawn - asset(%s) doesn't exist, "..
