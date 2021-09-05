@@ -104,8 +104,10 @@ end
 function RenderManager:onDCSEvent(event)
     if event.id == world.event.S_EVENT_SHOT then
         if isPlayer(event.initiator) and weaponIsTracked(event.weapon) then
-            Logger:debug("tracking '%s' released by '%s'",
-                event.weapon:getTypeName(), event.initiator:getPlayerName())
+            Logger:debug("start tracking missile %d ('%s') released by '%s'",
+                event.weapon:getID(),
+                event.weapon:getTypeName(),
+                event.initiator:getPlayerName())
             table.insert(self.missiles, event.weapon)
         end
 	end
@@ -149,6 +151,7 @@ function RenderManager:update(assetmgr, time)
                     rangeType = RangeType.Missile,
                 })
             else
+                Logger:debug("end tracking missile %d", msl:getID())
                 table.remove(self.missiles, i)
             end
         end
