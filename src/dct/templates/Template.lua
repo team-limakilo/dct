@@ -378,7 +378,15 @@ local function getkeys(objtype)
 			["name"]    = "extramarks",
 			["default"] = {},
 			["check"]   = checkExtraMarks,
-		},
+		}, {
+			["name"]    = "nocull",
+			["type"]	= "boolean",
+			["default"] = false,
+		}, {
+			["name"] 	= "subordinates",
+			["type"]  	= "table",
+			["default"] = {},
+		}
 	}
 
 	if notpldata[objtype] == nil then
