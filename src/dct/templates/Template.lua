@@ -382,11 +382,7 @@ local function getkeys(objtype)
 			["name"]    = "nocull",
 			["type"]	= "boolean",
 			["default"] = false,
-		}, {
-			["name"] 	= "subordinates",
-			["type"]  	= "table",
-			["default"] = {},
-		}
+		},
 	}
 
 	if notpldata[objtype] == nil then
@@ -445,7 +441,7 @@ local function getkeys(objtype)
 			["type"]  = "table",
 			["default"] = {},
 		})
-   end
+	end
 	return keys
 end
 

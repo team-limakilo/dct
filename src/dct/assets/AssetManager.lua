@@ -17,6 +17,7 @@ local assetpaths = {
 	"dct.assets.Player",
 	"dct.assets.Squadron",
 	"dct.assets.StaticAsset",
+	"dct.assets.DefendedAsset",
 }
 
 local AssetManager = require("libs.namedclass")("AssetManager",
@@ -212,7 +213,8 @@ function AssetManager:update()
 		if type(asset.update) == "function" then
 			asset:update()
 		end
-		if asset:isDead() then
+		if asset:isDead() and not asset:isSpawned() then
+			-- disband asset
 			deletionq[asset.name] = true
 		end
 	end

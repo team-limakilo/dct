@@ -41,10 +41,8 @@ function StaticAsset.assettypes()
 		enum.assetType.AMMODUMP,
 		enum.assetType.FUELDUMP,
 		enum.assetType.C2,
-		enum.assetType.EWR,
 		enum.assetType.MISSILE,
 		enum.assetType.PORT,
-		enum.assetType.SAM,
 		enum.assetType.SEA,
 		enum.assetType.FACILITY,
 		enum.assetType.BUNKER,
@@ -154,6 +152,10 @@ function StaticAsset:_setup()
 		self._logger:error("runtime error: must have a deathgoal, deleting")
 		self:setDead(true)
 	end
+end
+
+function StaticAsset:getTemplate()
+	return self._tpldata
 end
 
 function StaticAsset:getLocation()
@@ -359,10 +361,6 @@ function StaticAsset:marshal()
 		return nil
 	end
 	return tbl
-end
-
-function StaticAsset:getTemplate()
-	return self._tpldata
 end
 
 return StaticAsset

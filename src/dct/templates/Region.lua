@@ -166,64 +166,6 @@ local function registerType(self, kind, ttype, name)
 	table.insert(self._tpltypes[ttype], entry)
 end
 
--- splits SHORAD out of a template, modifying it, and
--- returns the new shorad template, if it contains any units
-local function splitSAMShorad(template)
-	local shorad = utils.deepcopy(template)
-	shorad.hasDeathGoals = false
-	shorad.objtype = dctenums.assetType["SHORAD"]
-	shorad.name = template.name.."-SHORAD"
-	shorad.desc = nil
-	shorad.cost = 0
-	for g = #template.tpldata, 1, -1 do
-		Logger:debug("%s group = %d", template.name, g)
-		local originalGroup = template.tpldata[g].data
-		local shoradGroup = shorad.tpldata[g].data
-		-- rename SHORAD group to avoid spawn conflicts
-		shoradGroup.name = originalGroup.name.."-SHORAD"
-		-- remove SHORAD from SAM/EWR, keep in the new template
-		for un = #originalGroup.units, 1, -1  do
-			Logger:debug("%s unit %d", template.name, un)
-			local unit = originalGroup.units[un]
-			local desc = Unit.getDescByName(unit.type)
-			if desc.attributes["AAA"] or
-			   desc.attributes["SR SAM"] or
-			   desc.attributes["MANDPADS"] then
-				-- delete from original, keep in SHORAD
-				Logger:debug("%s unit yeeted", template.name)
-				table.remove(originalGroup.units, un)
-			else
-				-- delete from SHORAD, keep in original
-				Logger:debug("%s unit yeeted", shorad.name)
-				table.remove(shoradGroup.units, un)
-			end
-		end
-		-- prune empty groups
-		if #originalGroup.units == 0 then
-			Logger:debug("%s group yeeted", template.name)
-			table.remove(template.tpldata, g)
-		end
-		if #shoradGroup.units == 0 then
-			Logger:debug("%s group yeeted", shorad.name)
-			table.remove(shorad.tpldata, g)
-		end
-	end
-	-- remove waypoints from the SHORAD template
-	for g = 1, #shorad.tpldata do
-		shorad.tpldata[g].data.route = {
-			points = {},
-			spans  = {},
-		}
-	end
-	-- only return the shorad template if it's not empty
-	if #shorad.tpldata > 0 then
-		table.insert(template.subordinates, shorad.name)
-		return shorad
-	else
-		Logger:debug("%s template yeeted", shorad.name)
-	end
-end
-
 local function addAndSpawnAsset(region, name, assetmgr)
 	if name == nil then
 		return nil
@@ -232,16 +174,6 @@ local function addAndSpawnAsset(region, name, assetmgr)
 	local tpl = region:getTemplateByName(name)
 	if tpl == nil then
 		return nil
-	end
-
-	-- split SHORAD out of SAM and EWR templates
-	if tpl.objtype == dctenums.assetType["SAM"] or
-	   tpl.objtype == dctenums.assetType["EWR"] then
-		local shorad = splitSAMShorad(tpl)
-		if shorad ~= nil then
-			region:addTemplate(shorad)
-			addAndSpawnAsset(region, shorad.name, assetmgr)
-		end
 	end
 
 	local mgr = dct.Theater.singleton():getAssetMgr()

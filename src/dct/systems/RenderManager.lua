@@ -97,7 +97,8 @@ end
 local function weaponIsTracked(weapon)
     local desc = weapon:getDesc()
     return desc.category == Weapon.Category.MISSILE and
-          (desc.missileCategory == Weapon.MissileCategory.CRUISE or
+          (desc.missileCategory == Weapon.MissileCategory.ANTI_SHIP or
+           desc.missileCategory == Weapon.MissileCategory.CRUISE or
            desc.missileCategory == Weapon.MissileCategory.OTHER)
 end
 
@@ -187,15 +188,15 @@ function RenderManager:checkRegion(region, assetmgr, time)
         -- O(n²) algorithm :(
         for _, asset in pairs(assets) do
             if asset:isSpawned() then
-                local keep = false
+                local seen = false
                 for _, obj in pairs(self.objects) do
                     if self:inRange(obj.location, obj.rangeType, asset) then
                         self.lastSeen[asset.name] = time
-                        keep = true
+                        seen = true
                         break
                     end
                 end
-                if not keep then
+                if not seen then
                     if time - self.lastSeen[asset.name] > DESPAWN_TIMEOUT then
                         asset:despawn()
                     end
