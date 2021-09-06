@@ -12,18 +12,13 @@ local StaticAsset  = require("dct.assets.StaticAsset")
 local Subordinates = require("dct.libs.Subordinates")
 local Logger       = require("dct.libs.Logger")
 
-local function getAssetMgr()
-    return require("dct.Theater").singleton():getAssetMgr()
-end
-
 local DefendedAsset = class("DefendedAsset", StaticAsset, Subordinates)
 function DefendedAsset:__init(template)
-    self._logger = Logger("Asset: DefendedAsset("..template.name..")")
+    Subordinates.__init(self)
     if template ~= nil then
-        template.subordinates = {}
+        self._logger = Logger("Asset: DefendedAsset("..template.name..")")
         self:_modifyTemplate(template)
     end
-	Subordinates.__init(self)
 	StaticAsset.__init(self, template)
 	self:_addMarshalNames({
 		"_subordinates",
@@ -35,22 +30,6 @@ function DefendedAsset.assettypes()
 		enum.assetType.EWR,
 		enum.assetType.SAM,
 	}
-end
-
-function DefendedAsset:_completeinit(template)
-    StaticAsset._completeinit(self, template)
-    self._subordinates = template.subordinates
-end
-
-function DefendedAsset:_setup()
-    StaticAsset._setup(self)
-    local assetmgr = getAssetMgr()
-	for _, name in pairs(self._subordinates) do
-        local asset = assetmgr:getAsset(name)
-        if asset then
-            self:addSubordinate(asset)
-        end
-    end
 end
 
 -- splits SHORAD out of the template and spawns it as a separate asset
@@ -74,7 +53,7 @@ function DefendedAsset:_modifyTemplate(template)
 			local desc = Unit.getDescByName(unit.type)
 			if desc.attributes["AAA"] or
 			   desc.attributes["SR SAM"] or
-			   desc.attributes["MANDPADS"] then
+			   desc.attributes["MANPADS"] then
 				-- delete from original, keep in SHORAD
 				self._logger:debug("%s unit removed", template.name)
 				table.remove(originalGroup.units, un)
@@ -101,14 +80,14 @@ function DefendedAsset:_modifyTemplate(template)
 			spans  = {},
 		}
 	end
-	-- spawn the new shorad asset if it's not empty
+	-- spawn the new shorad asset as a subordinate if it's not empty
 	if #shorad.tpldata > 0 then
-		table.insert(template.subordinates, shorad.name)
-        local assetmgr = getAssetMgr()
+        local assetmgr = _G.dct.Theater.singleton():getAssetMgr()
 		local shoradAsset = assetmgr:factory(shorad.objtype)(shorad)
         assetmgr:add(shoradAsset)
+        self:addSubordinate(shoradAsset)
 	else
-		self._logger:debug("%s template removed", shorad.name)
+		self._logger:debug("%s dropped", shorad.name)
 	end
 end
 
