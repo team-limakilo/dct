@@ -10,8 +10,20 @@ local enum     = require("dct.enum")
 local dctutils = require("dct.utils")
 local settings = _G.dct.settings
 
--- returns totals for all weapon types, returns nil if the group
--- does not exist
+local isAAMissile = {
+	[Weapon.MissileCategory.AAM] = true,
+	[Weapon.MissileCategory.SAM] = true,
+}
+
+local function defaultCategory(weapon)
+	if isAAMissile[weapon.desc.missileCategory] then
+		return enum.weaponCategory.AA
+	elseif weapon.desc.category ~= Weapon.Category.SHELL then
+		return enum.weaponCategory.AG
+	end
+end
+
+-- returns totals for all weapon types, or nil if the group does not exist
 local function totalPayload(grp, limits)
 	local unit = grp:getUnit(1)
 	local restrictedWeapons = settings.restrictedweapons
@@ -31,20 +43,16 @@ local function totalPayload(grp, limits)
 		local wpnname = dctutils.trimTypeName(wpn.desc.typeName)
 		local wpncnt  = wpn.count
 		local restriction = restrictedWeapons[wpnname] or {}
+		local category = restriction.category or defaultCategory(wpn)
 		local cost = restriction.cost or 0
-		local category = restriction.category
-			or enum.weaponCategory.UNRESTRICTED
-
-		total[category].current =
-			total[category].current + (wpncnt * cost)
-
 		if restriction.nuclear then
 			nuke = true
 		end
 
-		-- TODO: it seems cannons have an internal category of 0,
-		-- what are the other categories?
-		if wpn.desc.category > 0 then
+		if category ~= nil then
+			total[category].current =
+				total[category].current + (wpncnt * cost)
+
 			table.insert(total[category].payload, {
 				["name"] = wpn.desc.displayName,
 				["count"] = wpncnt,

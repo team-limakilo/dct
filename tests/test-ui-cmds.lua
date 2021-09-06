@@ -169,21 +169,23 @@ local testcmds = {
 			{
 				["desc"] = {
 					["displayName"] = "Cannon Shells",
-					["category"] = 0,
+					["category"] = Weapon.Category.SHELL,
 				},
 				["count"] = 600,
 			}, {
 				["desc"] = {
 					["displayName"] = "AIM-120B",
 					["typeName"] = "AIM_120",
-					["category"] = 1,
+					["category"] = Weapon.Category.MISSILE,
+					["missileCategory"] = Weapon.MissileCategory.AAM,
 				},
 				["count"] = 4,
 			}, {
 				["desc"] = {
 					["displayName"] = "AIM-9M",
 					["typeName"] = "AIM_9",
-					["category"] = 1,
+					["category"] = Weapon.Category.MISSILE,
+					["missileCategory"] = Weapon.MissileCategory.AAM,
 				},
 				["count"] = 2,
 			}
@@ -194,11 +196,9 @@ local testcmds = {
 			"  AA cost: 20 / 20\n"..
 			"  AG cost: 0 / 60\n"..
 			"\n"..
-			"== UNRESTRICTED Weapons:\n"..
-			"  AIM-9M        2 × 0 pts = 0 pts\n"..
-			"\n"..
 			"== AA Weapons:\n"..
-			"  AIM-120B        4 × 5 pts = 20 pts",
+			"  AIM-120B        4 × 5 pts = 20 pts\n"..
+			"  AIM-9M        2 × 0 pts = 0 pts",
 	}, {
 		-- Over limit with forbidden weapon
 		["data"] = {
@@ -210,7 +210,7 @@ local testcmds = {
 				["desc"] = {
 					["displayName"] = "RN-28",
 					["typeName"] = "RN-28",
-					["category"] = 3,
+					["category"] = Weapon.Category.BOMB,
 				},
 				["count"] = 1,
 			}
