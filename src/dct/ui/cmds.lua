@@ -126,38 +126,31 @@ function CheckPayloadCmd:__init(theater, data)
 end
 
 function CheckPayloadCmd.buildSummary(costs)
-	-- print cost summary
+	-- print cost summary at the top
 	local msg = "== Loadout Summary:"
-	for cat, id in pairs(enum.weaponCategory) do
-		if costs[id].current < enum.WPNINFCOST then
-			msg = msg..string.format("\n  %s cost: %d / %d",
-				cat, costs[id].current, costs[id].max)
+	for desc, cat in pairs(enum.weaponCategory) do
+		if costs[cat].current < enum.WPNINFCOST then
+			msg = string.format("%s\n  %s cost: %.4g / %d",
+				msg, desc, costs[cat].current, costs[cat].max)
 		else
-			msg = msg..string.format("\n  %s cost: ∞ / %d", cat, costs[id].max)
+			msg = string.format("%s\n  %s cost: -- / %d",
+				msg, desc, costs[cat].max)
 		end
 	end
 
-	-- group weapons by type
-	for cat, val in pairs(enum.weaponCategory) do
-		if #costs[val].payload > 0 then
-			msg = msg..string.format("\n\n== %s Weapons:", cat)
-			for _, wpn in pairs(costs[val].payload) do
-				if wpn.cost < enum.WPNINFCOST then
-					-- tally the costs of each weapon
-					msg = msg..string.format(
-						"\n  %s        %d × %d pts = %d pts",
-						wpn.name,
-						wpn.count,
-						wpn.cost,
-						wpn.count * wpn.cost
-					)
+	-- group weapons by category
+	for desc, cat in pairs(enum.weaponCategory) do
+		if next(costs[cat].payload) ~= nil then
+			msg = msg..string.format("\n\n== %s Weapons:", desc)
+			for _, wpn in pairs(costs[cat].payload) do
+				msg = string.format("%s\n  %s\n    ↳ ", msg, wpn.name)
+				if wpn.cost == 0 then
+					msg = msg..string.format("%d × unrestricted (0 pts)", wpn.count)
+				elseif wpn.cost < enum.WPNINFCOST then
+					msg = msg..string.format("%d × %.4g pts = %.4g pts",
+						wpn.count, wpn.cost, wpn.count * wpn.cost)
 				else
-					-- show special lines for forbidden weapons
-					msg = msg..string.format(
-						"\n  %s        %d × ∞ pts = ∞ pts (FORBIDDEN)",
-						wpn.name,
-						wpn.count
-					)
+					msg = msg.."Weapon cannot be used in this theater [!]"
 				end
 			end
 		end

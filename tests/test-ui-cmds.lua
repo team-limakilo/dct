@@ -174,20 +174,20 @@ local testcmds = {
 				["count"] = 600,
 			}, {
 				["desc"] = {
-					["displayName"] = "AIM-120B",
-					["typeName"] = "AIM_120",
-					["category"] = Weapon.Category.MISSILE,
-					["missileCategory"] = Weapon.MissileCategory.AAM,
-				},
-				["count"] = 4,
-			}, {
-				["desc"] = {
 					["displayName"] = "AIM-9M",
 					["typeName"] = "AIM_9",
 					["category"] = Weapon.Category.MISSILE,
 					["missileCategory"] = Weapon.MissileCategory.AAM,
 				},
 				["count"] = 2,
+			}, {
+				["desc"] = {
+					["displayName"] = "AIM-120B",
+					["typeName"] = "AIM_120",
+					["category"] = Weapon.Category.MISSILE,
+					["missileCategory"] = Weapon.MissileCategory.AAM,
+				},
+				["count"] = 4,
 			}
 		},
 		["assert"]     = true,
@@ -197,8 +197,10 @@ local testcmds = {
 			"  AG cost: 0 / 60\n"..
 			"\n"..
 			"== AA Weapons:\n"..
-			"  AIM-120B        4 × 5 pts = 20 pts\n"..
-			"  AIM-9M        2 × 0 pts = 0 pts",
+			"  AIM-9M\n"..
+			"    ↳ 2 × unrestricted (0 pts)\n"..
+			"  AIM-120B\n"..
+			"    ↳ 4 × 5 pts = 20 pts",
 	}, {
 		-- Over limit with forbidden weapon
 		["data"] = {
@@ -220,10 +222,11 @@ local testcmds = {
 			"you will be punished!\n\n"..
 			"== Loadout Summary:\n"..
 			"  AA cost: 0 / 20\n"..
-			"  AG cost: ∞ / 60\n"..
+			"  AG cost: -- / 60\n"..
 			"\n"..
 			"== AG Weapons:\n"..
-			"  RN-28        1 × ∞ pts = ∞ pts (FORBIDDEN)",
+			"  RN-28\n"..
+			"    ↳ Weapon cannot be used in this theater [!]",
 	},
 }
 
