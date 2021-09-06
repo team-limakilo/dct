@@ -129,13 +129,11 @@ function CheckPayloadCmd.buildSummary(costs)
 	-- print cost summary
 	local msg = "== Loadout Summary:"
 	for cat, id in pairs(enum.weaponCategory) do
-		if id ~= enum.weaponCategory.UNRESTRICTED then
-			if costs[id].current < enum.WPNINFCOST then
-				msg = msg..string.format("\n  %s cost: %d / %d",
-					cat, costs[id].current, costs[id].max)
-			else
-				msg = msg..string.format("\n  %s cost: ∞ / %d", cat, costs[id].max)
-			end
+		if costs[id].current < enum.WPNINFCOST then
+			msg = msg..string.format("\n  %s cost: %d / %d",
+				cat, costs[id].current, costs[id].max)
+		else
+			msg = msg..string.format("\n  %s cost: ∞ / %d", cat, costs[id].max)
 		end
 	end
 
