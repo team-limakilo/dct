@@ -60,8 +60,7 @@ function StaticAsset:_completeinit(template)
 end
 
 --[[
--- ignore all but primary targets when it comes to determining
--- if we are "dead"
+-- Ensure only primary death goals are added
 --]]
 function StaticAsset:_addDeathGoal(name, goalspec)
 	assert(name ~= nil and type(name) == "string",
@@ -78,11 +77,7 @@ function StaticAsset:_addDeathGoal(name, goalspec)
 end
 
 --[[
--- This function needs to do three things:
---   mark the object(unit/static/group) in the template dead,
---      dct_dead == true
---   remove deathgoal entry
---   upon no more deathgoals set dead
+-- Removes deathgoal entry, and upon no more deathgoals, set asset as dead
 --]]
 function StaticAsset:_removeDeathGoal(name, goal)
 	assert(name ~= nil and type(name) == "string",
@@ -93,19 +88,6 @@ function StaticAsset:_removeDeathGoal(name, goal)
 	if self:isDead() then
 		self._logger:error("_removeDeathGoal() called '%s' marked as dead", self.name)
 		return
-	end
-
-	local grpdata = self._assets[goal:getGroupName()].data
-	if grpdata.name == name then
-		grpdata.dct_dead = true
-	else
-		assert(grpdata.units ~= nil, "no units found, this is a problem")
-		for _, unit in ipairs(grpdata.units) do
-			if unit.name == name then
-				unit.dct_dead = true
-				break
-			end
-		end
 	end
 
 	self._deathgoals[name] = nil
@@ -140,13 +122,23 @@ function StaticAsset:_setupDeathGoal(grpdata, category, country)
 end
 
 --[[
+-- Checks if a goal is complete, and if so, removes it
+--]]
+function StaticAsset:_checkDeathGoal(name)
+	local goal = self._deathgoals[name]
+	if goal and goal:checkComplete() then
+		self:_removeDeathGoal(name, goal)
+	end
+end
+
+--[[
 -- Adds an object (group or static) to the monitored list for this
 -- asset. This list will be needed later to save state.
 --]]
 function StaticAsset:_setup()
 	for _, grp in ipairs(self._tpldata) do
 		self:_setupDeathGoal(grp.data, grp.category, grp.countryid)
-		self._assets[grp.data.name] = grp
+		self._assets[grp.data.name] = utils.deepcopy(grp)
 	end
 	if next(self._deathgoals) == nil then
 		self._logger:error("runtime error: must have a deathgoal, deleting")
@@ -211,62 +203,32 @@ end
 function StaticAsset:handleDead(event)
 	local obj = event.initiator
 
-	-- mark the unit/group/static as dead in the template, dct_dead
+	-- remove dead units and their respective goals
 	local unitname = tostring(obj:getName())
 	if obj:getCategory() == Object.Category.UNIT then
 		local grpname = obj:getGroup():getName()
 		local grp = self._assets[grpname]
-		for _, unit in pairs(grp.data.units) do
-			if unit.name == unitname then
-				unit.dct_dead = true
+		local units = grp.data.units
+		for i = 1, #units do
+			if units[i].name == unitname then
+				self._logger:debug("IS DEAD: %s", unitname)
+				self:_checkDeathGoal(unitname)
+				table.remove(units, i)
 				break
 			end
 		end
-		local goal = self._deathgoals[grpname]
-		if goal and goal:checkComplete() then
-			self:_removeDeathGoal(grpname, goal)
+		self:_checkDeathGoal(grpname)
+		if next(units) == nil then
+			self._assets[grpname] = nil
 		end
 	else
-		self._assets[unitname].data.dct_dead = true
 		if self._assets[unitname].category == enum.UNIT_CAT_SCENERY then
 			dct.Theater.singleton():getSystem(
 				"dct.systems.bldgPersist"):addObject(unitname)
 		end
-		local goal = self._deathgoals[unitname]
-		if goal and goal:checkComplete() then
-			self:_removeDeathGoal(unitname, goal)
-		end
+		self:_checkDeathGoal(unitname)
+		self._assets[unitname] = nil
 	end
-
-	-- delete any deathgoal related to the unit notified as dead,
-	-- this may work around any bug in DCS where the object is still
-	-- kept and its health reports a non-zero value
-	local goal = self._deathgoals[unitname]
-	if goal ~= nil then
-		self:_removeDeathGoal(unitname, goal)
-	end
-end
-
-local dctkeys = {
-	["dct_deathgoal"] = true,
-	["dct_dead"]      = true
-}
-
--- modifies 'tbl' with 'keys' keys removed from 'tbl'
-local function removekeys(tbl, keys)
-	for k, _ in pairs(keys) do
-		tbl[k] = nil
-	end
-end
-
--- returns a copy of 'grp' with all dct table keys removed
-local function removeDCTKeys(grp)
-	local g = utils.deepcopy(grp)
-	removekeys(g.data, dctkeys)
-	for _, unit in ipairs(g.data.units or {}) do
-		removekeys(unit, dctkeys)
-	end
-	return g
 end
 
 local function isUnitCategory(category)
@@ -282,8 +244,8 @@ function StaticAsset:spawn(ignore)
 		return
 	end
 
-	for _, tpl in ipairs(self._tpldata) do
-		local obj = removeDCTKeys(tpl)
+	for _, tpl in pairs(self._assets) do
+		local obj = tpl
 		if obj.category == Unit.Category.STRUCTURE then
 			coalition.addStaticObject(obj.countryid, obj.data)
 		elseif isUnitCategory(obj.category) then
@@ -312,39 +274,13 @@ function StaticAsset:despawn()
 	AssetBase.despawn(self)
 end
 
-local function filterDeadObjects(tbl, grp)
-	-- remove groups that are dead
-	if grp.data.dct_dead == true then
-		return
+-- copy live groups in the same order as the original template
+local function filterTemplateData(template, alive)
+	local out = {}
+	for _, grp in ipairs(template) do
+		table.insert(out, utils.deepcopy(alive[grp.data.name]))
 	end
-
-	local gcpy = utils.deepcopy(grp)
-	-- remove dead units from the group
-	if grp.data.units then
-		gcpy.data.units = {}
-		for _, unit in ipairs(grp.data.units) do
-			if unit.dct_dead ~= true then
-				table.insert(gcpy.data.units, utils.deepcopy(unit))
-			end
-		end
-		if not next(gcpy.data.units) then
-			-- there are no alive units do not add the group
-			return
-		end
-	end
-	table.insert(tbl, gcpy)
-end
-
-local function filterTemplateData(tpldata)
-	local cpytbl = {}
-
-	for _, grp in ipairs(tpldata) do
-		filterDeadObjects(cpytbl, grp)
-	end
-	if not next(cpytbl) then
-		cpytbl = nil
-	end
-	return cpytbl
+	return out
 end
 
 function StaticAsset:marshal()
@@ -355,9 +291,9 @@ function StaticAsset:marshal()
 	if self.regenerate then
 		tbl._tpldata = self._tpldata
 	else
-		tbl._tpldata = filterTemplateData(self._tpldata)
+		tbl._tpldata = filterTemplateData(self._tpldata, self._assets)
 	end
-	if tbl._tpldata == nil then
+	if next(tbl._tpldata) == nil then
 		return nil
 	end
 	return tbl
