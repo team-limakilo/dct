@@ -8,7 +8,6 @@
 
 -- luacheck: max_cyclomatic_complexity 12
 
-require("math")
 local class     = require("libs.class")
 local utils     = require('dct.utils')
 local Command   = require("dct.Command")
@@ -258,9 +257,9 @@ function RenderManager:getSortedDistances(region)
 end
 
 function RenderManager:checkRegion(region, time)
-    local ops = 0
     local assets = self.assets[region.name]
     if assets ~= nil then
+        local ops = 0
         local distances, objdist = self:getSortedDistances(region)
         for i = 1, #assets do
             local asset = assets[i]
@@ -298,8 +297,9 @@ function RenderManager:checkRegion(region, time)
                 end
             end
         end
+        Logger:info("checkRegion(%s) objects = %d, assets = %d, ops = %d",
+            region.name, #distances, #assets, ops)
     end
-    Logger:debug("checkRegion(%s) ops = %d", region.name, ops)
     return CHECK_INTERVAL
 end
 
