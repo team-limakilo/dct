@@ -46,6 +46,24 @@ local events = {
 			["name"] = "Novorossiysk_NovoShipsinPort 1 SHIP 1-6",
 			["objtype"] = Object.Category.UNIT,
 		},
+	},{
+		["id"] = world.event.S_EVENT_DEAD,
+		["object"] = {
+			["name"] = "Krasnodar_KrasnodarEWR 1 GROUND_UNIT 1-1",
+			["objtype"] = Object.Category.UNIT,
+		},
+	},{
+		["id"] = world.event.S_EVENT_DEAD,
+		["object"] = {
+			["name"] = "Krasnodar_KrasnodarEWR 1 GROUND_UNIT 1-2",
+			["objtype"] = Object.Category.UNIT,
+		},
+	},{
+		["id"] = world.event.S_EVENT_DEAD,
+		["object"] = {
+			["name"] = "Sukhumi_SukhumiAmmoDump 2 GROUND_UNIT 11-1",
+			["objtype"] = Object.Category.UNIT,
+		},
 	},
 }
 
@@ -72,12 +90,13 @@ local function createEvent(eventdata, player)
 		assert(false, "other object types not supported")
 	end
 
-	assert(objref, "objref is nil")
+	assert(objref, "objref is nil for '"..eventdata.object.name.."'")
 	event.id = eventdata.id
 	event.time = 2345
 	if event.id == world.event.S_EVENT_DEAD then
 		event.initiator = objref
 		objref.clife = 0
+		Object.destroy(objref)
 	elseif event.id == world.event.S_EVENT_HIT then
 		event.initiator = player
 		event.weapon = nil
@@ -148,10 +167,14 @@ local function main()
 	_G.dct.theater = newtheater
 	theater.startdate = startdate
 	newtheater:exec(50)
-	local name = "Test region_1_Abu Musa Ammo Dump"
-	-- verify the units read in do not include the asset we killed off
-	assert(newtheater:getAssetMgr():getAsset(name) == nil,
-		"state saving has an issue, dead asset is alive: "..name)
+
+	-- verify the units read in do not include the ones we killed off
+	local deadasset = "Krasnodar_1_KrasnodarEWR"
+	assert(newtheater:getAssetMgr():getAsset(deadasset) == nil,
+		"state saving has an issue, dead asset is alive: "..deadasset)
+	local deadunit = "Sukhumi_SukhumiAmmoDump 2 GROUND_UNIT 11-1"
+	assert(Unit.getByName(deadunit) == nil,
+		"state saving has an issue, dead unit is alive: "..deadunit)
 
 	-- attempt to get theater status
 	newtheater:onEvent({
