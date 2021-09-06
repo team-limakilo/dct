@@ -625,6 +625,14 @@ function Object:__init(objdata)
 	objects[self.category][self.name] = self
 end
 Object.Category = objectcat
+
+function Object.getDescByName(typeName)
+	return {
+		attributes = {},
+		typeName = typeName,
+	}
+end
+
 function Object:isExist()
 	return self.exists
 end

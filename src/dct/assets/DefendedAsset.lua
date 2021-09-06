@@ -64,11 +64,11 @@ function DefendedAsset:_modifyTemplate(template)
 			end
 		end
 		-- prune empty groups
-		if #originalGroup.units == 0 then
+		if next(originalGroup.units) == nil then
 			self._logger:debug("%s group removed", template.name)
 			table.remove(template.tpldata, g)
 		end
-		if #shoradGroup.units == 0 then
+		if next(shoradGroup.units) == nil then
 			self._logger:debug("%s group removed", shorad.name)
 			table.remove(shorad.tpldata, g)
 		end
@@ -81,7 +81,7 @@ function DefendedAsset:_modifyTemplate(template)
 		}
 	end
 	-- spawn the new shorad asset as a subordinate if it's not empty
-	if #shorad.tpldata > 0 then
+	if next(shorad.tpldata) ~= nil then
         local assetmgr = _G.dct.Theater.singleton():getAssetMgr()
 		local shoradAsset = assetmgr:factory(shorad.objtype)(shorad)
         assetmgr:add(shoradAsset)

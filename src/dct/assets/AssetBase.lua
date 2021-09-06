@@ -177,6 +177,7 @@ function AssetBase:_completeinit(template)
 	self.backfill   = template.backfill
 	self.regenerate = template.regenerate
 	self.extramarks = template.extramarks
+	self.nocull     = template.nocull
 	self._location  = template.location
 	if norenametype[self.type] == true then
 		self.name = self.tplname

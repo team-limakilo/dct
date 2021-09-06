@@ -72,8 +72,35 @@ local function calculateRange(asset, type)
     return assetRange
 end
 
+local function isPlayer(object)
+    return object:getPlayerName() ~= nil
+end
+
+local function allPlayers()
+    local players = {}
+    for co = 0, 2 do
+        for _, player in pairs(coalition.getPlayers(co)) do
+            table.insert(players, player)
+        end
+    end
+    return players
+end
+
+local function weaponIsTracked(weapon)
+    local desc = weapon:getDesc()
+    return desc.category == Weapon.Category.MISSILE and
+          (desc.missileCategory == Weapon.MissileCategory.ANTI_SHIP or
+           desc.missileCategory == Weapon.MissileCategory.CRUISE or
+           desc.missileCategory == Weapon.MissileCategory.OTHER)
+end
+
 local RenderManager = class()
 function RenderManager:__init(theater)
+    -- disable this system in tests
+    if _G.DCT_TEST then
+        return
+    end
+
     self.t         =  0 -- last update time
     self.object    = {} -- object of interest locations as Vector3D
     self.assets    = {} -- assets grouped by region
@@ -90,18 +117,6 @@ function RenderManager:__init(theater)
         self.delayedInit, self, theater))
 end
 
-local function isPlayer(object)
-    return object:getPlayerName() ~= nil
-end
-
-local function weaponIsTracked(weapon)
-    local desc = weapon:getDesc()
-    return desc.category == Weapon.Category.MISSILE and
-          (desc.missileCategory == Weapon.MissileCategory.ANTI_SHIP or
-           desc.missileCategory == Weapon.MissileCategory.CRUISE or
-           desc.missileCategory == Weapon.MissileCategory.OTHER)
-end
-
 function RenderManager:onDCSEvent(event)
     if event.id == world.event.S_EVENT_SHOT then
         if isPlayer(event.initiator) and weaponIsTracked(event.weapon) then
@@ -116,7 +131,7 @@ end
 
 function RenderManager:inRange(location, rangeType, asset)
     -- targeted assets should always be visible
-    if asset:isTargeted(utils.getenemy(asset.owner)) then
+    if asset.nocull or asset:isTargeted(utils.getenemy(asset.owner)) then
         return true
     end
     -- compute and save asset render ranges for future lookups
@@ -136,13 +151,12 @@ function RenderManager:update(assetmgr, time)
         self.t = time
         -- update player and missile locations
         self.objects = {}
-        for co = 0, 2 do
-            for _, player in pairs(coalition.getPlayers(co)) do
-                table.insert(self.objects, {
-                    location = vec.Vector3D(player:getPoint()),
-                    rangeType = RangeType.Player,
-                })
-            end
+        local players = allPlayers()
+        for i = 1, #players do
+            table.insert(self.objects, {
+                location = vec.Vector3D(players[i]:getPoint()),
+                rangeType = RangeType.Player,
+            })
         end
         for i = #self.missiles, 1, -1 do
             local msl = self.missiles[i]
