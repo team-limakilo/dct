@@ -36,7 +36,7 @@ local RENDER_RANGES = {
 		["EWR"]         = 320000,
 		["LR SAM"]      = 320000,
 		["MR SAM"]      = 160000,
-		["Default"]     =  40000,
+		["Default"]     =  20000,
 	},
 	[RangeType.Missile] = {
 		["Ships"]       = 120000,
