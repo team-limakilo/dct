@@ -300,7 +300,6 @@ function RenderManager:checkRegion(region, time)
 		Logger:info("checkRegion(%s) objects = %d, assets = %d, ops = %d",
 			region.name, #distances, #assets, ops)
 	end
-	return CHECK_INTERVAL
 end
 
 return RenderManager
