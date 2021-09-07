@@ -218,8 +218,10 @@ function RenderManager:update(theater)
 	-- Queue region checks
 	for name, region in pairs(regions) do
 		local cmdname = string.format("RenderManager.checkRegion(%s)", name)
-		theater:queueCommand(theater.cmdmindelay,
-			Command(cmdname, self.checkRegion, self, region))
+		if self.assets[name] ~= nil then
+			theater:queueCommand(theater.cmdmindelay,
+				Command(cmdname, self.checkRegion, self, region))
+		end
 	end
 	return CHECK_INTERVAL
 end
