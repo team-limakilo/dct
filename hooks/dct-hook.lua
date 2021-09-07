@@ -672,8 +672,13 @@ local function dct_load(hooks)
 		dct_call_hook(hooks.onPlayerChangeSlot, hooks, id)
 	end
 	function handler.onPlayerTryChangeSlot(playerid, side, slotid)
-		return dct_call_hook(hooks.onPlayerTryChangeSlot, hooks,
-			playerid, side, slotid)
+		local allow = dct_call_hook(
+			hooks.onPlayerTryChangeSlot, hooks, playerid, side, slotid)
+		-- return false when blocking, but don't return anything when allowing,
+		-- to allow other hooks to run this function after DCT
+		if allow == false then
+			return false
+		end
 	end
 	function handler.onSimulationFrame()
 		dct_call_hook(hooks.onSimulationFrame, hooks)
