@@ -4,6 +4,11 @@
 -- Automatically spawns and despawns assets based on their distances from
 -- objects of interest (ie. players and stand-off weapons) to reduce
 -- active unit count.
+--
+-- Terminology:
+--  * Asset: a static DCT asset
+--  * Object (of interest): objects that are analyzed for proxmity to assets
+--    (players and player-launched missiles)
 --]]
 
 -- luacheck: max_cyclomatic_complexity 12
@@ -27,6 +32,13 @@ local AGE_OLD = -DESPAWN_TIMEOUT
 local RangeType = {
 	Player  = 1,
 	Missile = 2,
+}
+
+local MissileCategories = {
+	[Weapon.MissileCategory.BM] = true,
+	[Weapon.MissileCategory.ANTI_SHIP] = true,
+	[Weapon.MissileCategory.CRUISE] = true,
+	[Weapon.MissileCategory.OTHER] = true,
 }
 
 -- Maps specific unit attributes to maximum intended render ranges, in meters
@@ -96,10 +108,10 @@ end
 
 local function weaponIsTracked(weapon)
 	local desc = weapon:getDesc()
+	Logger:debug("check tracked weapon: %s",
+		require("libs.json"):encode_pretty(desc))
 	return desc.category == Weapon.Category.MISSILE and
-		  (desc.missileCategory == Weapon.MissileCategory.ANTI_SHIP or
-		   desc.missileCategory == Weapon.MissileCategory.CRUISE or
-		   desc.missileCategory == Weapon.MissileCategory.OTHER)
+	       MissileCategories[weapon.missileCategory]
 end
 
 local RenderManager = class()
