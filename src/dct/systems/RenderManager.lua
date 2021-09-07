@@ -148,7 +148,7 @@ end
 
 -- Check if the object is within the asset's render bubble
 function RenderManager:inRange(object, asset)
-	-- Ttargeted assets should always be visible
+	-- Flagged and targeted assets should always be visible
 	if asset.nocull or asset:isTargeted(utils.getenemy(asset.owner)) then
 		return true
 	end
@@ -166,7 +166,7 @@ end
 -- two ranges between player and missile render range
 --]]
 function RenderManager:tooFar(object, asset, region)
-	-- Targeted assets should always be visible
+	-- Flagged and targeted assets should always be visible
 	if asset.nocull or asset:isTargeted(utils.getenemy(asset.owner)) then
 		return false
 	end
