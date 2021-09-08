@@ -11,92 +11,171 @@
 --    (players and player-launched missiles)
 --]]
 
--- luacheck: max_cyclomatic_complexity 12
+-- luacheck: max_cyclomatic_complexity 15
 
 local class     = require("libs.class")
-local utils     = require('dct.utils')
+local utils     = require("dct.utils")
 local Command   = require("dct.Command")
 local vec       = require("dct.libs.vector")
 local Logger    = require("dct.libs.Logger").getByName("RenderManager")
 local StaticAsset = require("dct.assets.StaticAsset")
 
--- How long to wait between render checks
+-- How many seconds to wait between render checks
 local CHECK_INTERVAL = 10
 
--- How long to keep an asset in the world after it's out of range
+-- How many seconds to keep an asset in the world after it's out of range
 local DESPAWN_TIMEOUT = 180
 
 -- Default asset age (ensures everything is culled from the start)
 local AGE_OLD = -DESPAWN_TIMEOUT
 
 local RangeType = {
-	Player  = 1,
-	Missile = 2,
+	Player     = 1, -- Player flights
+	Missile    = 2, -- Guided missiles and some guided bombs
+	GuidedBomb = 3, -- Most other guided bombs
 }
 
-local MissileCategories = {
+local RadarDistanceFactor = {
+	[RangeType.Player]     = 2.5,
+	[RangeType.Missile]    = 1.0,
+	[RangeType.GuidedBomb] = nil,
+}
+
+local AGM = {
 	[Weapon.MissileCategory.BM] = true,
 	[Weapon.MissileCategory.ANTI_SHIP] = true,
 	[Weapon.MissileCategory.CRUISE] = true,
 	[Weapon.MissileCategory.OTHER] = true,
 }
 
--- Maps specific unit attributes to maximum intended render ranges, in meters
-local RENDER_RANGES = {
+-- Maps specific unit types and attributes to minimum render ranges, in meters
+local UnitRanges = {
+	[RangeType.Player]          = {},
+	[RangeType.Missile]         = {},
+	[RangeType.GuidedBomb]      = {},
+}
+local AttributeRanges = {
 	[RangeType.Player] = {
-		["Ships"]       = 480000,
-		["EWR"]         = 320000,
-		["LR SAM"]      = 320000,
-		["MR SAM"]      = 160000,
-		["Default"]     =  20000,
+		["Ships"]               = 500000,
+		["EWR"]                 = 300000,
 	},
 	[RangeType.Missile] = {
-		["Ships"]       = 120000,
-		["EWR"]         =  40000,
-		["LR SAM"]      =  40000,
-		["MR SAM"]      =  20000,
-		["SR SAM"]      =  10000,
-		["Default"]     =   5000,
-	}
+		["Ships"]               = 300000,
+	},
+	[RangeType.GuidedBomb]      = {},
+}
+local DefaultRanges = {
+	[RangeType.Player]          = 30000,
+	[RangeType.Missile]         = 5000,
+	[RangeType.GuidedBomb]      = 5000,
 }
 
--- Exhaustively search every unit in every group in the template of the asset
--- to find its maximum render ranges based on unit attributes
-local function calculateRange(asset, type)
-	local template = asset:getTemplate()
-	local assetRange = RENDER_RANGES[type]["Default"]
-	if template == nil then
-		return assetRange
+local radarRanges = {}
+local assetRanges = {}
+
+-- Spawns an unit and checks its radar range if needed
+local function getRadarRange(unitType)
+	if radarRanges[unitType] ~= nil then
+		return radarRanges[unitType]
 	end
-	for _, group in pairs(template) do
-		Logger:debug("asset %s group %s", asset.name, group.data.name)
-		if group.data ~= nil and group.data.units ~= nil then
-			local groupRange = 0
-			for _, unit in pairs(group.data.units) do
-				local desc = Unit.getDescByName(unit.type)
-				for attr, unitRange in pairs(RENDER_RANGES[type]) do
-					if desc.attributes[attr] and unitRange > groupRange then
-						Logger:debug(
-							"asset %s unit %s attr %s overriding range = %d",
-							asset.name, unit.type, attr, unitRange)
-						groupRange = unitRange
-					end
+	local range = 0
+	local prefix = string.format("DCT_RenderManager_RadarRange")
+	local category = Unit.getDescByName(unitType).category
+	local group = coalition.addGroup(0, category, {
+		name = string.format("%s Group", prefix),
+		task = "Ground Nothing",
+		start_time = 0,
+		hidden = true,
+		units = {{
+			playerCanDrive = false,
+			name = string.format("%s Unit", prefix),
+			type = unitType,
+			heading = 0,
+			x = 0,
+			y = 0,
+		}},
+		x = 0,
+		y = 0,
+	})
+	local sensors = group:getUnit(1):getSensors()
+	Logger:debug("unit %s sensors = %s",
+		unitType, require("libs.json"):encode_pretty(sensors))
+	if sensors ~= nil and sensors[Unit.SensorType.RADAR] ~= nil then
+		for _, sensor in pairs(sensors[Unit.SensorType.RADAR]) do
+			local detection = sensor.detectionDistanceAir
+			if sensor.type == 1 and detection ~= nil then
+				if detection.upperHemisphere.headOn > range then
+					range = detection.upperHemisphere.headOn
 				end
-			end
-			if groupRange > assetRange then
-				assetRange = groupRange
+				if detection.lowerHemisphere.headOn > range then
+					range = detection.lowerHemisphere.headOn
+				end
 			end
 		end
 	end
-	Logger:debug("asset %s range = %d", asset.name, assetRange)
+	radarRanges[unitType] = range
+	group:destroy()
+	return range
+end
+
+-- Exhaustively search every unit in every group in the template of the asset
+-- to find its maximum render ranges based on various settings
+local function calculateRangeFor(asset, rangeType)
+	local assetRange = DefaultRanges[rangeType]
+	local template = asset:getTemplate()
+	if template == nil then
+		return assetRange
+	end
+	Logger:debug("calc asset '%s' range for %s",
+		asset.name, require("libs.utils").getkey(RangeType, rangeType))
+	for _, group in pairs(template) do
+		if group.data ~= nil and group.data.units ~= nil then
+			for _, unit in pairs(group.data.units) do
+				local desc = Unit.getDescByName(unit.type)
+				local unitRange = UnitRanges[rangeType][unit.type]
+				for attr, attrRange in pairs(AttributeRanges[rangeType]) do
+					if desc.attributes[attr] ~= nil and attrRange > assetRange then
+						unitRange = attrRange
+						Logger:debug("asset '%s' unit '%s' attr '%s' overriding range = %d",
+							asset.name, unit.type, attr, attrRange)
+					end
+				end
+				if RadarDistanceFactor[rangeType] ~= nil then
+					local range = getRadarRange(unit.type) * RadarDistanceFactor[rangeType]
+					if range > assetRange then
+						unitRange = range
+						Logger:debug("asset '%s' unit '%s' radar overriding range = %d",
+							asset.name, unit.type, range)
+					end
+				end
+				if unitRange ~= nil and unitRange > assetRange then
+					assetRange = unitRange
+					Logger:debug("asset '%s' unit '%s' setting asset range = %d",
+						asset.name, unit.type, unitRange)
+				end
+			end
+		end
+	end
+	Logger:debug("asset '%s' range for '%s' = %d",
+		asset.name, require("libs.utils").getkey(RangeType, rangeType), assetRange)
 	return assetRange
+end
+
+-- Compute and save asset render ranges for future lookups
+local function computeRanges(asset)
+	if assetRanges[asset.name] == nil then
+		assetRanges[asset.name] = {}
+		for _, type in pairs(RangeType) do
+			assetRanges[asset.name][type] = calculateRangeFor(asset, type)
+		end
+	end
 end
 
 local function isPlayer(object)
 	return object:getPlayerName() ~= nil
 end
 
-local function allPlayers()
+local function getAllPlayers()
 	local players = {}
 	for co = 0, 2 do
 		for _, player in pairs(coalition.getPlayers(co)) do
@@ -106,10 +185,14 @@ local function allPlayers()
 	return players
 end
 
-local function weaponIsTracked(weapon)
+local function weaponRangeType(weapon)
 	local desc = weapon:getDesc()
-	return desc.category == Weapon.Category.MISSILE and
-	       MissileCategories[desc.missileCategory]
+	if desc.category == Weapon.Category.MISSILE and AGM[desc.missileCategory] then
+		return RangeType.Missile
+	end
+	if desc.category == Weapon.Category.BOMB and desc.guidance ~= nil then
+		return RangeType.GuidedBomb
+	end
 end
 
 local RenderManager = class()
@@ -123,8 +206,7 @@ function RenderManager:__init(theater)
 	self.assets    = {} -- Assets grouped by region
 	self.assetPos  = {} -- Asset locations as Vector3D
 	self.lastSeen  = {} -- Time each asset was last seen
-	self.ranges    = {} -- Asset render ranges
-	self.missiles  = {} -- Tracked missiles
+	self.weapons   = {} -- Tracked weapons in flight
 
 	-- Listen to weapon fired events to track stand-off weapons
 	theater:addObserver(self.onDCSEvent, self, "RenderManager.onDCSEvent")
@@ -136,22 +218,12 @@ end
 
 function RenderManager:onDCSEvent(event)
 	if event.id == world.event.S_EVENT_SHOT then
-		if isPlayer(event.initiator) and weaponIsTracked(event.weapon) then
-			Logger:debug("start tracking missile %d ('%s') released by '%s'",
+		if isPlayer(event.initiator) and weaponRangeType(event.weapon) ~= nil then
+			Logger:debug("start tracking wpn %d ('%s') released by '%s'",
 				event.weapon.id_,
 				event.weapon:getTypeName(),
 				event.initiator:getPlayerName())
-			table.insert(self.missiles, event.weapon)
-		end
-	end
-end
-
--- Compute and save asset render ranges for future lookups
-function RenderManager:computeRanges(asset)
-	if self.ranges[asset.name] == nil then
-		self.ranges[asset.name] = {}
-		for _, type in pairs(RangeType) do
-			self.ranges[asset.name][type] = calculateRange(asset, type)
+			table.insert(self.weapons, event.weapon)
 		end
 	end
 end
@@ -163,10 +235,9 @@ function RenderManager:inRange(object, asset)
 		return true
 	end
 
-	self:computeRanges(asset)
-
+	computeRanges(asset)
 	local dist = vec.distance(object.location, self.assetPos[asset.name])
-	return dist <= self.ranges[asset.name][object.rangeType]
+	return dist <= assetRanges[asset.name][object.rangeType]
 end
 
 --[[
@@ -181,10 +252,11 @@ function RenderManager:tooFar(object, asset, region)
 		return false
 	end
 
-	self:computeRanges(asset)
+	computeRanges(asset)
 	local range = math.max(
-		self.ranges[asset.name][RangeType.Player],
-		self.ranges[asset.name][RangeType.Missile])
+		assetRanges[asset.name][RangeType.Player],
+		assetRanges[asset.name][RangeType.Missile],
+		assetRanges[asset.name][RangeType.GuidedBomb])
 
 	local dist = vec.distance(object.location, self.assetPos[asset.name])
 	return dist > range + region.radius
@@ -193,25 +265,25 @@ end
 function RenderManager:update(theater)
 	local assetmgr = theater:getAssetMgr()
 	local regions = theater:getRegionMgr().regions
-	-- Update player and missile locations
+	-- Update player and weapon locations
 	self.objects = {}
-	local players = allPlayers()
+	local players = getAllPlayers()
 	for i = 1, #players do
 		table.insert(self.objects, {
 			location = vec.Vector3D(players[i]:getPoint()),
 			rangeType = RangeType.Player,
 		})
 	end
-	for i = #self.missiles, 1, -1 do
-		local msl = self.missiles[i]
-		if msl:isExist() then
+	for i = #self.weapons, 1, -1 do
+		local wpn = self.weapons[i]
+		if wpn:isExist() then
 			table.insert(self.objects, {
-				location = vec.Vector3D(msl:getPoint()),
-				rangeType = RangeType.Missile,
+				location = vec.Vector3D(wpn:getPoint()),
+				rangeType = weaponRangeType(wpn),
 			})
 		else
-			Logger:debug("end tracking missile %d", msl.id_)
-			table.remove(self.missiles, i)
+			Logger:debug("end tracking wpn %d", wpn.id_)
+			table.remove(self.weapons, i)
 		end
 	end
 	-- Update asset locations
@@ -257,10 +329,8 @@ function RenderManager:getSortedDistances(region)
 		table.insert(distances, dist)
 		-- In the *extremely* unlikely case that we have more than one
 		-- object at the same cached distance from the region center,
-		-- prefer to store a player over a missile so that it can
-		-- check the largest radius of the two
-		if objdist[dist] == nil or
-			objdist[dist].rangeType ~= RangeType.Player then
+		-- prefer to store a player over any kind of weapon
+		if objdist[dist] == nil or obj.rangeType == RangeType.Player then
 			objdist[dist] = obj
 		end
 	end
