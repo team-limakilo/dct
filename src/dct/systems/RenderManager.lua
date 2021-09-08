@@ -108,10 +108,8 @@ end
 
 local function weaponIsTracked(weapon)
 	local desc = weapon:getDesc()
-	Logger:debug("check tracked weapon: %s",
-		require("libs.json"):encode_pretty(desc))
 	return desc.category == Weapon.Category.MISSILE and
-	       MissileCategories[weapon.missileCategory]
+	       MissileCategories[desc.missileCategory]
 end
 
 local RenderManager = class()
@@ -140,7 +138,7 @@ function RenderManager:onDCSEvent(event)
 	if event.id == world.event.S_EVENT_SHOT then
 		if isPlayer(event.initiator) and weaponIsTracked(event.weapon) then
 			Logger:debug("start tracking missile %d ('%s') released by '%s'",
-				event.weapon:getID(),
+				event.weapon.id_,
 				event.weapon:getTypeName(),
 				event.initiator:getPlayerName())
 			table.insert(self.missiles, event.weapon)
@@ -212,7 +210,7 @@ function RenderManager:update(theater)
 				rangeType = RangeType.Missile,
 			})
 		else
-			Logger:debug("end tracking missile %d", msl:getID())
+			Logger:debug("end tracking missile %d", msl.id_)
 			table.remove(self.missiles, i)
 		end
 	end
