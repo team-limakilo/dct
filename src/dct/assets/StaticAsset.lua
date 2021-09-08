@@ -20,6 +20,7 @@ local StaticAsset = require("libs.namedclass")("StaticAsset", AssetBase)
 function StaticAsset:__init(template)
 	self._maxdeathgoals = 0
 	self._curdeathgoals = 0
+	self._status        = 0
 	self._deathgoals    = {}
 	self._assets        = {}
 	self._eventhandlers = {
@@ -163,15 +164,18 @@ function StaticAsset:getLocation()
 end
 
 function StaticAsset:getStatus()
+	if not self:isSpawned() then
+		return self._status
+	end
 	local total = 0
-	local completed = self._maxdeathgoals
+	local goals = self._maxdeathgoals
 	for _, goal in pairs(self._deathgoals) do
 		total = total + goal:getStatus()
-		completed = completed - 1
+		goals = goals - 1
 	end
-	-- missing goals are 100% complete
-	total = total + completed * 100
-	return math.ceil(total / self._maxdeathgoals)
+	total = total + goals * 100
+	self._status = math.ceil(total / self._maxdeathgoals)
+	return self._status
 end
 
 function StaticAsset:getObjectNames()
@@ -258,6 +262,8 @@ function StaticAsset:spawn(ignore)
 	for _, goal in pairs(self._deathgoals) do
 		goal:onSpawn()
 	end
+
+	self:getStatus()
 end
 
 function StaticAsset:despawn()
