@@ -215,7 +215,6 @@ function StaticAsset:handleDead(event)
 		local units = grp.data.units
 		for i = 1, #units do
 			if units[i].name == unitname then
-				self._logger:debug("IS DEAD: %s", unitname)
 				self:_checkDeathGoal(unitname)
 				table.remove(units, i)
 				break
@@ -235,7 +234,7 @@ function StaticAsset:handleDead(event)
 	end
 end
 
-local function isUnitCategory(category)
+local function isUnitGroup(category)
 	return category == Unit.Category.AIRPLANE
 		or category == Unit.Category.HELICOPTER
 		or category == Unit.Category.GROUND_UNIT
@@ -248,11 +247,10 @@ function StaticAsset:spawn(ignore)
 		return
 	end
 
-	for _, tpl in pairs(self._assets) do
-		local obj = tpl
+	for _, obj in pairs(self._assets) do
 		if obj.category == Unit.Category.STRUCTURE then
 			coalition.addStaticObject(obj.countryid, obj.data)
-		elseif isUnitCategory(obj.category) then
+		elseif isUnitGroup(obj.category) then
 			coalition.addGroup(obj.countryid, obj.category, obj.data)
 		end
 	end
@@ -271,7 +269,7 @@ function StaticAsset:despawn()
 		if obj.category == Unit.Category.STRUCTURE then
 			local structure = StaticObject.getByName(name)
 			structure:destroy()
-		elseif isUnitCategory(obj.category) then
+		elseif isUnitGroup(obj.category) then
 			local group = Group.getByName(name)
 			group:destroy()
 		end
@@ -280,11 +278,20 @@ function StaticAsset:despawn()
 	AssetBase.despawn(self)
 end
 
--- copy live groups in the same order as the original template
-local function filterTemplateData(template, alive)
+-- copies live groups in the same order as the original template,
+-- and removes group and unit ids inserted by DCS
+local function filterTemplateData(template, aliveGroups)
 	local out = {}
 	for _, grp in ipairs(template) do
-		table.insert(out, utils.deepcopy(alive[grp.data.name]))
+		table.insert(out, utils.deepcopy(aliveGroups[grp.data.name]))
+	end
+	for _, grp in ipairs(out) do
+		grp.data.groupId = nil
+		if grp.data.units ~= nil then
+			for _, unit in ipairs(grp.data.units) do
+				unit.unitId = nil
+			end
+		end
 	end
 	return out
 end
