@@ -11,7 +11,7 @@
 --    (players and player-launched missiles)
 --]]
 
--- luacheck: max_cyclomatic_complexity 15
+-- luacheck: max_cyclomatic_complexity 16
 
 local class     = require("libs.class")
 local utils     = require("dct.utils")
@@ -126,7 +126,7 @@ local function calculateRangeFor(asset, rangeType)
 	if template == nil then
 		return assetRange
 	end
-	Logger:debug("calc asset '%s' range for %s",
+	Logger:debug("asset '%s' calculating range for '%s'",
 		asset.name, require("libs.utils").getkey(RangeType, rangeType))
 	for _, group in pairs(template) do
 		if group.data ~= nil and group.data.units ~= nil then
@@ -136,7 +136,7 @@ local function calculateRangeFor(asset, rangeType)
 				for attr, attrRange in pairs(AttributeRanges[rangeType]) do
 					if desc.attributes[attr] ~= nil and attrRange > assetRange then
 						unitRange = attrRange
-						Logger:debug("asset '%s' unit '%s' attr '%s' overriding range = %d",
+						Logger:debug("asset '%s' unit '%s' attr '%s' set range = %d",
 							asset.name, unit.type, attr, attrRange)
 					end
 				end
@@ -144,13 +144,13 @@ local function calculateRangeFor(asset, rangeType)
 					local range = getRadarRange(unit.type) * RadarDistanceFactor[rangeType]
 					if range > assetRange then
 						unitRange = range
-						Logger:debug("asset '%s' unit '%s' radar overriding range = %d",
+						Logger:debug("asset '%s' unit '%s' radar set range = %d",
 							asset.name, unit.type, range)
 					end
 				end
 				if unitRange ~= nil and unitRange > assetRange then
 					assetRange = unitRange
-					Logger:debug("asset '%s' unit '%s' setting asset range = %d",
+					Logger:debug("asset '%s' unit '%s' asset range = %d",
 						asset.name, unit.type, unitRange)
 				end
 			end
@@ -253,13 +253,8 @@ function RenderManager:tooFar(object, asset, region)
 	end
 
 	computeRanges(asset)
-	local range = math.max(
-		assetRanges[asset.name][RangeType.Player],
-		assetRanges[asset.name][RangeType.Missile],
-		assetRanges[asset.name][RangeType.GuidedBomb])
-
 	local dist = vec.distance(object.location, self.assetPos[asset.name])
-	return dist > range + region.radius
+	return dist > assetRanges[asset.name][object.rangeType] + region.radius
 end
 
 function RenderManager:update(theater)
@@ -324,17 +319,22 @@ function RenderManager:getSortedDistances(region)
 	local regionloc = vec.Vector3D(region.location)
 	local distances = {}
 	local objdist = {}
-	for _, obj in pairs(self.objects) do
-		local dist = vec.distance(obj.location, regionloc)
-		table.insert(distances, dist)
-		-- In the *extremely* unlikely case that we have more than one
-		-- object at the same cached distance from the region center,
-		-- prefer to store a player over any kind of weapon
-		if objdist[dist] == nil or obj.rangeType == RangeType.Player then
-			objdist[dist] = obj
+	for _, rangeType in pairs(RangeType) do
+		distances[rangeType] = {}
+		for _, obj in pairs(self.objects) do
+			if obj.rangeType == rangeType then
+				local dist = vec.distance(obj.location, regionloc)
+				table.insert(distances[rangeType], dist)
+				-- In the *extremely* unlikely case that we have more than one
+				-- object at the same cached distance from the region center,
+				-- prefer to store a player over any kind of weapon
+				if objdist[dist] == nil or rangeType == RangeType.Player then
+					objdist[dist] = obj
+				end
+			end
 		end
+		table.sort(distances[rangeType])
 	end
-	table.sort(distances)
 	return distances, objdist
 end
 
@@ -347,32 +347,42 @@ function RenderManager:checkRegion(region, time)
 			local asset = assets[i]
 			if asset:isSpawned() then
 				local seen = false
-				for di = 1, #distances do
-					ops = ops + 1
-					local object = objdist[distances[di]]
-					if self:tooFar(object, asset, region) then
-						break
+				for rt = 1, #distances do
+					for di = 1, #distances[rt] do
+						ops = ops + 1
+						local object = objdist[distances[rt][di]]
+						if self:tooFar(object, asset, region) then
+							break
+						end
+						if self:inRange(object, asset) then
+							self.lastSeen[asset.name] = time
+							seen = true
+							break
+						end
 					end
-					if self:inRange(object, asset) then
-						self.lastSeen[asset.name] = time
-						seen = true
+					if seen then
 						break
 					end
 				end
-				if not seen then
-					if time - self.lastSeen[asset.name] > DESPAWN_TIMEOUT then
-						asset:despawn()
-					end
+				if not seen and time - self.lastSeen[asset.name] > DESPAWN_TIMEOUT then
+					asset:despawn()
 				end
 			else
-				for di = 1, #distances do
-					ops = ops + 1
-					local object = objdist[distances[di]]
-					if self:tooFar(object, asset, region) then
-						break
+				for rt = 1, #distances do
+					local seen = false
+					for di = 1, #distances[rt] do
+						ops = ops + 1
+						local object = objdist[distances[rt][di]]
+						if self:tooFar(object, asset, region) then
+							break
+						end
+						if self:inRange(object, asset) then
+							self.lastSeen[asset.name] = time
+							seen = true
+							break
+						end
 					end
-					if self:inRange(object, asset) then
-						self.lastSeen[asset.name] = time
+					if seen then
 						asset:spawn()
 						break
 					end
@@ -380,7 +390,7 @@ function RenderManager:checkRegion(region, time)
 			end
 		end
 		Logger:info("checkRegion(%s) objects = %d, assets = %d, ops = %d",
-			region.name, #distances, #assets, ops)
+			region.name, #distances[1]+#distances[2]+#distances[3], #assets, ops)
 	end
 end
 
