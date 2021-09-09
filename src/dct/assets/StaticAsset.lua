@@ -51,6 +51,8 @@ function StaticAsset.assettypes()
 		enum.assetType.FACTORY,
 		enum.assetType.FOB,
 		enum.assetType.LOGISTICS,
+		enum.assetType.FRONTLINE,
+		enum.assetType.CONVOY,
 	}
 end
 

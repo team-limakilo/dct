@@ -11,9 +11,10 @@
 --    (players and player-launched missiles)
 --]]
 
--- luacheck: max_cyclomatic_complexity 16
+-- luacheck: max_cyclomatic_complexity 100
 
 local class     = require("libs.class")
+local enum      = require("dct.enum")
 local utils     = require("dct.utils")
 local Command   = require("dct.Command")
 local vec       = require("dct.libs.vector")
@@ -47,6 +48,8 @@ local AGM = {
 	[Weapon.MissileCategory.CRUISE] = true,
 	[Weapon.MissileCategory.OTHER] = true,
 }
+
+local OnDemand = enum.assetClass.ONDEMAND
 
 -- Maps specific unit types and attributes to minimum render ranges, in meters
 local UnitRanges = {
@@ -197,16 +200,16 @@ end
 
 local RenderManager = class()
 function RenderManager:__init(theater)
-	-- Disable this system in tests
-	if _G.DCT_TEST then
-		return
-	end
-
-	self.object    = {} -- Object of interest locations as Vector3D
+	self.objects   = {} -- Object of interest locations as Vector3D
 	self.assets    = {} -- Assets grouped by region
 	self.assetPos  = {} -- Asset locations as Vector3D
 	self.lastSeen  = {} -- Time each asset was last seen
 	self.weapons   = {} -- Tracked weapons in flight
+
+	-- Disable automatic execution in tests
+	if _G.DCT_TEST then
+		return
+	end
 
 	-- Listen to weapon fired events to track stand-off weapons
 	theater:addObserver(self.onDCSEvent, self, "RenderManager.onDCSEvent")
@@ -228,13 +231,20 @@ function RenderManager:onDCSEvent(event)
 	end
 end
 
--- Check if the object is within the asset's render bubble
-function RenderManager:inRange(object, asset)
-	-- Flagged and targeted assets should always be visible
-	if asset.nocull or asset:isTargeted(utils.getenemy(asset.owner)) then
+-- Check conditions on assets that are not range-based
+local function forcedVisibility(asset)
+	if asset.nocull then
 		return true
 	end
+	if asset:isTargeted(utils.getenemy(asset.owner)) then
+		return true
+	elseif OnDemand[asset.type] then
+		return false
+	end
+end
 
+-- Check if the object is within the asset's render bubble
+function RenderManager:inRange(object, asset)
 	computeRanges(asset)
 	local dist = vec.distance(object.location, self.assetPos[asset.name])
 	return dist <= assetRanges[asset.name][object.rangeType]
@@ -247,11 +257,6 @@ end
 -- two ranges between player and missile render range
 --]]
 function RenderManager:tooFar(object, asset, region)
-	-- Flagged and targeted assets should always be visible
-	if asset.nocull or asset:isTargeted(utils.getenemy(asset.owner)) then
-		return false
-	end
-
 	computeRanges(asset)
 	local dist = vec.distance(object.location, self.assetPos[asset.name])
 	return dist > assetRanges[asset.name][object.rangeType] + region.radius
@@ -345,47 +350,56 @@ function RenderManager:checkRegion(region, time)
 		local distances, objdist = self:getSortedDistances(region)
 		for i = 1, #assets do
 			local asset = assets[i]
-			if asset:isSpawned() then
-				local seen = false
-				for rt = 1, #distances do
-					for di = 1, #distances[rt] do
-						ops = ops + 1
-						local object = objdist[distances[rt][di]]
-						if self:tooFar(object, asset, region) then
-							break
+			local forcedVis = forcedVisibility(asset)
+			if forcedVis == nil then
+				if asset:isSpawned() then
+					local seen = false
+					for rt = 1, #distances do
+						for di = 1, #distances[rt] do
+							ops = ops + 1
+							local object = objdist[distances[rt][di]]
+							if self:tooFar(object, asset, region) then
+								break
+							end
+							if self:inRange(object, asset) then
+								self.lastSeen[asset.name] = time
+								seen = true
+								break
+							end
 						end
-						if self:inRange(object, asset) then
-							self.lastSeen[asset.name] = time
-							seen = true
+						if seen then
 							break
 						end
 					end
-					if seen then
-						break
+					if not seen and time - self.lastSeen[asset.name] > DESPAWN_TIMEOUT then
+						asset:despawn()
 					end
-				end
-				if not seen and time - self.lastSeen[asset.name] > DESPAWN_TIMEOUT then
-					asset:despawn()
+				else
+					for rt = 1, #distances do
+						local seen = false
+						for di = 1, #distances[rt] do
+							ops = ops + 1
+							local object = objdist[distances[rt][di]]
+							if self:tooFar(object, asset, region) then
+								break
+							end
+							if self:inRange(object, asset) then
+								self.lastSeen[asset.name] = time
+								seen = true
+								break
+							end
+						end
+						if seen then
+							asset:spawn()
+							break
+						end
+					end
 				end
 			else
-				for rt = 1, #distances do
-					local seen = false
-					for di = 1, #distances[rt] do
-						ops = ops + 1
-						local object = objdist[distances[rt][di]]
-						if self:tooFar(object, asset, region) then
-							break
-						end
-						if self:inRange(object, asset) then
-							self.lastSeen[asset.name] = time
-							seen = true
-							break
-						end
-					end
-					if seen then
-						asset:spawn()
-						break
-					end
+				if forcedVis == false and asset:isSpawned() then
+					asset:despawn()
+				elseif forcedVis == true and not asset:isSpawned() then
+					asset:spawn()
 				end
 			end
 		end

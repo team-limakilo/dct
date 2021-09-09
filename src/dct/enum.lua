@@ -28,6 +28,8 @@ enum.assetType = {
 	["JTAC"]        = 12,
 	["LOGISTICS"]   = 13,
 	["SEA"]         = 14,
+	["FRONTLINE"]   = 25,
+	["CONVOY"]      = 26,
 
 	-- extended type set
 	["BUNKER"]      = 15,
@@ -48,6 +50,7 @@ enum.assetType = {
 --]]
 enum.assetTypePriority = {
 	[enum.assetType.AIRSPACE]    = 10,
+	[enum.assetType.FRONTLINE]   = 10,
 	[enum.assetType.JTAC]        = 10,
 	[enum.assetType.EWR]         = 20,
 	[enum.assetType.SAM]         = 20,
@@ -61,6 +64,7 @@ enum.assetTypePriority = {
 	[enum.assetType.PORT]        = 70,
 	[enum.assetType.LOGISTICS]   = 70,
 	[enum.assetType.AIRBASE]     = 70,
+	[enum.assetType.CONVOY]      = 70,
 	[enum.assetType.SHORAD]      = 100,
 	[enum.assetType.FACILITY]    = 100,
 	[enum.assetType.BUNKER]      = 100,
@@ -102,9 +106,11 @@ enum.assetClass = {
 		[enum.assetType.SHORAD]      = true,
 		[enum.assetType.AIRBASE]     = true,
 		[enum.assetType.SPECIALFORCES] = true,
-		[enum.assetType.FOB]           = true,
-		[enum.assetType.AIRSPACE]      = true,
-		[enum.assetType.LOGISTICS]     = true,
+		[enum.assetType.FOB]         = true,
+		[enum.assetType.AIRSPACE]    = true,
+		[enum.assetType.LOGISTICS]   = true,
+		[enum.assetType.FRONTLINE]   = true,
+		[enum.assetType.CONVOY]      = true,
 	},
 	-- strategic list is used in calculating ownership of a region
 	-- among other things
@@ -127,7 +133,13 @@ enum.assetClass = {
 	-- agents never get serialized to the state file
 	["AGENTS"] = {
 		[enum.assetType.PLAYERGROUP] = true,
-	}
+	},
+	-- on-demand assets are only spawned when targeted by a mission
+	["ONDEMAND"] = {
+		[enum.assetType.SPECIALFORCES] = true,
+		[enum.assetType.FRONTLINE]     = true,
+		[enum.assetType.CONVOY]        = true,
+	},
 }
 
 enum.missionTypeMap = {
@@ -155,6 +167,7 @@ enum.missionTypeMap = {
 	},
 	[enum.missionType.CAS] = {
 		[enum.assetType.JTAC]       = true,
+		[enum.assetType.FRONTLINE]  = true,
 	},
 	[enum.missionType.CAP] = {
 		[enum.assetType.AIRSPACE]   = true,
@@ -164,7 +177,7 @@ enum.missionTypeMap = {
 		[enum.assetType.FOB]           = true,
 	},
 	[enum.missionType.ANTISHIP] = {
-		[enum.assetType.SEA] = true,
+		[enum.assetType.SEA]        = true,
 	},
 }
 
