@@ -214,24 +214,12 @@ function AssetManager:update()
 			asset:update()
 		end
 		if asset:isDead() and not asset:isSpawned() then
-			-- disband asset
 			deletionq[asset.name] = true
 		end
 	end
 	for name, _ in pairs(deletionq) do
 		self:remove(self:getAsset(name))
 	end
-	local function countunits(coa)
-		local units = 0
-		for _, grp in pairs(coalition.getGroups(coa)) do
-			units = units + grp:getSize()
-		end
-		return units
-	end
-	local function countall()
-		return countunits(1) + countunits(2) + countunits(0)
-	end
-	self._logger:debug("units: %d", countall())
 	return self.updaterate
 end
 
