@@ -238,7 +238,7 @@ local function forcedVisibility(asset)
 	end
 	if asset:isTargeted(utils.getenemy(asset.owner)) then
 		return true
-	elseif OnDemand[asset.type] then
+	elseif OnDemand[asset.type] and not asset:isSpawned() then
 		return false
 	end
 end

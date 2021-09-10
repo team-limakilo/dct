@@ -16,6 +16,13 @@ local vector   = require("dct.libs.vector")
 local Goal     = require("dct.Goal")
 local AssetBase= require("dct.assets.AssetBase")
 
+local function isUnitGroup(category)
+	return category == Unit.Category.AIRPLANE
+		or category == Unit.Category.HELICOPTER
+		or category == Unit.Category.GROUND_UNIT
+		or category == Unit.Category.SHIP
+end
+
 local StaticAsset = require("libs.namedclass")("StaticAsset", AssetBase)
 function StaticAsset:__init(template)
 	self._maxdeathgoals = 0
@@ -251,13 +258,6 @@ function StaticAsset:handleDead(event)
 		self:_checkDeathGoal(unitname)
 		self._assets[unitname] = nil
 	end
-end
-
-local function isUnitGroup(category)
-	return category == Unit.Category.AIRPLANE
-		or category == Unit.Category.HELICOPTER
-		or category == Unit.Category.GROUND_UNIT
-		or category == Unit.Category.SHIP
 end
 
 function StaticAsset:spawn(ignore)
