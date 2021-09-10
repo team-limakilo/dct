@@ -142,14 +142,20 @@ function StaticAsset:_setup()
 	for _, grp in ipairs(self._tpldata) do
 		self:_setupDeathGoal(grp.data, grp.category, grp.countryid)
 		self._assets[grp.data.name] = utils.deepcopy(grp)
+
+		local route = grp.data.route
+		if route ~= nil and route.points ~= nil and #route.points > 1 then
+			self.isMobile = true
+		end
 	end
+
 	if next(self._deathgoals) == nil then
 		self._logger:error("runtime error: must have a deathgoal, deleting")
 		self:setDead(true)
 	end
 end
 
-function StaticAsset:getTemplate()
+function StaticAsset:getTemplateData()
 	return self._tpldata
 end
 
@@ -163,6 +169,17 @@ function StaticAsset:getLocation()
 		self._location = vector.Vector3D(vec2, land.getHeight(vec2)):raw()
 	end
 	return AssetBase.getLocation(self)
+end
+
+function StaticAsset:getCurrentLocation()
+	if self:isSpawned() and self.isMobile then
+		for name, group in pairs(self._assets) do
+			if isUnitGroup(group.category) then
+				return Group.getByName(name):getUnit(1):getPoint()
+			end
+		end
+	end
+	return self:getLocation()
 end
 
 function StaticAsset:getStatus()

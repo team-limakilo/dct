@@ -357,13 +357,6 @@ function AssetBase:getObjectNames()
 end
 
 --[[
--- Get the template data of the asset, if it exists
---]]
-function AssetBase:getTemplate()
-	return nil
-end
-
---[[
 -- Process a DCS event associated w/ this asset.
 -- Returns: none
 --]]

@@ -125,13 +125,13 @@ end
 -- to find its maximum render ranges based on various settings
 local function calculateRangeFor(asset, rangeType)
 	local assetRange = DefaultRanges[rangeType]
-	local template = asset:getTemplate()
-	if template == nil then
+	local tpldata = asset:getTemplateData()
+	if tpldata == nil then
 		return assetRange
 	end
 	Logger:debug("asset '%s' calculating range for '%s'",
 		asset.name, require("libs.utils").getkey(RangeType, rangeType))
-	for _, group in pairs(template) do
+	for _, group in pairs(tpldata) do
 		if group.data ~= nil and group.data.units ~= nil then
 			for _, unit in pairs(group.data.units) do
 				local desc = Unit.getDescByName(unit.type)
@@ -290,10 +290,10 @@ function RenderManager:update(theater)
 	self.assets = {}
 	self.assetPos = {}
 	for _, asset in assetmgr:iterate() do
-		if asset:isa(StaticAsset) and asset:getLocation() ~= nil then
+		if asset:isa(StaticAsset) then
 			self.assets[asset.rgnname] = self.assets[asset.rgnname] or {}
 			self.lastSeen[asset.name] = self.lastSeen[asset.name] or AGE_OLD
-			self.assetPos[asset.name] = vec.Vector3D(asset:getLocation())
+			self.assetPos[asset.name] = vec.Vector3D(asset:getCurrentLocation())
 			table.insert(self.assets[asset.rgnname], asset)
 		end
 	end
