@@ -52,7 +52,7 @@ local AGM = {
 local OnDemand = enum.assetClass.ONDEMAND
 
 -- Maps specific unit types and attributes to minimum render ranges, in meters
-local UnitRanges = {
+local UnitTypeRanges = {
 	[RangeType.Player]          = {},
 	[RangeType.Missile]         = {},
 	[RangeType.GuidedBomb]      = {},
@@ -73,36 +73,15 @@ local DefaultRanges = {
 	[RangeType.GuidedBomb]      = 5000,
 }
 
-local radarRanges = {}
 local assetRanges = {}
 
--- Spawns an unit and checks its radar range if needed
-local function getRadarRange(unitType)
-	if radarRanges[unitType] ~= nil then
-		return radarRanges[unitType]
-	end
+-- Gets the maximum radar detection range of an unit
+-- Note: this sometimes combines all sensors of a group,
+-- so a supply truck in a SAM group may return the search
+-- radar sensor range.
+local function getRadarRange(unit)
 	local range = 0
-	local prefix = string.format("DCT_RenderManager_RadarRange")
-	local category = Unit.getDescByName(unitType).category
-	local group = coalition.addGroup(0, category, {
-		name = string.format("%s Group", prefix),
-		task = "Ground Nothing",
-		start_time = 0,
-		hidden = true,
-		units = {{
-			playerCanDrive = false,
-			name = string.format("%s Unit", prefix),
-			type = unitType,
-			heading = 0,
-			x = 0,
-			y = 0,
-		}},
-		x = 0,
-		y = 0,
-	})
-	local sensors = group:getUnit(1):getSensors()
-	Logger:debug("unit %s sensors = %s",
-		unitType, require("libs.json"):encode_pretty(sensors))
+	local sensors = unit:getSensors()
 	if sensors ~= nil and sensors[Unit.SensorType.RADAR] ~= nil then
 		for _, sensor in pairs(sensors[Unit.SensorType.RADAR]) do
 			local detection = sensor.detectionDistanceAir
@@ -116,45 +95,50 @@ local function getRadarRange(unitType)
 			end
 		end
 	end
-	radarRanges[unitType] = range
-	group:destroy()
 	return range
 end
 
--- Exhaustively search every unit in every group in the template of the asset
--- to find its maximum render ranges based on various settings
+-- Exhaustively search every unit in every group of asset
+-- to find its maximum render range based on various settings
 local function calculateRangeFor(asset, rangeType)
 	local assetRange = DefaultRanges[rangeType]
 	local tpldata = asset:getTemplateData()
-	if tpldata == nil then
-		return assetRange
+	-- Cannot calculate range, default to infinite range
+	if tpldata == nil or not asset:isSpawned() then
+		return nil
 	end
 	Logger:debug("asset '%s' calculating range for '%s'",
 		asset.name, require("libs.utils").getkey(RangeType, rangeType))
-	for _, group in pairs(tpldata) do
-		if group.data ~= nil and group.data.units ~= nil then
-			for _, unit in pairs(group.data.units) do
-				local desc = Unit.getDescByName(unit.type)
-				local unitRange = UnitRanges[rangeType][unit.type]
+	for _, tpl in pairs(tpldata) do
+		local group = Group.getByName(tpl.data.name)
+		if group ~= nil then
+			for _, unit in pairs(group:getUnits()) do
+				local unitDesc = unit:getDesc()
+				local unitType = unit:getTypeName()
+				-- Check unit type range
+				local unitRange = UnitTypeRanges[rangeType][unitType]
+				-- Check attribute ranges
 				for attr, attrRange in pairs(AttributeRanges[rangeType]) do
-					if desc.attributes[attr] ~= nil and attrRange > assetRange then
+					if unitDesc.attributes[attr] ~= nil and attrRange > assetRange then
 						unitRange = attrRange
 						Logger:debug("asset '%s' unit '%s' attr '%s' set range = %d",
-							asset.name, unit.type, attr, attrRange)
+							asset.name, unitType, attr, attrRange)
 					end
 				end
+				-- Check radar range
 				if RadarDistanceFactor[rangeType] ~= nil then
-					local range = getRadarRange(unit.type) * RadarDistanceFactor[rangeType]
-					if range > assetRange then
-						unitRange = range
+					local radarRange = getRadarRange(unit) * RadarDistanceFactor[rangeType]
+					if radarRange > assetRange then
+						unitRange = radarRange
 						Logger:debug("asset '%s' unit '%s' radar set range = %d",
-							asset.name, unit.type, range)
+							asset.name, unitType, radarRange)
 					end
 				end
+				-- Override asset range if unit wins
 				if unitRange ~= nil and unitRange > assetRange then
 					assetRange = unitRange
 					Logger:debug("asset '%s' unit '%s' asset range = %d",
-						asset.name, unit.type, unitRange)
+						asset.name, unitType, unitRange)
 				end
 			end
 		end
@@ -245,7 +229,9 @@ end
 
 -- Check if the object is within the asset's render bubble
 function RenderManager:inRange(object, asset)
-	computeRanges(asset)
+	if assetRanges[asset.name][object.rangeType] == nil then
+		return true
+	end
 	local dist = vec.distance(object.location, self.assetPos[asset.name])
 	return dist <= assetRanges[asset.name][object.rangeType]
 end
@@ -257,7 +243,9 @@ end
 -- two ranges between player and missile render range
 --]]
 function RenderManager:tooFar(object, asset, region)
-	computeRanges(asset)
+	if assetRanges[asset.name][object.rangeType] == nil then
+		return false
+	end
 	local dist = vec.distance(object.location, self.assetPos[asset.name])
 	return dist > assetRanges[asset.name][object.rangeType] + region.radius
 end
@@ -352,16 +340,18 @@ function RenderManager:checkRegion(region, time)
 			local asset = assets[i]
 			local forcedVis = forcedVisibility(asset)
 			if forcedVis == nil then
+				computeRanges(asset)
 				if asset:isSpawned() then
 					local seen = false
 					for rt = 1, #distances do
 						for di = 1, #distances[rt] do
-							ops = ops + 1
 							local object = objdist[distances[rt][di]]
 							if self:tooFar(object, asset, region) then
+								ops = ops + 1
 								break
 							end
 							if self:inRange(object, asset) then
+								ops = ops + 1
 								self.lastSeen[asset.name] = time
 								seen = true
 								break
@@ -378,12 +368,13 @@ function RenderManager:checkRegion(region, time)
 					for rt = 1, #distances do
 						local seen = false
 						for di = 1, #distances[rt] do
-							ops = ops + 1
 							local object = objdist[distances[rt][di]]
 							if self:tooFar(object, asset, region) then
+								ops = ops + 1
 								break
 							end
 							if self:inRange(object, asset) then
+								ops = ops + 1
 								self.lastSeen[asset.name] = time
 								seen = true
 								break
@@ -403,8 +394,10 @@ function RenderManager:checkRegion(region, time)
 				end
 			end
 		end
-		Logger:info("checkRegion(%s) objects = %d, assets = %d, ops = %d",
-			region.name, #distances[1]+#distances[2]+#distances[3], #assets, ops)
+		Logger:info("checkRegion(%s) details:\n  players = %d\n  missiles = %d\n"..
+			"  bombs = %d\n  assets = %d\n  range checks = %d", region.name,
+			#distances[RangeType.Player], #distances[RangeType.Missile],
+			#distances[RangeType.GuidedBomb], #assets, ops)
 	end
 end
 
