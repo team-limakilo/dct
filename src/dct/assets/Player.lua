@@ -222,8 +222,7 @@ function OccupiedState:_checkPayload(asset, display)
 	if display and not ok then
 		-- Show the current loadout to the player
 		local CheckPayloadCmd = cmds[dctenum.uiRequestType.CHECKPAYLOAD]
-		local msg = "You are over budget! Re-arm and re-check before departing, "..
-			"or you will be punished!\n"..CheckPayloadCmd.buildSummary(costs)
+		local msg = CheckPayloadCmd.showMessage(false, costs)
 		trigger.action.outTextForGroup(asset.groupId, msg, 60, false)
 	end
 	return nil, ok
