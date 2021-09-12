@@ -149,6 +149,7 @@ function AssetBase:__init(template)
 	end
 	self._initcomplete = false
 	if template ~= nil then
+		self._location = template.location
 		self:_completeinit(template)
 		self:_setup()
 		self._initcomplete = true
@@ -178,7 +179,6 @@ function AssetBase:_completeinit(template)
 	self.regenerate = template.regenerate
 	self.extramarks = template.extramarks
 	self.nocull     = template.nocull
-	self._location  = template.location
 	if norenametype[self.type] == true then
 		self.name = self.tplname
 	else
