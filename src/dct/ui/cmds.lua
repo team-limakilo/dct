@@ -125,7 +125,7 @@ function CheckPayloadCmd:__init(theater, data)
 	self.name = "CheckPayloadCmd:"..data.name
 end
 
-function CheckPayloadCmd.buildSummary(costs)
+function CheckPayloadCmd:_buildSummary(costs)
 	-- print cost summary at the top
 	local msg = "== Loadout Summary:"
 	for desc, cat in pairs(enum.weaponCategory) do
@@ -159,18 +159,21 @@ function CheckPayloadCmd.buildSummary(costs)
 	return msg
 end
 
-function CheckPayloadCmd:_execute(_ --[[time]], _ --[[cmdr]])
-	local ok, totals = loadout.check(self.asset)
+function CheckPayloadCmd:buildMessage(ok, costs)
 	if ok then
 		return "Valid loadout, you may depart. Good luck!\n\n"
-			..self.buildSummary(totals)
+			..self:_buildSummary(costs)
 	else
 		return "You are over budget! Re-arm before departing, or "..
 			"you will be punished!\n\n"
-			..self.buildSummary(totals)
+			..self:_buildSummary(costs)
 	end
 end
 
+function CheckPayloadCmd:_execute(_ --[[time]], _ --[[cmdr]])
+	local ok, costs = loadout.check(self.asset)
+	return self:buildMessage(ok, costs)
+end
 
 local MissionCmd = class(UICmd)
 function MissionCmd:__init(theater, data)
