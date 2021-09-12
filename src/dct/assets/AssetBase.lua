@@ -133,6 +133,7 @@ function AssetBase:__init(template)
 		"ignore",
 		"regenerate",
 		"extramarks",
+		"nocull",
 	})
 	self._spawned    = false
 	self._dead       = false
