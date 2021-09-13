@@ -134,6 +134,7 @@ function AssetBase:__init(template)
 		"regenerate",
 		"extramarks",
 		"nocull",
+		"ondemand",
 	})
 	self._spawned    = false
 	self._dead       = false
@@ -180,6 +181,7 @@ function AssetBase:_completeinit(template)
 	self.regenerate = template.regenerate
 	self.extramarks = template.extramarks
 	self.nocull     = template.nocull
+	self.ondemand   = template.ondemand
 	if norenametype[self.type] == true then
 		self.name = self.tplname
 	else

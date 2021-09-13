@@ -382,6 +382,10 @@ local function getkeys(objtype)
 			["name"]    = "nocull",
 			["type"]	= "boolean",
 			["default"] = false,
+		}, {
+			["name"]    = "ondemand",
+			["type"]	= "boolean",
+			["default"] = false,
 		},
 	}
 

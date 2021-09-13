@@ -14,7 +14,6 @@
 -- luacheck: max_cyclomatic_complexity 100
 
 local class     = require("libs.class")
-local enum      = require("dct.enum")
 local utils     = require("dct.utils")
 local Command   = require("dct.Command")
 local vec       = require("dct.libs.vector")
@@ -48,8 +47,6 @@ local AGM = {
 	[Weapon.MissileCategory.CRUISE] = true,
 	[Weapon.MissileCategory.OTHER] = true,
 }
-
-local OnDemand = enum.assetClass.ONDEMAND
 
 -- Maps specific unit types and attributes to minimum render ranges, in meters
 local UnitTypeRanges = {
@@ -222,7 +219,7 @@ local function forcedVisibility(asset)
 	end
 	if asset:isTargeted(utils.getenemy(asset.owner)) then
 		return true
-	elseif OnDemand[asset.type] and not asset:isSpawned() then
+	elseif asset.ondemand and not asset:isSpawned() then
 		return false
 	end
 end

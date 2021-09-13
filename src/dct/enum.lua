@@ -134,12 +134,6 @@ enum.assetClass = {
 	["AGENTS"] = {
 		[enum.assetType.PLAYERGROUP] = true,
 	},
-	-- on-demand assets are only spawned when targeted by a mission
-	["ONDEMAND"] = {
-		[enum.assetType.SPECIALFORCES] = true,
-		[enum.assetType.FRONTLINE]     = true,
-		[enum.assetType.CONVOY]        = true,
-	},
 }
 
 enum.missionTypeMap = {
