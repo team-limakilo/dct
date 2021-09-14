@@ -279,7 +279,9 @@ function Theater:onEvent(event)
 		return
 	end
 	fixup_airbase(event)
-	self:notify(event)
+	xpcall(function() self:notify(event) end, function(err)
+		Logger:error("protected call - %s", debug.traceback(err, 2))
+	end)
 	if event.id == world.event.S_EVENT_MISSION_END then
 		-- Only delete the state if there is an end mission event
 		-- and tickets are complete, otherwise when a server is
