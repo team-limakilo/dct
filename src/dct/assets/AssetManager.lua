@@ -20,8 +20,7 @@ local assetpaths = {
 	"dct.assets.DefendedAsset",
 }
 
-local AssetManager = require("libs.namedclass")("AssetManager",
-	Observable)
+local AssetManager = require("libs.namedclass")("AssetManager", Observable)
 function AssetManager:__init(theater)
 	Observable.__init(self,
 		require("dct.libs.Logger").getByName("AssetManager"))
@@ -94,6 +93,11 @@ function AssetManager:remove(asset)
 	end
 end
 
+local CapturableAsset = {
+	[enum.assetType.AIRSPACE] = true,
+	[enum.assetType.AIRBASE]  = true,
+}
+
 function AssetManager:add(asset)
 	assert(asset ~= nil, "value error: asset object must be provided")
 	assert(self._assetset[asset.name] == nil, "asset name ('"..
@@ -109,8 +113,8 @@ function AssetManager:add(asset)
 	self._assetset[asset.name] = asset
 	asset:addObserver(self.onDCSEvent, self, "AssetManager.onDCSEvent")
 
-	-- add asset to approperate side lists
-	if asset.type == enum.assetType.AIRSPACE then
+	-- add asset to appropriate side lists
+	if CapturableAsset[asset.type] then
 		for _, side in pairs(coalition.side) do
 			self._sideassets[side].assets[asset.name] = asset.type
 		end
@@ -271,6 +275,7 @@ function AssetManager:onDCSEvent(event)
 		[world.event.S_EVENT_EJECTION]        = true,
 		[world.event.S_EVENT_HIT]             = true,
 		[world.event.S_EVENT_DEAD]            = true,
+		[world.event.S_EVENT_BASE_CAPTURED]   = true,
 		[enum.event.DCT_EVENT_DEAD]           = true,
 		--[world.event.S_EVENT_UNIT_LOST]     = true,
 	}
@@ -279,6 +284,7 @@ function AssetManager:onDCSEvent(event)
 		[world.event.S_EVENT_KILL] = "target", -- type: Unit
 		[world.event.S_EVENT_LAND] = "place", -- type: Object
 		[world.event.S_EVENT_TAKEOFF] = "place", -- type: Object
+		[world.event.S_EVENT_BASE_CAPTURED] = "place", -- type: Airbase
 	}
 
 	if not relevents[event.id] then

@@ -257,7 +257,6 @@ end
 
 -- ignore unnecessary events from DCS
 local irrelevants = {
-	[world.event.S_EVENT_BASE_CAPTURED]                = true,
 	[world.event.S_EVENT_TOOK_CONTROL]                 = true,
 	[world.event.S_EVENT_HUMAN_FAILURE]                = true,
 	[world.event.S_EVENT_DETAILED_FAILURE]             = true,

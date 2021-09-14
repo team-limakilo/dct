@@ -62,6 +62,7 @@
 --   determine if those events render the slot non-operational.
 --]]
 
+local utils         = require("libs.utils")
 local class         = require("libs.namedclass")
 local PriorityQueue = require("libs.containers.pqueue")
 local dctenum       = require("dct.enum")
@@ -181,9 +182,17 @@ function OperationalState:onDCTEvent(asset, event)
 	--  * S_EVENT_LAND - no need to handle
 	--  * S_EVENT_HIT - no need to handle at this time
 	--  * S_EVENT_DEAD - no need to handle at this time
+	--
+	-- For now, we'll only handle capture by ground units
 	--]]
-	asset._logger:debug("operational state: onDCTEvent called event.id %d",
-		event.id)
+	if event.id == world.event.S_EVENT_BASE_CAPTURED and
+	   event.place:getName() == asset.name and
+	   event.place:getCoalition() ~= self.owner then
+		asset.owner = event.place:getCoalition()
+		asset._logger:debug("Captured by %s coalition",
+			utils.getkey(coalition.side, asset.owner))
+	end
+	return nil
 end
 
 local allowedtpltypes = {
@@ -302,6 +311,10 @@ function AirbaseAsset:unmarshal(data)
 	-- unmarshaled due to how the Marshallable object works
 	self.state = State.factory(statemap, data.state.type)
 	self.state:unmarshal(data.state)
+end
+
+function AirbaseAsset:getObjectNames()
+	return { self.name }
 end
 
 function AirbaseAsset:resetDamage()
