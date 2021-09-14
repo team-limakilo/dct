@@ -152,7 +152,7 @@ function OccupiedState:__init(inair)
 	self._eventhandlers = {
 		[world.event.S_EVENT_BIRTH]             = self.handleSwitchOccupied,
 		[world.event.S_EVENT_TAKEOFF]           = self.handleTakeoff,
-		[world.event.S_EVENT_EJECTION]          = self.handleDead,
+		[world.event.S_EVENT_EJECTION]          = self.handleEjection,
 		[world.event.S_EVENT_DEAD]              = self.handleDead,
 		[world.event.S_EVENT_PILOT_DEAD]        = self.handleDead,
 		[world.event.S_EVENT_CRASH]             = self.handleDead,
@@ -322,7 +322,16 @@ function OccupiedState:handleLand(asset, event)
 end
 
 function OccupiedState:handleDead(--[[asset, event]])
-	return EmptyState(dctenum.kickCode.DEAD)
+	return EmptyState(dctenum.kickCode.NOKICK)
+end
+
+function OccupiedState:handleEjection(asset, _)
+	-- Prevent ejected players from blowing up by reslotting immediately
+	if not asset:inAir() then
+		return EmptyState(dctenum.kickCode.DEAD)
+	else
+		return self:handleDead()
+	end
 end
 
 function OccupiedState:handleSwitchOccupied(asset, event)
