@@ -282,13 +282,17 @@ function Commander:canTarget(asset)
 	if asset:isDead() then
 		return false
 	end
+	-- airbases are indestructible at the moment
+	if asset.type == enum.assetType.AIRBASE then
+		return false
+	end
+	-- ignore assets that are assigned to missions that have
+	-- reached the agent quota
 	local mission = self.missionsByTarget[asset.name]
-	-- ignore assets that are assigned to missions that have reached the
-	-- minimum agent quota
 	if mission ~= nil and mission.isfull then
 		return false
 	end
-	-- accept asset as mission target
+	-- finally, accept asset as mission target
 	return true
 end
 

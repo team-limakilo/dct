@@ -61,7 +61,7 @@ local testcmds = {
 			"Airbases:\n  CVN-71 Theodore Roosevelt: Friendly\n  "..
 			"Krymsk: Hostile\n  Kutaisi: Friendly\n  Senaki-Kolkhi: Friendly\n\n"..
 			"Current Active Air Missions:\n  None\n\n"..
-			"Available missions:\n  CAP:  2\n  OCA:  1\n  "..
+			"Available missions:\n  CAP:  2\n  "..
 			"SEAD:  2\n  STRIKE:  3\n\n"..
 			"Recommended Mission Type: SEAD",
 	}, {
@@ -86,7 +86,7 @@ local testcmds = {
 			"Airbases:\n  CVN-71 Theodore Roosevelt: Friendly\n  "..
 			"Krymsk: Hostile\n  Kutaisi: Friendly\n  Senaki-Kolkhi: Friendly\n\n"..
 			"Current Active Air Missions:\n  STRIKE:  1\n\n"..
-			"Available missions:\n  CAP:  2\n  OCA:  1\n  "..
+			"Available missions:\n  CAP:  2\n  "..
 			"SEAD:  2\n  STRIKE:  2\n\n"..
 			"Recommended Mission Type: SEAD",
 	}, {
