@@ -80,6 +80,7 @@ local function reset_slot(asset)
 			asset._logger:warn("squadron does not exist, using default settings")
 		end
 	end
+	uimenu.createMenu(asset)
 	local cmdr = theater:getCommander(asset.owner)
 	local msn  = cmdr:getAssigned(asset)
 
@@ -409,7 +410,6 @@ end
 function Player:_setup()
 	self.state = EmptyState(dctenum.kickCode.SETUP)
 	self.state:enter(self)
-	uimenu.createMenu(self)
 end
 
 -- Player assets cannot die, prevent them from ever being cleaned up
