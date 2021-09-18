@@ -56,6 +56,35 @@ function utils.airbaseId2Name(id)
 	return airbase_id2name_map[id]
 end
 
+function utils.nearestAirbase(point, radius, filter, data)
+	assert(type(point.x) == "number", "point.x must be a number")
+	assert(type(point.z) == "number", "point.z must be a number")
+	assert(type(point.y) == "number", "point.y must be a number")
+	assert(filter == nil or type(filter) == "function",
+		"filter must be a function or nil")
+	local vol = {
+		id = world.VolumeType.SPHERE,
+		params = {
+			point  = point,
+			radius = radius,
+		},
+	}
+	point = vector.Vector3D(point)
+	local nearestDist = math.huge
+	local nearestAirbase = nil
+	local function handler(obj, handlerData)
+		if filter == nil or filter(obj, handlerData) == true then
+			local dist = vector.distance(point, vector.Vector3D(obj:getPoint()))
+			if nearestDist > dist then
+				nearestAirbase = obj
+				nearestDist = dist
+			end
+		end
+	end
+	world.searchObjects(Object.Category.BASE, vol, handler, data)
+	return nearestAirbase
+end
+
 function utils.time(dcsabstime)
 	-- timer.getAbsTime() returns local time of day, but we still need
 	-- to calculate the day
