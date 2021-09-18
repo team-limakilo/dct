@@ -33,20 +33,25 @@ local norenametype = {
 	[dctenum.assetType.AIRBASE]        = true,
 }
 
+local codenames = utils.deepcopy(settings.codenamedb)
+local function getCodenames(type)
+	if codenames[type] == nil then
+		type = "default"
+	end
+	-- Refresh the codename list if it's empty
+	if next(codenames[type]) == nil then
+		codenames[type] = utils.deepcopy(settings.codenamedb[type])
+	end
+	return codenames[type]
+end
+
 local function generateCodename(template)
 	if template.codename ~= "default codename" then
 		return template.codename
 	end
-
-	local codenamedb = settings.codenamedb
-	local typetbl = codenamedb[template.objtype]
-
-	if typetbl == nil then
-		typetbl = codenamedb.default
-	end
-
-	local idx = math.random(1, #typetbl)
-	return typetbl[idx]
+	local typeCodenames = getCodenames(template.objtype)
+	local idx = math.random(1, #typeCodenames)
+	return table.remove(typeCodenames, idx)
 end
 
 local function isMissionTarget(assetType)
