@@ -384,22 +384,36 @@ local function airbaseParkingId(grp)
 	return nil
 end
 
+local function findAirbase(grp)
+	local id = airbaseId(grp)
+	if id ~= nil then
+		return dctutils.airbaseId2Name(id)
+	end
+
+	-- in case of a ground start, use the closest airbase or FARP
+	local point = { x = grp.data.x, z = grp.data.y, y = land.getHeight(grp.data) }
+	local nearest = dctutils.nearestAirbase(point, 5000)
+	if nearest ~= nil then
+		return nearest:getName()
+	end
+end
+
 function Player:_completeinit(template)
 	AssetBase._completeinit(self, template)
 	-- we assume all slots in a player group are the same
 	self._tpldata   = template:copyData()
 	self.unittype   = self._tpldata.data.units[1].type
-	self._logger:debug("unittype: %s", tostring(self.unittype))
 	self.cmdpending = false
 	self.groupId    = self._tpldata.data.groupId
 	self.squadron   = self.name:match("(%w+)(.+)")
-	self.airbase    = dctutils.airbaseId2Name(airbaseId(self._tpldata))
+	self.airbase    = findAirbase(self._tpldata)
 	self.parking    = airbaseParkingId(self._tpldata)
 	self.ato        = settings.ui.ato[self.unittype] or
 		dctenum.missionType
 	self.payloadlimits = settings.payloadlimits
 	self.gridfmt    = settings.ui.gridfmt[self.unittype] or
 		dctutils.posfmt.DMS
+	self._logger:debug("unittype: %s", tostring(self.unittype))
 	self._logger:debug("airbase: %s", tostring(self.airbase))
 	self._logger:debug("payloadlimits: %s",
 		require("libs.json"):encode_pretty(self.payloadlimits))

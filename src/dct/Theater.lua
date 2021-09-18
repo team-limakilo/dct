@@ -223,13 +223,11 @@ local airbase_cats = {
 	[Airbase.Category.SHIP]    = true,
 }
 
-local function handlefarps(airbase, event)
-	if event.place ~= nil or
-	   airbase:getCategory() ~= Object.Category.BASE or
-	   airbase_cats[airbase:getDesc().category] == nil then
-		return
+local function filterfarps(airbase)
+	if airbase:getCategory() == Object.Category.BASE and
+	   airbase_cats[airbase:getDesc().category] ~= nil then
+		return true
 	end
-	event.place = airbase
 end
 
 local airbase_events = {
@@ -242,17 +240,10 @@ local airbase_events = {
 -- if there is a FARP near the event and if so uses that FARP as the
 -- place for the event.
 local function fixup_airbase(event)
-	if airbase_events[event.id] == nil or event.place ~= nil then
-		return
+	if airbase_events[event.id] ~= nil and event.place == nil then
+		event.place = dctutils.nearestAirbase(
+			event.initiator:getPoint(), 700, filterfarps)
 	end
-	local vol = {
-		id = world.VolumeType.SPHERE,
-		params = {
-			point  = event.initiator:getPoint(),
-			radius = 700, -- meters
-		},
-	}
-	world.searchObjects(Object.Category.BASE, vol, handlefarps, event)
 end
 
 -- ignore unnecessary events from DCS
