@@ -184,4 +184,37 @@ local codenamedb = {
 	["default"]              = default,
 }
 
+-- Try to load Hoggit objectives.json
+xpcall(function()
+	local lfs  = require("lfs")
+	local json = require("libs.json")
+
+	local file, err = io.open(lfs.writedir().."/Scripts/objectives.json", "r")
+	if err == nil then
+		-- Change existing codenames into Titlecase
+		for key, value in pairs(codenamedb.default) do
+			codenamedb.default[key] = value:lower():gsub("^%w", string.upper)
+		end
+
+		-- Append the new objective names to the default list
+		local objectives = json:decode(file:read("*all"))
+		for _, name in pairs(objectives) do
+			table.insert(codenamedb.default, name)
+		end
+
+		file:close()
+
+		-- Replace the entire codename list with the new list, with placeholders
+		-- for player assets to minimize duplicates when generating asset names
+		codenamedb = {
+			["default"]                     = codenamedb.default,
+			[enum.assetType.PLAYERGROUP]    = { "PLAYERGROUP" },
+			[enum.assetType.SQUADRONPLAYER] = { "SQUADRONPLAYER" },
+		}
+		env.info("Replaced DCT codenames with Hoggit supporter objectives")
+	end
+end, function(err)
+	env.error("Failed to read hoggit codenames: "..tostring(err))
+end)
+
 return codenamedb
