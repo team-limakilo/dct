@@ -12,28 +12,54 @@ local StaticAsset  = require("dct.assets.StaticAsset")
 local Subordinates = require("dct.libs.Subordinates")
 local Logger       = require("dct.libs.Logger")
 
-local DefendedAsset = class("DefendedAsset", StaticAsset, Subordinates)
-function DefendedAsset:__init(template)
+local siteTypes = {
+    ["SNR_75V"]              = "SA-2",
+    ["snr s-125 tr"]         = "SA-3",
+    ["RPC_5N62V"]            = "SA-5",
+    ["Kub 1S91 str"]         = "SA-6",
+    ["S-300PS 40B6M tr"]     = "SA-10",
+    ["SA-11 Buk LN 9A310M1"] = "SA-11",
+    ["Hawk tr"]              = "Hawk",
+    ["Patriot str"]          = "Patriot",
+	["55G6 EWR"]             = "EWR",
+	["1L13 EWR"]             = "EWR",
+}
+
+local AirDefenseSite = class("AirDefenseSite", StaticAsset, Subordinates)
+function AirDefenseSite:__init(template)
     Subordinates.__init(self)
     if template ~= nil then
-        self._logger = Logger("Asset: DefendedAsset("..template.name..")")
+        self._logger = Logger("AirDefenseSite - "..template.name.."")
         self:_modifyTemplate(template)
     end
 	StaticAsset.__init(self, template)
 	self:_addMarshalNames({
 		"_subordinates",
+		"sitetype",
 	})
 end
 
-function DefendedAsset.assettypes()
+function AirDefenseSite.assettypes()
 	return {
 		enum.assetType.EWR,
 		enum.assetType.SAM,
 	}
 end
 
+function AirDefenseSite:_completeinit(template)
+	StaticAsset._completeinit(self, template)
+	for _, grp in pairs(template.tpldata) do
+		for _, unit in pairs(grp.data.units) do
+			if siteTypes[unit.type] ~= nil then
+				self.sitetype = siteTypes[unit.type]
+				break
+			end
+		end
+	end
+end
+
 -- splits SHORAD out of the template and spawns it as a separate asset
-function DefendedAsset:_modifyTemplate(template)
+function AirDefenseSite:_modifyTemplate(template)
     local shorad = utils.deepcopy(template)
 	shorad.hasDeathGoals = false
 	shorad.objtype = enum.assetType.SHORAD
@@ -87,8 +113,8 @@ function DefendedAsset:_modifyTemplate(template)
         assetmgr:add(shoradAsset)
         self:addSubordinate(shoradAsset)
 	else
-		self._logger:debug("%s dropped", shorad.name)
+		self._logger:debug("%s not created (no units)", shorad.name)
 	end
 end
 
-return DefendedAsset
+return AirDefenseSite

@@ -13,11 +13,11 @@ local Observable = require("dct.libs.Observable")
 
 local assetpaths = {
 	"dct.assets.Airbase",
+	"dct.assets.AirDefenseSite",
 	"dct.assets.Airspace",
 	"dct.assets.Player",
 	"dct.assets.Squadron",
 	"dct.assets.StaticAsset",
-	"dct.assets.DefendedAsset",
 }
 
 local AssetManager = require("libs.namedclass")("AssetManager", Observable)
