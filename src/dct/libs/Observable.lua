@@ -54,12 +54,10 @@ if dct.settings and dct.settings.server and
 	function Observable:notify(event)
 		local tstart = os.clock()
 		self:_notify(event)
-		self._logger:warn("notify time: %5.2fms", (os.clock()-tstart)*1000)
+		self._logger:info("notify time: %5.2fms", (os.clock()-tstart)*1000)
 	end
 else
-	function Observable:notify(event)
-		self:_notify(event)
-	end
+	Observable.notify = Observable._notify
 end
 
 

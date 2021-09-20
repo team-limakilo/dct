@@ -36,14 +36,13 @@ Command.PRIORITY = cmdpriority
 local cmd = Command
 
 if dct.settings and dct.settings.server and
-   (dct.settings.server.debug == true and
-	dct.settings.server.profile == true) then
+   dct.settings.server.profile == true then
 	require("os")
 	local TimedCommand = class("TimedCommand", Command)
 	function TimedCommand:execute(time)
 		local tstart = os.clock()
 		local rc = Command.execute(self, time)
-		Logger:debug("'%s' exec time: %5.2fms", self.name, (os.clock()-tstart)*1000)
+		Logger:info("'%s' exec time: %5.2fms", self.name, (os.clock()-tstart)*1000)
 		return rc
 	end
 	TimedCommand.PRIORITY = cmdpriority
