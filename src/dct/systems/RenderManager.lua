@@ -19,6 +19,7 @@ local Command   = require("dct.Command")
 local vec       = require("dct.libs.vector")
 local Logger    = require("dct.libs.Logger").getByName("RenderManager")
 local StaticAsset = require("dct.assets.StaticAsset")
+local settings    = _G.dct.settings
 
 -- How many seconds to wait between render checks
 local CHECK_INTERVAL = 10
@@ -108,7 +109,7 @@ local function calculateRangeFor(asset, rangeType)
 	if tpldata == nil or not asset:isSpawned() then
 		return nil
 	end
-	Logger:debug("asset '%s' calculating range for '%s'",
+	Logger:debug("asset '%s' calculating range for %s",
 		asset.name, require("libs.utils").getkey(RangeType, rangeType))
 	for _, tpl in pairs(tpldata) do
 		local group = Group.getByName(tpl.data.name)
@@ -144,7 +145,7 @@ local function calculateRangeFor(asset, rangeType)
 			end
 		end
 	end
-	Logger:debug("asset '%s' range for '%s' = %d",
+	Logger:debug("asset '%s' range for %s = %d",
 		asset.name, require("libs.utils").getkey(RangeType, rangeType), assetRange)
 	return assetRange
 end
@@ -336,10 +337,11 @@ function RenderManager:getSortedDistances(region)
 end
 
 function RenderManager:checkRegion(region, time)
-	local start = os.clock()
 	local assets = self.assets[region.name]
 	if assets ~= nil then
 		local ops = 0
+		local spawns = 0
+		local start = os.clock()
 		local distances, objdist = self:getSortedDistances(region)
 		for i = 1, #assets do
 			local asset = assets[i]
@@ -386,6 +388,7 @@ function RenderManager:checkRegion(region, time)
 							end
 						end
 						if seen then
+							spawns = spawns + 1
 							asset:spawn()
 							break
 						end
@@ -395,17 +398,20 @@ function RenderManager:checkRegion(region, time)
 				if forcedVis == false and asset:isSpawned() then
 					asset:despawn()
 				elseif forcedVis == true and not asset:isSpawned() then
+					spawns = spawns + 1
 					asset:spawn()
 				end
 			end
 		end
-		Logger:info("checkRegion(%s): players = %d, weapons = %d, "..
-			" assets = %d, ops = %d, time = %.3fs", region.name,
-			#distances[RangeType.Player],
-			#distances[RangeType.AntiRadMsl] +
-			#distances[RangeType.CruiseMsl]  +
-			#distances[RangeType.GuidedBomb],
-			#assets, ops, os.clock() - start)
+		if settings.server.profile == true then
+			Logger:info("checkRegion(%s): players = %d, weapons = %d, "..
+				" assets = %d, ops = %d, spawns = %d, time = %.2fms", region.name,
+				#distances[RangeType.Player],
+				#distances[RangeType.AntiRadMsl] +
+				#distances[RangeType.CruiseMsl]  +
+				#distances[RangeType.GuidedBomb],
+				#assets, ops, spawns, (os.clock() - start)*1000)
+		end
 	end
 end
 
