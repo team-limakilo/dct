@@ -5,19 +5,15 @@
 -- JSON format
 --]]
 
-local dctenum  = require("dct.enum")
 local json     = require("libs.json")
 local class    = require("libs.class")
+local utils    = require("libs.utils")
+local dctenum  = require("dct.enum")
 local Command  = require("dct.Command")
-local Logger   = require("dct.libs.Logger").getByName("dataExport")
+local Logger   = require("dct.libs.Logger").getByName("DataExport")
 local settings = _G.dct.settings.server
 
-local COALITIONS = {
-    1, -- Red
-    2, -- Blue
-}
-
--- Reverse maps for asset and mission types
+-- Reverse maps for asset and mission type names
 local ASSET_TYPE = {}
 local MISSION_TYPE = {}
 
@@ -29,13 +25,23 @@ for name, id in pairs(dctenum.missionType) do
     MISSION_TYPE[id] = name
 end
 
+local function makeData()
+    return {
+        coalitions = {},
+        version = dct._VERSION,
+        date = os.date("!%F %TZ")
+    }
+end
+
 local DataExport = class()
 function DataExport:__init(theater)
+    self.theater = theater
     if settings.exportperiod > 0 then
-        Logger:debug("enabling data export every %d seconds",
+        self.cachedData = makeData()
+        Logger:debug("running data export every %d seconds",
             settings.exportperiod)
         theater:queueCommand(settings.exportperiod,
-            Command("DataExport.update", self.update, theater))
+            Command("DataExport.update", self.update, self))
     else
         Logger:debug("data export disabled")
     end
@@ -51,17 +57,19 @@ local function getTickets(tickets, coalition)
 end
 
 -- Convert DCS coordinates to a table with latitude, longitude, and altitude
-local function location(point)
-    local latitude, longitude, altitude = coord.LOtoLL(point)
+local function getLocation(point)
+    local latitude, longitude = coord.LOtoLL(point)
     return {
-        latitude = latitude,
-        longitude = longitude,
-        altitude = altitude,
+        x = point.x,
+        y = point.y,
+        z = point.z,
+        lat = latitude,
+        lon = longitude,
     }
 end
 
 -- Expand assigned groups into a table containing the group and player name
-local function withPlayerNames(assigned)
+local function getGroupAndPlayerName(assigned)
     local output = {}
     for id, groupname in pairs(assigned) do
         local group = Group.getByName(groupname)
@@ -90,11 +98,16 @@ local function getAssetsByRegion(theater, coalition)
     for name, asset in pairs(assetmgr._assetset) do
         local region = asset.rgnname
         if asset.owner == coalition and
-           dctenum.assetClass["STRATEGIC"][asset.type] then
+           dctenum.assetClass["INITIALIZE"][asset.type] then
             export[region][name] = {
                 dead = asset._dead,
+                intel = asset.intel,
                 codename = asset.codename,
+                location = getLocation(asset:getLocation()),
+                strategic = dctenum.assetClass["STRATEGIC"][asset.type] ~= nil,
+                status = asset:getStatus(),
                 type = ASSET_TYPE[asset.type],
+                sitetype = asset.sitetype,
                 cost = asset.cost,
             }
         end
@@ -109,24 +122,19 @@ local function getMissions(commander)
         local tgtinfo = mission:getTargetInfo()
         id = tostring(id)
         missions[id] = {
-            id = id,
-            assigned = withPlayerNames(mission.assigned),
-            coalition = tostring(mission.cmdr.owner),
+            assigned = getGroupAndPlayerName(mission.assigned),
             type = MISSION_TYPE[mission.type],
             target = {
                 name = mission.target,
-                intel = tgtinfo.intellvl,
-                codename = tgtinfo.callsign,
-                location = location(tgtinfo.location),
-                status = tgtinfo.status,
                 region = tgtinfo.region,
+                coalition = tgtinfo.coalition,
             },
         }
     end
     return missions
 end
 
--- Save the file to the disk
+-- Save the data to a file
 local function export(data)
     local path = settings.statepath..".export.json"
     local file, msg = io.open(path, "w+")
@@ -135,21 +143,24 @@ local function export(data)
 		return Logger:error("unable to open '%s'; msg: %s", path, tostring(msg))
 	end
 
-    file:write(json:encode_pretty(data))
+    if settings.debug == true then
+        file:write(json:encode_pretty(data))
+    else
+        file:write(json:encode(data))
+    end
+
     file:close()
 end
 
 -- Run the data export
-function DataExport.update(theater)
+function DataExport:update()
+    local theater = self.theater
     local tickets = theater:getSystem("dct.systems.tickets")
-    local data = {
-        coalitions = {},
-        version = dct._VERSION,
-    }
+    local data = makeData()
 
     local coalitions = data.coalitions
 
-    for _, coalition in pairs(COALITIONS) do
+    for _, coalition in pairs(coalition.side) do
         local key = tostring(coalition)
         coalitions[key] = {}
         coalitions[key].tickets = getTickets(tickets, coalition)
@@ -158,7 +169,13 @@ function DataExport.update(theater)
     end
 
     export(data)
+    self.cachedData = data
     return settings.exportperiod
+end
+
+-- Get the latest exported data if enabled, else returns nil
+function DataExport:get()
+    return utils.deepcopy(self.cachedData)
 end
 
 return DataExport
