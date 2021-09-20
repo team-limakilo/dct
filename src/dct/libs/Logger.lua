@@ -22,11 +22,14 @@ function Logger:__init(name)
 	self.name   = name
 	self.fmtstr = "DCT|%s: %s"
 	self.dbgfmt = "DEBUG-DCT|%s: %s"
-	self:setLevel(Logger.level["warn"])
 	if settings.logger ~= nil and settings.logger[name] ~= nil then
 		self:setLevel(Logger.level[settings.logger[name]])
 	elseif settings.debug == true then
 		self:setLevel(Logger.level["debug"])
+	elseif settings.logger ~= nil and settings.logger["default"] ~= nil then
+		self:setLevel(Logger.level[settings.logger["default"]])
+	else
+		self:setLevel(Logger.level["warn"])
 	end
 	self.getByName = nil
 	self.level = nil
