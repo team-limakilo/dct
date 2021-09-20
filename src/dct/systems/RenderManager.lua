@@ -31,43 +31,47 @@ local AGE_OLD = -DESPAWN_TIMEOUT
 
 local RangeType = {
 	Player     = 1, -- Player flights
-	Missile    = 2, -- Guided missiles and some guided bombs
-	GuidedBomb = 3, -- Most other guided bombs
+	CruiseMsl  = 2, -- INS, TV, and Radar-guided missiles
+	AntiRadMsl = 3, -- Anti-radiation missiles
+	GuidedBomb = 4, -- Laser and TV-guided bombs
 }
 
 local RadarDistanceFactor = {
 	[RangeType.Player]     = 2.5,
-	[RangeType.Missile]    = 1.0,
+	[RangeType.CruiseMsl]  = nil,
+	[RangeType.AntiRadMsl] = 0.5,
 	[RangeType.GuidedBomb] = nil,
 }
 
-local AGM = {
-	[Weapon.MissileCategory.BM] = true,
-	[Weapon.MissileCategory.ANTI_SHIP] = true,
-	[Weapon.MissileCategory.CRUISE] = true,
-	[Weapon.MissileCategory.OTHER] = true,
+local cruiseGuidance = {
+	[Weapon.GuidanceType.INS] = true,
+	[Weapon.GuidanceType.TELE] = true,
+	[Weapon.GuidanceType.RADAR_ACTIVE] = true,
 }
 
 -- Maps specific unit types and attributes to minimum render ranges, in meters
 local UnitTypeRanges = {
 	[RangeType.Player]          = {},
-	[RangeType.Missile]         = {},
+	[RangeType.CruiseMsl]       = {},
+	[RangeType.AntiRadMsl]      = {},
 	[RangeType.GuidedBomb]      = {},
 }
 local AttributeRanges = {
 	[RangeType.Player] = {
-		["Ships"]               = 500000,
+		["Ships"]               = 150000,
 		["EWR"]                 = 300000,
 	},
-	[RangeType.Missile] = {
-		["Ships"]               = 300000,
+	[RangeType.CruiseMsl] = {
+		["Ships"]               = 150000,
 	},
+	[RangeType.AntiRadMsl]      = {},
 	[RangeType.GuidedBomb]      = {},
 }
 local DefaultRanges = {
 	[RangeType.Player]          = 30000,
-	[RangeType.Missile]         = 5000,
-	[RangeType.GuidedBomb]      = 5000,
+	[RangeType.CruiseMsl]       = 500,
+	[RangeType.AntiRadMsl]      = 500,
+	[RangeType.GuidedBomb]      = 1500,
 }
 
 local assetRanges = {}
@@ -171,10 +175,13 @@ end
 
 local function weaponRangeType(weapon)
 	local desc = weapon:getDesc()
-	if desc.category == Weapon.Category.MISSILE and AGM[desc.missileCategory] then
-		return RangeType.Missile
-	end
-	if desc.category == Weapon.Category.BOMB and desc.guidance ~= nil then
+	if desc.guidance == Weapon.GuidanceType.RADAR_PASSIVE then
+		return RangeType.AntiRadMsl
+	elseif desc.category == Weapon.Category.MISSILE and
+	       cruiseGuidance[desc.guidance] ~= nil then
+		return RangeType.CruiseMsl
+	elseif desc.category == Weapon.Category.BOMB and
+	       desc.guidance ~= nil then
 		return RangeType.GuidedBomb
 	end
 end
@@ -392,10 +399,13 @@ function RenderManager:checkRegion(region, time)
 				end
 			end
 		end
-		Logger:info("checkRegion(%s): players = %d, missiles = %d, "..
-			"bombs = %d, assets = %d, ops = %d, time = %.3fs", region.name,
-			#distances[RangeType.Player], #distances[RangeType.Missile],
-			#distances[RangeType.GuidedBomb], #assets, ops, os.clock() - start)
+		Logger:info("checkRegion(%s): players = %d, weapons = %d, "..
+			" assets = %d, ops = %d, time = %.3fs", region.name,
+			#distances[RangeType.Player],
+			#distances[RangeType.AntiRadMsl] +
+			#distances[RangeType.CruiseMsl]  +
+			#distances[RangeType.GuidedBomb],
+			#assets, ops, os.clock() - start)
 	end
 end
 
