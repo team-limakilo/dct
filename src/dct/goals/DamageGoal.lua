@@ -27,8 +27,9 @@ end
 local function get_group_size(grp)
 	local alive = 0
 	for _, unit in pairs(grp:getUnits()) do
-		-- Unit.getLife() uses a value lesser than 1 to indicate that the unit is dead
-		if unit ~= nil and unit:getLife() >= 1 then
+		-- Unit.getLife() uses a value of 1.00 to indicate dying units
+		-- ie. sinking ships and burning ammo dumps
+		if unit ~= nil and unit:getLife() > 1 then
 			alive = alive + 1
 		end
 	end
