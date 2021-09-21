@@ -397,9 +397,12 @@ function RenderManager:checkRegion(region, time)
 			else
 				if forcedVis == false and asset:isSpawned() then
 					asset:despawn()
-				elseif forcedVis == true and not asset:isSpawned() then
-					spawns = spawns + 1
-					asset:spawn()
+				elseif forcedVis == true then
+					self.lastSeen[asset.name] = time
+					if not asset:isSpawned() then
+						spawns = spawns + 1
+						asset:spawn()
+					end
 				end
 			end
 		end
