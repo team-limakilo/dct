@@ -65,8 +65,8 @@ local function createDigit1Menu(gid, name, parentMenu)
 end
 
 local missioncodes = {}
-function missioncodes.addMissionCodes(gid, name, parentMenu)
-	createDigit1Menu(gid, name, parentMenu)
+function missioncodes.addMissionCodes(asset, name, parentMenu)
+	createDigit1Menu(asset.groupId, name, parentMenu)
 end
 
 return missioncodes
