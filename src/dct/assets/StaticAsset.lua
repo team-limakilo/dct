@@ -132,12 +132,13 @@ function StaticAsset:_setupDeathGoal(grpdata, category, country)
 end
 
 --[[
--- Checks if a goal is complete, and if so, removes it
+-- Checks if a goal is complete, and if so, removes it, and returns true
 --]]
 function StaticAsset:_checkDeathGoal(name)
 	local goal = self._deathgoals[name]
 	if goal and goal:checkComplete() then
 		self:_removeDeathGoal(name, goal)
+		return true
 	end
 end
 
@@ -255,7 +256,6 @@ function StaticAsset:handleDead(event)
 			dct.Theater.singleton():getSystem(
 				"dct.systems.bldgPersist"):addObject(unitname)
 		end
-		self:_checkDeathGoal(unitname)
 		self._assets[unitname] = nil
 	end
 end
