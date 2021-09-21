@@ -93,14 +93,11 @@ function loadout.check(player)
 	end
 end
 
-function loadout.addmenu(asset, menu, handler)
-	local gid  = asset.groupId
-	local name = asset.name
-	return missionCommands.addCommandForGroup(gid,
-		"Check Payload", menu, handler, {
-			["name"]   = name,
-			["type"]   = enum.uiRequestType.CHECKPAYLOAD,
-		})
+function loadout.addmenu(addcmd, asset, menu, handler)
+	return addcmd(asset, "Check Payload", menu, handler, {
+		["name"] = asset.name,
+		["type"] = enum.uiRequestType.CHECKPAYLOAD,
+	})
 end
 
 return loadout
