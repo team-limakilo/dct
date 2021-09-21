@@ -29,7 +29,8 @@ local function makeData()
     return {
         coalitions = {},
         version = dct._VERSION,
-        date = os.date("!%F %TZ")
+        theater = env.mission.theatre,
+        date = os.date("!%F %TZ"),
     }
 end
 
