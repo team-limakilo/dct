@@ -116,7 +116,7 @@ function menus.createMenu(asset)
 			["type"]   = enum.uiRequestType.MISSIONROLEX,
 			["value"]  = 30*60,  -- seconds
 		})
-	loadout.addmenu(asset, nil, Theater.playerRequest)
+	loadout.addmenu(addcmd, asset, nil, Theater.playerRequest)
 end
 
 function menus.removeMenu(asset)
