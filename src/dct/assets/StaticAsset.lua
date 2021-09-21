@@ -89,10 +89,13 @@ end
 --[[
 -- Removes deathgoal entry, and upon no more deathgoals, set asset as dead
 --]]
-function StaticAsset:_removeDeathGoal(name, goal)
+function StaticAsset:_removeDeathGoal(name)
 	assert(name ~= nil and type(name) == "string",
 		"value error: name must be provided")
-	assert(goal ~= nil, "value error: goal must be provided")
+
+	if self._deathgoals[name] == nil then
+		return
+	end
 
 	self._logger:debug("_removeDeathGoal() - obj name: %s", name)
 	if self:isDead() then
@@ -128,17 +131,6 @@ function StaticAsset:_setupDeathGoal(grpdata, category, country)
 			AssetBase.defaultgoal(
 				category == Unit.Category.STRUCTURE or
 				category == enum.UNIT_CAT_SCENERY))
-	end
-end
-
---[[
--- Checks if a goal is complete, and if so, removes it, and returns true
---]]
-function StaticAsset:_checkDeathGoal(name)
-	local goal = self._deathgoals[name]
-	if goal and goal:checkComplete() then
-		self:_removeDeathGoal(name, goal)
-		return true
 	end
 end
 
@@ -242,13 +234,13 @@ function StaticAsset:handleDead(event)
 		local units = grp.data.units
 		for i = 1, #units do
 			if units[i].name == unitname then
-				self:_checkDeathGoal(unitname)
+				self:_removeDeathGoal(unitname)
 				table.remove(units, i)
 				break
 			end
 		end
-		self:_checkDeathGoal(grpname)
 		if next(units) == nil then
+			self:_removeDeathGoal(grpname)
 			self._assets[grpname] = nil
 		end
 	else
@@ -256,6 +248,7 @@ function StaticAsset:handleDead(event)
 			dct.Theater.singleton():getSystem(
 				"dct.systems.bldgPersist"):addObject(unitname)
 		end
+		self:_removeDeathGoal(unitname)
 		self._assets[unitname] = nil
 	end
 end

@@ -697,6 +697,10 @@ function SceneryObject:getLife()
 	assert(type(self.id_) == "number", "id_ is not a number")
 	return 10
 end
+
+function SceneryObject.getByName(name)
+	return objects[Object.Category.SCENERY][name]
+end
 _G.SceneryObject = SceneryObject
 
 local Coalition = class(Object)
@@ -1031,6 +1035,9 @@ end
 
 function trigger.action.setUserFlag(flagname, value)
 	gblflagtbl[flagname] = tonumber(value)
+end
+
+function trigger.action.explosion(_, _)
 end
 
 trigger.misc = {}
