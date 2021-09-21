@@ -24,12 +24,26 @@ local loadout  = require("dct.systems.loadouts")
 local utils    = require("libs.utils")
 local msncodes = require("dct.ui.missioncodes")
 local Logger   = dct.Logger.getByName("UI")
-local addmenu  = missionCommands.addSubMenuForGroup
-local addcmd   = missionCommands.addCommandForGroup
+
+local function addmenu(asset, name, path)
+	local menu = missionCommands.addSubMenuForGroup(asset.groupId, name, path)
+	if path == nil then
+		table.insert(asset.uimenus, menu)
+	end
+	return menu
+end
+
+local function addcmd(asset, name, path, handler, data)
+	local cmd = missionCommands.addCommandForGroup(asset.groupId, name, path,
+		handler, data)
+	if path == nil then
+		table.insert(asset.uimenus, cmd)
+	end
+	return cmd
+end
 
 local menus = {}
 function menus.createMenu(asset)
-	local gid  = asset.groupId
 	local name = asset.name
 
 	if asset.uimenus ~= nil then
@@ -41,27 +55,27 @@ function menus.createMenu(asset)
 
 	asset.uimenus = {}
 
-	local padmenu = addmenu(gid, "Scratch Pad", nil)
+	local padmenu = addmenu(asset, "Scratch Pad", nil)
 	for k, v in pairs({
 		["DISPLAY"] = enum.uiRequestType.SCRATCHPADGET,
 		["SET"] = enum.uiRequestType.SCRATCHPADSET}) do
-		addcmd(gid, k, padmenu, Theater.playerRequest,
+		addcmd(asset, k, padmenu, Theater.playerRequest,
 			{
 				["name"]   = name,
 				["type"]   = v,
 			})
 	end
 
-	addcmd(gid, "Theater Update", nil, Theater.playerRequest,
+	addcmd(asset, "Theater Update", nil, Theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.THEATERSTATUS,
 		})
 
-	local msnmenu = addmenu(gid, "Mission", nil)
-	local rqstmenu = addmenu(gid, "Request", msnmenu)
+	local msnmenu = addmenu(asset, "Mission", nil)
+	local rqstmenu = addmenu(asset, "Request", msnmenu)
 	for k, v in utils.sortedpairs(asset.ato) do
-		addcmd(gid, k, rqstmenu, Theater.playerRequest,
+		addcmd(asset, k, rqstmenu, Theater.playerRequest,
 			{
 				["name"]   = name,
 				["type"]   = enum.uiRequestType.MISSIONREQUEST,
@@ -69,40 +83,48 @@ function menus.createMenu(asset)
 			})
 	end
 
-	local joinmenu = addmenu(gid, "Join", msnmenu)
-	addcmd(gid, "Use Scratch Pad Value", joinmenu, Theater.playerRequest,
+	local joinmenu = addmenu(asset, "Join", msnmenu)
+	addcmd(asset, "Use Scratch Pad Value", joinmenu, Theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.MISSIONJOIN,
 			["value"]  = nil,
 		})
 
-	local codemenu = addmenu(gid, "Input Code (F1-F10)", joinmenu)
-	msncodes.addMissionCodes(gid, name, codemenu)
+	local codemenu = addmenu(asset, "Input Code (F1-F10)", joinmenu)
+	msncodes.addMissionCodes(asset, name, codemenu)
 
-	addcmd(gid, "Briefing", msnmenu, Theater.playerRequest,
+	addcmd(asset, "Briefing", msnmenu, Theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.MISSIONBRIEF,
 		})
-	addcmd(gid, "Status", msnmenu, Theater.playerRequest,
+	addcmd(asset, "Status", msnmenu, Theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.MISSIONSTATUS,
 		})
-	addcmd(gid, "Abort", msnmenu, Theater.playerRequest,
+	addcmd(asset, "Abort", msnmenu, Theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.MISSIONABORT,
 			["value"]  = enum.missionAbortType.ABORT,
 		})
-	addcmd(gid, "Rolex +30", msnmenu, Theater.playerRequest,
+	addcmd(asset, "Rolex +30", msnmenu, Theater.playerRequest,
 		{
 			["name"]   = name,
 			["type"]   = enum.uiRequestType.MISSIONROLEX,
 			["value"]  = 30*60,  -- seconds
 		})
 	loadout.addmenu(asset, nil, Theater.playerRequest)
+end
+
+function menus.removeMenu(asset)
+	Logger:debug("removeMenu - removing menu for group: %s", asset.name)
+	for _, menu in pairs(asset.uimenus) do
+		missionCommands.removeItemForGroup(asset.groupId, menu)
+	end
+	asset.uimenus = nil
 end
 
 return menus

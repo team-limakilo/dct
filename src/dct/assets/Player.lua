@@ -166,6 +166,7 @@ function OccupiedState:enter(asset)
 end
 
 function OccupiedState:exit(asset)
+	uimenu.removeMenu(asset)
 	if self.loseticket then
 		asset:setDead(true)
 	end
