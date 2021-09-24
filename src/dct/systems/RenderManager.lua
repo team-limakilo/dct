@@ -119,10 +119,15 @@ local function calculateRangeFor(asset, rangeType)
 				local unitType = unit:getTypeName()
 				-- Check unit type range
 				local unitRange = UnitTypeRanges[rangeType][unitType]
+				if unitRange ~= nil and unitRange > assetRange then
+					Logger:debug("asset '%s' unit '%s' asset range = %d",
+						asset.name, unitType, unitRange)
+					assetRange = unitRange
+				end
 				-- Check attribute ranges
 				for attr, attrRange in pairs(AttributeRanges[rangeType]) do
 					if unitDesc.attributes[attr] ~= nil and attrRange > assetRange then
-						unitRange = attrRange
+						assetRange = attrRange
 						Logger:debug("asset '%s' unit '%s' attr '%s' set range = %d",
 							asset.name, unitType, attr, attrRange)
 					end
@@ -131,16 +136,10 @@ local function calculateRangeFor(asset, rangeType)
 				if RadarDistanceFactor[rangeType] ~= nil then
 					local radarRange = getRadarRange(unit) * RadarDistanceFactor[rangeType]
 					if radarRange > assetRange then
-						unitRange = radarRange
+						assetRange = radarRange
 						Logger:debug("asset '%s' unit '%s' radar set range = %d",
 							asset.name, unitType, radarRange)
 					end
-				end
-				-- Override asset range if unit wins
-				if unitRange ~= nil and unitRange > assetRange then
-					assetRange = unitRange
-					Logger:debug("asset '%s' unit '%s' asset range = %d",
-						asset.name, unitType, unitRange)
 				end
 			end
 		end
