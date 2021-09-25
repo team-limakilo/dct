@@ -12,6 +12,7 @@ local dctEnum = require("dct.enum")
 
 local OverlordBotRPC = class()
 function OverlordBotRPC:__init(theater)
+	self.theater = theater
 	theater:queueCommand(5, Command("OverlordBotRPC.init", self.init, self))
 end
 
@@ -61,6 +62,15 @@ function OverlordBotRPC:init()
 			})
 
 			return GRPC.success(nil)
+		end
+
+		function GRPC.methods.getExportData()
+			local exportSystem = self.theater:getSystem("dct.systems.dataExport")
+			if exportSystem ~= nil then
+				return GRPC.success(exportSystem:get())
+			else
+				return GRPC.errorNotFound("Export system unavailable")
+			end
 		end
 
 	else

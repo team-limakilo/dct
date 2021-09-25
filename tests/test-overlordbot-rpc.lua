@@ -41,6 +41,7 @@ local function checkError(err, msg)
 end
 
 local function main()
+    _G.dct.settings.server.exportperiod = 60
 	local theater = dct.Theater()
 	_G.dct.theater = theater
 	theater:exec(50)
@@ -55,7 +56,7 @@ local function main()
     assert(rpcSystem ~= nil,
         "OverlordBot RPC system was not loaded by the theater")
 
-    local _, err, msg
+    local _, err, msg, exportData
 
     -- Start mission
     _, err, msg = GRPC.methods.requestMissionAssignment({
@@ -89,6 +90,14 @@ local function main()
     assert(player.missionid == mission.id, string.format(
         "player did not join mission '%s' (current mission: '%s')",
         tostring(mission.id), tostring(player.missionid)))
+
+    -- Test export system endpoint
+    exportData, err, msg = GRPC.methods.getExportData()
+    checkError(err, msg)
+    assert(type(exportData) == "table",
+        "expected export data to be a table")
+    assert(exportData.version == _G.dct._VERSION,
+        "expected export data to contain DCT version")
 
 	return 0
 end
