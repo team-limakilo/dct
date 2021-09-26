@@ -196,7 +196,7 @@ function CheckPayloadCmd:_execute(_ --[[time]], _ --[[cmdr]])
 		local ok, costs = loadout.check(self.asset)
 		return self:buildMessage(ok, costs)
 	end
-	return "Cannot check payload in the air, please land at a friendly base first."
+	return "Payload check is only allowed when landed at a friendly airbase"
 end
 
 local MissionCmd = class(UICmd)
