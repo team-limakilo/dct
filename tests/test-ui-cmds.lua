@@ -40,9 +40,9 @@ local briefingtxt = "Package: #5720\n"..
 
 local capbriefingtxt = "Package: #2730\n"..
 			"IFF Codes: M1(02), M3(2730)\n"..
-			"Station AO: 88°06'N 063°24'W (DALLAS)\n"..
+			"Station AO: 88°06'N 063°24'W (SYDNEY)\n"..
 			"Briefing:\n"..
-			"Coordinate with friendly forces and provide cover in Novorossiysk "..
+			"Coordinate with friendly forces and provide cover in Krasnodar "..
 			"airspace.\n\n"..
 			"The mission status shows how many ground missions have been completed "..
 			"in the region, however, you can RTB at any time."
@@ -63,7 +63,7 @@ local testcmds = {
 			"Current Active Air Missions:\n  None\n\n"..
 			"Available missions:\n  CAP:  2\n  "..
 			"SEAD:  2\n  STRIKE:  3\n\n"..
-			"Recommended Mission Type: SEAD",
+			"Recommended Mission Type: CAP",
 	}, {
 		["data"] = {
 			["name"]   = grp:getName(),
@@ -88,7 +88,7 @@ local testcmds = {
 			"Current Active Air Missions:\n  STRIKE:  1\n\n"..
 			"Available missions:\n  CAP:  2\n  "..
 			"SEAD:  2\n  STRIKE:  2\n\n"..
-			"Recommended Mission Type: SEAD",
+			"Recommended Mission Type: CAP",
 	}, {
 		["data"] = {
 			["name"]   = grp:getName(),

@@ -389,7 +389,7 @@ function Region:generate()
 		["objtype"]    = "airspace",
 		["name"]       = "airspace",
 		["regionname"] = self.name,
-		["regionprio"] = 1000,
+		["regionprio"] = self.priority,
 		["intel"]      = 1,
 		["cost"]       = 0,
 		["desc"]       = string.format(airspaceDesc, self.name),
