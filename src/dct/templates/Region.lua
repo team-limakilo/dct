@@ -367,11 +367,6 @@ function Region:generate()
 		end
 	end
 
-	-- do not create an airspace object if not wanted
-	if self.airspace ~= true then
-		return
-	end
-
 	local centroid, radius = calculateCentroidAndRadius(self, assets)
 	self.radius = radius
 
@@ -383,6 +378,11 @@ function Region:generate()
 
 	Logger:debug("Region(%s) location - %d, %d, %d",
 		self.name, self.location.x, self.location.y, self.location.z)
+
+	-- do not create an airspace object if not wanted
+	if self.airspace ~= true then
+		return
+	end
 
 	-- create airspace asset
 	local airspacetpl = Template({
