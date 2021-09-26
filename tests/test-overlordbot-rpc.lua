@@ -20,6 +20,7 @@ local unit1 = Unit({
 	["name"] = "pilot1",
 	["exists"] = true,
 	["desc"] = {
+        ["displayName"] = "F/A-18C Hornet",
 		["typeName"] = "FA-18C_hornet",
 		["attributes"] = {},
 	},

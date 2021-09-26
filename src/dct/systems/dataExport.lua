@@ -9,6 +9,7 @@ local json     = require("libs.json")
 local class    = require("libs.class")
 local utils    = require("libs.utils")
 local dctenum  = require("dct.enum")
+local dctutils = require("dct.utils")
 local Command  = require("dct.Command")
 local Logger   = require("dct.libs.Logger").getByName("DataExport")
 local settings = _G.dct.settings.server
@@ -37,6 +38,7 @@ end
 local DataExport = class()
 function DataExport:__init(theater)
     self.theater = theater
+    self.saveToDisk = true
     if settings.exportperiod > 0 then
         self.cachedData = makeData()
         Logger:debug("running data export every %d seconds",
@@ -57,7 +59,8 @@ local function getTickets(tickets, coalition)
     }
 end
 
--- Convert DCS coordinates to a table with latitude, longitude, and altitude
+-- Convert DCS coordinates to a table with latitude, longitude,
+-- and the original DCS coordinates
 local function getLocation(point)
     local latitude, longitude = coord.LOtoLL(point)
     return {
@@ -69,19 +72,20 @@ local function getLocation(point)
     }
 end
 
--- Expand assigned groups into a table containing the group and player name
-local function getGroupAndPlayerName(assigned)
+-- Expand assigned groups into a table containing the player name
+-- and aircraft type
+local function getAssignedUnitInfo(assignedGroups, assetmgr)
     local output = {}
-    for id, groupname in pairs(assigned) do
-        local group = Group.getByName(groupname)
-        -- Protect against dead/removed units during data export
-        if group ~= nil and group:getUnit(1) ~= nil then
-            output[id] = {
+    for idx, groupname in pairs(assignedGroups) do
+        local asset = assetmgr:getAsset(groupname)
+        if asset ~= nil and type(asset.getPlayerName) == "function" then
+            output[idx] = {
                 group = groupname,
-                player = group:getUnit(1):getPlayerName(),
+                player = asset:getPlayerName(),
+                aircraft = asset:getAircraftName(),
             }
         else
-            output[id] = {
+            output[idx] = {
                 group = groupname,
             }
         end
@@ -90,10 +94,9 @@ local function getGroupAndPlayerName(assigned)
 end
 
 -- List all tracked assets of a coalition in each region
-local function getAssetsByRegion(theater, coalition)
-    local assetmgr = theater:getAssetMgr()
+local function getAssets(regionmgr, assetmgr, coalition)
     local export = {}
-    for region, _ in pairs(theater:getRegionMgr().regions) do
+    for region, _ in pairs(regionmgr.regions) do
         export[region] = {}
     end
     for name, asset in pairs(assetmgr._assetset) do
@@ -117,18 +120,21 @@ local function getAssetsByRegion(theater, coalition)
 end
 
 -- List active missions
-local function getMissions(commander)
+local function getMissions(commander, assetmgr)
     local missions = {}
     for id, mission in pairs(commander.missions) do
-        local tgtinfo = mission:getTargetInfo()
+        local tgt = mission:getTargetInfo()
+        local pos = dctutils.degrade_position(tgt.location, tgt.intellvl)
         id = tostring(id)
         missions[id] = {
-            assigned = getGroupAndPlayerName(mission.assigned),
+            assigned = getAssignedUnitInfo(mission.assigned, assetmgr),
             type = MISSION_TYPE[mission.type],
             target = {
                 name = mission.target,
-                region = tgtinfo.region,
-                coalition = tgtinfo.coalition,
+                region = tgt.region,
+                coalition = tgt.coalition,
+                location_degraded = getLocation(pos),
+                intel = tgt.intellvl,
             },
         }
     end
@@ -136,7 +142,7 @@ local function getMissions(commander)
 end
 
 -- Save the data to a file
-local function export(data)
+local function saveToDisk(data)
     local path = settings.statepath..".export.json"
     local file, msg = io.open(path, "w+")
 
@@ -156,20 +162,25 @@ end
 -- Run the data export
 function DataExport:update()
     local theater = self.theater
+    local assetmgr = theater:getAssetMgr()
+    local regionmgr = theater:getRegionMgr()
     local tickets = theater:getSystem("dct.systems.tickets")
     local data = makeData()
 
     local coalitions = data.coalitions
 
     for _, coalition in pairs(coalition.side) do
+        local cmdr = theater:getCommander(coalition)
         local key = tostring(coalition)
         coalitions[key] = {}
         coalitions[key].tickets = getTickets(tickets, coalition)
-        coalitions[key].missions = getMissions(theater:getCommander(coalition))
-        coalitions[key].assets = getAssetsByRegion(theater, coalition)
+        coalitions[key].missions = getMissions(cmdr, assetmgr)
+        coalitions[key].assets = getAssets(regionmgr, assetmgr, coalition)
     end
 
-    export(data)
+    if self.saveToDisk then
+        saveToDisk(data)
+    end
     self.cachedData = data
     return settings.exportperiod
 end

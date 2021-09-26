@@ -121,6 +121,7 @@ local function main()
 		["name"]   = "player1",
 		["exists"] = true,
 		["desc"] = {
+			["displayName"] = "F/A-18C Hornet",
 			["typeName"] = "FA-18C_hornet",
 			["attributes"] = {},
 		},
