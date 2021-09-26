@@ -35,7 +35,10 @@ function UICmd:isAlive()
 	return dctutils.isalive(self.asset.name)
 end
 
-function UICmd:_print(msg)
+function UICmd:_print(msg, isError)
+	if isError and _G.DCT_TEST then
+		return
+	end
 	assert(msg ~= nil and type(msg) == "string", "msg must be a string")
 	trigger.action.outTextForGroup(self.asset.groupId, msg,
 		self.displaytime, self.displayclear)
@@ -60,7 +63,7 @@ function UICmd:uicmd(time)
 
 	if not ok then
 		self.asset.cmdpending = false
-		self:_print("F10 menu command failed to execute, please report a bug")
+		self:_print("F10 menu command failed to execute, please report a bug", true)
 		error(string.format(
 			"\nui command failed: %s - %s", self.__clsname, tostring(result)))
 	end
