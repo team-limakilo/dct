@@ -5,7 +5,7 @@
 --]]
 
 require("os")
-local class    = require("libs.class")
+local class    = require("libs.namedclass")
 local utils    = require("libs.utils")
 local enum     = require("dct.enum")
 local dctutils = require("dct.utils")
@@ -14,7 +14,7 @@ local Command  = require("dct.Command")
 local Logger   = dct.Logger.getByName("UI")
 local loadout  = require("dct.systems.loadouts")
 
-local UICmd = class(Command)
+local UICmd = class("UICmd", Command)
 function UICmd:__init(theater, data)
 	assert(theater ~= nil, "value error: theater required")
 	assert(data ~= nil, "value error: data required")
@@ -35,6 +35,12 @@ function UICmd:isAlive()
 	return dctutils.isalive(self.asset.name)
 end
 
+function UICmd:_print(msg)
+	assert(msg ~= nil and type(msg) == "string", "msg must be a string")
+	trigger.action.outTextForGroup(self.asset.groupId, msg,
+		self.displaytime, self.displayclear)
+end
+
 function UICmd:uicmd(time)
 	-- only process commands from live players unless they are abort
 	-- commands
@@ -45,16 +51,22 @@ function UICmd:uicmd(time)
 		return nil
 	end
 
-	local cmdr = self.theater:getCommander(self.asset.owner)
-	local msg  = self:_execute(time, cmdr)
-	assert(msg ~= nil and type(msg) == "string", "msg must be a string")
-	trigger.action.outTextForGroup(self.asset.groupId, msg,
-		self.displaytime, self.displayclear)
-	self.asset.cmdpending = false
-	return nil
+	local ok, result = pcall(function()
+		local cmdr = self.theater:getCommander(self.asset.owner)
+		local msg  = self:_execute(time, cmdr)
+		self.asset.cmdpending = false
+		self:_print(msg)
+	end)
+
+	if not ok then
+		self.asset.cmdpending = false
+		self:_print("F10 menu command failed to execute, please report a bug")
+		error(string.format(
+			"\nui command failed: %s - %s", self.__clsname, tostring(result)))
+	end
 end
 
-local ScratchPadDisplay = class(UICmd)
+local ScratchPadDisplay = class("ScratchPadDisplay", UICmd)
 function ScratchPadDisplay:__init(theater, data)
 	UICmd.__init(self, theater, data)
 	self.name = "ScratchPadDisplay:"..data.name
@@ -66,7 +78,7 @@ function ScratchPadDisplay:_execute(_, _)
 	return msg
 end
 
-local ScratchPadSet = class(UICmd)
+local ScratchPadSet = class("ScratchPadSet", UICmd)
 function ScratchPadSet:__init(theater, data)
 	UICmd.__init(self, theater, data)
 	self.name = "ScratchPadSet:"..data.name
@@ -86,7 +98,7 @@ function ScratchPadSet:_execute(_, _)
 	return msg
 end
 
-local TheaterUpdateCmd = class(UICmd)
+local TheaterUpdateCmd = class("TheaterUpdateCmd", UICmd)
 function TheaterUpdateCmd:__init(theater, data)
 	UICmd.__init(self, theater, data)
 	self.name = "TheaterUpdateCmd:"..data.name
@@ -140,7 +152,7 @@ function TheaterUpdateCmd:_execute(_, cmdr)
 	return msg
 end
 
-local CheckPayloadCmd = class(UICmd)
+local CheckPayloadCmd = class("CheckPayloadCmd", UICmd)
 function CheckPayloadCmd:__init(theater, data)
 	UICmd.__init(self, theater, data)
 	self.name = "CheckPayloadCmd:"..data.name
@@ -199,7 +211,7 @@ function CheckPayloadCmd:_execute(_ --[[time]], _ --[[cmdr]])
 	return "Payload check is only allowed when landed at a friendly airbase"
 end
 
-local MissionCmd = class(UICmd)
+local MissionCmd = class("MissionCmd", UICmd)
 function MissionCmd:__init(theater, data)
 	UICmd.__init(self, theater, data)
 	self.erequest = true
@@ -251,7 +263,7 @@ local function assignedPilots(msn, assetmgr)
 	return table.concat(pilots, "\n")
 end
 
-local MissionJoinCmd = class(MissionCmd)
+local MissionJoinCmd = class("MissionJoinCmd", MissionCmd)
 function MissionJoinCmd:__init(theater, data)
 	MissionCmd.__init(self, theater, data)
 	self.name = "MissionJoinCmd:"..data.name
@@ -284,7 +296,7 @@ function MissionJoinCmd:_execute(_, cmdr)
 	return msg
 end
 
-local MissionRqstCmd = class(MissionCmd)
+local MissionRqstCmd = class("MissionRqstCmd", MissionCmd)
 function MissionRqstCmd:__init(theater, data)
 	MissionCmd.__init(self, theater, data)
 	self.name = "MissionRqstCmd:"..data.name
@@ -318,7 +330,7 @@ function MissionRqstCmd:_execute(_, cmdr)
 end
 
 
-local MissionBriefCmd = class(MissionCmd)
+local MissionBriefCmd = class("MissionBriefCmd", MissionCmd)
 function MissionBriefCmd:__init(theater, data)
 	MissionCmd.__init(self, theater, data)
 	self.name = "MissionBriefCmd:"..data.name
@@ -330,7 +342,7 @@ function MissionBriefCmd:_mission(_, _, msn)
 end
 
 
-local MissionStatusCmd = class(MissionCmd)
+local MissionStatusCmd = class("MissionStatusCmd", MissionCmd)
 function MissionStatusCmd:__init(theater, data)
 	MissionCmd.__init(self, theater, data)
 	self.name = "MissionStatusCmd:"..data.name
@@ -360,7 +372,7 @@ function MissionStatusCmd:_mission(_, _, msn)
 end
 
 
-local MissionAbortCmd = class(MissionCmd)
+local MissionAbortCmd = class("MissionAbortCmd", MissionCmd)
 function MissionAbortCmd:__init(theater, data)
 	MissionCmd.__init(self, theater, data)
 	self.name = "MissionAbortCmd:"..data.name
@@ -388,7 +400,7 @@ function MissionAbortCmd:_mission(_ --[[time]], _, msn)
 end
 
 
-local MissionRolexCmd = class(MissionCmd)
+local MissionRolexCmd = class("MissionRolexCmd", MissionCmd)
 function MissionRolexCmd:__init(theater, data)
 	MissionCmd.__init(self, theater, data)
 	self.name = "MissionRolexCmd:"..data.name
@@ -401,7 +413,7 @@ function MissionRolexCmd:_mission(_, _, msn)
 end
 
 
-local MissionCheckinCmd = class(MissionCmd)
+local MissionCheckinCmd = class("MissionCheckinCmd", MissionCmd)
 function MissionCheckinCmd:__init(theater, data)
 	self.name = "MissionCheckinCmd:"..data.name
 	MissionCmd.__init(self, theater, data)
@@ -413,7 +425,7 @@ function MissionCheckinCmd:_mission(time, _, msn)
 end
 
 
-local MissionCheckoutCmd = class(MissionCmd)
+local MissionCheckoutCmd = class("MissionCheckoutCmd", MissionCmd)
 function MissionCheckoutCmd:__init(theater, data)
 	MissionCmd.__init(self, theater, data)
 	self.name = "MissionCheckoutCmd:"..data.name
