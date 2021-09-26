@@ -42,10 +42,10 @@ local capbriefingtxt = "Package: #2730\n"..
 			"IFF Codes: M1(02), M3(2730)\n"..
 			"Station AO: 88°06'N 063°24'W (DALLAS)\n"..
 			"Briefing:\n"..
-			"Cover friendly forces in Novorossiysk airspace for as long as "..
-			"possible.\n"..
+			"Coordinate with friendly forces and provide cover in Novorossiysk "..
+			"airspace.\n\n"..
 			"The mission status shows how many ground missions have been completed "..
-			"in the region. You can RTB at any time."
+			"in the region, however, you can RTB at any time."
 
 local assignedPilots = "Assigned Pilots:\nbobplayer (F/A-18C Hornet)"
 

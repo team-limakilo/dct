@@ -34,9 +34,9 @@ local STATUS = {
 }
 
 local airspaceDesc =
-	"Cover friendly forces in %s airspace for as long as possible.\n"..
+	"Coordinate with friendly forces and provide cover in %s airspace.\n\n"..
 	"The mission status shows how many ground missions have been completed "..
-	"in the region. You can RTB at any time."
+	"in the region, however, you can RTB at any time."
 
 local function processlimits(_, tbl)
 	-- process limits; convert the human readable asset type names into
@@ -395,7 +395,6 @@ function Region:generate()
 		["desc"]       = string.format(airspaceDesc, self.name),
 		["coalition"]  = coalition.side.NEUTRAL,
 		["location"]   = self.location,
-		["minagents"]  = 4,
 		["backfill"]   = true,
 	})
 	self:addTemplate(airspacetpl)
