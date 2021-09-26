@@ -199,7 +199,7 @@ local function main()
 			"Current Active Air Missions:\n  None\n\n"..
 			"Available missions:\n  CAP:  1\n  "..
 			"SEAD:  1\n  STRIKE:  2\n\n"..
-			"Recommended Mission Type: SEAD",
+			"Recommended Mission Type: CAP",
 	}
 	local uicmds = require("dct.ui.cmds")
 	trigger.action.setassert(status.assert)
