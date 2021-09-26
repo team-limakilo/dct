@@ -136,6 +136,8 @@ function AssetBase:__init(template)
 		"codename",
 		"cost",
 		"ignore",
+		"minagents",
+		"backfill",
 		"regenerate",
 		"extramarks",
 		"nocull",
