@@ -6,15 +6,16 @@
 -- which side "controls" the space, and spawn nothing
 --]]
 
-local enum      = require("dct.enum")
-local utils     = require("dct.utils")
-local Command   = require("dct.Command")
+local utils     = require("libs.utils")
+local dctenum   = require("dct.enum")
+local dctutils  = require("dct.utils")
 local AssetBase = require("dct.assets.AssetBase")
 
 local Airspace = require("libs.namedclass")("Airspace", AssetBase)
 function Airspace:__init(template)
 	AssetBase.__init(self, template)
 	self:_addMarshalNames({
+		"_maxStrategicAssets",
 		"_radius",
 	})
 end
@@ -27,33 +28,31 @@ end
 
 function Airspace:_completeinit(template)
 	AssetBase._completeinit(self, template)
-	assert(template.radius ~= nil,
-		"runtime error: Airspace requires template to define a radius")
-	self._radius = template.radius
+	assert(type(template.radius) == "number",
+		"runtime error: Airspace requires template to define a numeric radius")
+	self._radius   = template.radius
+end
+
+function Airspace:spawn(ignore)
+	AssetBase.spawn(self, ignore)
 	self:_trackStrategicAssets()
 end
 
-function Airspace:_unmarshalpost(data)
-	AssetBase._unmarshalpost(self, data)
-	self:_postinit()
-end
-
-function Airspace:_postinit()
-	-- finish initialization after all assets have spawned
-	local cmdname = "Airspace("..self.name.."):_trackStrategicAssets"
-	dct.Theater.singleton():queueCommand(2,
-		Command(cmdname, self._trackStrategicAssets, self))
-end
-
 local function isStrategic(asset, inRegion)
-	return enum.assetClass["STRATEGIC"][asset.type]
+	return dctenum.assetClass["STRATEGIC"][asset.type]
 		and asset.rgnname == inRegion
-		-- airbases can't be captured, so ignore them for now
-		and asset.type ~= enum.assetType.AIRBASE
+		-- Airbases can't be captured normally, so they will not be tracked
+		and asset.type ~= dctenum.assetType.AIRBASE
+end
+
+function Airspace:_recalculateCapacity()
+	local numAssets = #self._strategicAssets
+	local capacity = math.max(2, math.ceil(numAssets / 4))
+	self._logger:debug("setting minagents = %d", capacity)
+	self.minagents = capacity
 end
 
 function Airspace:_trackStrategicAssets()
-	-- track strategic assets in the region
 	self._strategicAssets = {}
 	local theater = dct.Theater.singleton()
 	theater:getAssetMgr():filterAssets(function(asset)
@@ -62,7 +61,8 @@ function Airspace:_trackStrategicAssets()
 			table.insert(self._strategicAssets, asset)
 		end
 	end)
-	-- define owner based on highest strategic asset count
+	-- Define owner based on highest strategic asset count
+	-- TODO: migrate to region ownership system
 	local numAssets = {
 		[coalition.side.NEUTRAL] = 0,
 		[coalition.side.RED] = 0,
@@ -78,52 +78,59 @@ function Airspace:_trackStrategicAssets()
 		numAssets[asset.owner] = count
 	end
 	self.owner = owner.side
-	self._logger:debug("set to owner: %d", self.owner)
-	-- remove assets that are not owned by the majority owner in the region
+	self._logger:debug("set owner = %s", utils.getkey(coalition.side, self.owner))
+	-- Ignore assets that are not owned by the region owner
 	for idx, asset in pairs(self._strategicAssets) do
 		if asset.owner ~= self.owner then
-			self._logger:debug("not same owner: %s", asset.name)
+			self._logger:debug("%s owned by different coalition, removing", asset.name)
 			table.remove(self._strategicAssets, idx)
 		end
 	end
 	self._maxStrategicAssets = self._maxStrategicAssets or #self._strategicAssets
 	self._logger:debug("tracking %d/%d alive strategic assets",
 		#self._strategicAssets, self._maxStrategicAssets)
+
+	self:_recalculateCapacity()
 end
 
-function Airspace:_countAliveStrategicAssets()
+function Airspace:_updateAliveAssets()
 	if self._strategicAssets == nil then
 		return 0
 	end
-	local count = 0
+	local aliveAssets = {}
 	for _, asset in pairs(self._strategicAssets) do
-		if asset:isDead() == false then
-			count = count + 1
+		if not asset:isDead() then
+			table.insert(aliveAssets, asset)
 		end
 	end
-	return count
+	self._logger:debug("alive assets = %d", #aliveAssets)
+	self._strategicAssets = aliveAssets
+	return #aliveAssets
 end
 
--- TODO: need to figure out how to track influence within this space
--- this version of the function only calculates how many strategic objectives
--- have been completed in the region
+-- Right now, we only calculats how many strategic assets
+-- have been destroyed in the region
 function Airspace:getStatus()
 	if self._maxStrategicAssets == 0 then
 		return 0
 	end
-	local numAlive = self:_countAliveStrategicAssets()
+	local numAlive = self:_updateAliveAssets()
 	return math.ceil((1 - numAlive / self._maxStrategicAssets) * 100)
 end
 
 function Airspace:update()
-	-- set as neutral and notify asset "death" to complete missions
-	if self.owner ~= 0 and self:_countAliveStrategicAssets() == 0 then
-		self.owner = 0
-		self:notify(utils.buildevent.dead(self))
+	self:_updateAliveAssets()
+	self:_recalculateCapacity()
+
+	-- When empty, set to neutral and notify asset death to trigger mission update
+	if self.owner ~= coalition.side.NEUTRAL and #self._strategicAssets == 0 then
+		self.owner = coalition.side.NEUTRAL
+		self:notify(dctutils.buildevent.dead(self))
 		self._logger:debug("neutralized")
 	end
 end
 
+-- Keep this asset alive after completion
 function Airspace:isDead()
 	return false
 end

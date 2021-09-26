@@ -155,6 +155,9 @@ local function main()
 		theater:onEvent(createEvent(eventdata, player1))
 	end
 
+	-- run all pending commands
+	theater:exec(100)
+	theater:exec(200)
 	theater:export()
 	local f = io.open(settings.statepath, "r")
 	local sumorig = md5.sumhexa(f:read("*all"))
@@ -194,7 +197,7 @@ local function main()
 			"Airbases:\n  CVN-71 Theodore Roosevelt: Friendly\n  "..
 			"Krymsk: Hostile\n  Kutaisi: Friendly\n  Senaki-Kolkhi: Friendly\n\n"..
 			"Current Active Air Missions:\n  None\n\n"..
-			"Available missions:\n  CAP:  2\n  "..
+			"Available missions:\n  CAP:  1\n  "..
 			"SEAD:  1\n  STRIKE:  2\n\n"..
 			"Recommended Mission Type: SEAD",
 	}
