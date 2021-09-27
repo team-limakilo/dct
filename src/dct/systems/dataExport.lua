@@ -129,12 +129,14 @@ local function getMissions(commander, assetmgr)
         missions[id] = {
             assigned = getAssignedUnitInfo(mission.assigned, assetmgr),
             type = MISSION_TYPE[mission.type],
+            state = mission:getStateName(),
             target = {
                 name = mission.target,
                 region = tgt.region,
                 coalition = tgt.coalition,
                 location_degraded = getLocation(pos),
                 intel = tgt.intellvl,
+                status = tgt.status,
             },
         }
     end
