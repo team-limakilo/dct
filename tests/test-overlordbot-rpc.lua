@@ -66,7 +66,8 @@ local function main()
     })
     checkError(err, msg)
     theater:exec(60)
-    assert(player.missionid ~= nil, "player mission request did not complete")
+    assert(player.missionid ~= enum.missionInvalidID,
+        "player mission request did not complete")
 
     -- Leave mission
     dct.Theater.playerRequest({
@@ -74,7 +75,8 @@ local function main()
         type = enum.uiRequestType.MISSIONABORT,
     })
     theater:exec(70)
-    assert(player.missionid == nil, "player did not leave the mission")
+    assert(player.missionid == enum.missionInvalidID,
+        "player did not leave the mission")
 
     -- Join another mission
     local tgt = theater:getAssetMgr():getAsset("Krasnodar_1_KrasnodarFactory")

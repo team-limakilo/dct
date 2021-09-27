@@ -249,7 +249,7 @@ function Mission:removeAssigned(asset)
 	if self.backfill and #self.assigned < self.minagents then
 		self.isfull = false
 	end
-	asset.missionid = enum.misisonInvalidID
+	asset.missionid = enum.missionInvalidID
 end
 
 --[[
