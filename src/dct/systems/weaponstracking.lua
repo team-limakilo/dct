@@ -19,8 +19,9 @@ local function isWpnValid(event)
 
 	local wpndesc = event.weapon:getDesc()
 	local allowedmsltypes = {
-		[Weapon.MissileCategory.CRUISE] = true,
-		[Weapon.MissileCategory.OTHER]  = true,
+		[Weapon.MissileCategory.ANTI_SHIP] = true,
+		[Weapon.MissileCategory.CRUISE]    = true,
+		[Weapon.MissileCategory.OTHER]     = true,
 	}
 	if wpndesc.category == Weapon.Category.MISSILE and
 	   allowedmsltypes[wpndesc.missileCategory] == nil then
