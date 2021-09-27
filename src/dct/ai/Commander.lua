@@ -108,6 +108,7 @@ end
 
 local MISSION_ID = math.random(1,63)
 local invalidXpdrTbl = {
+	["0000"] = true,
 	["7700"] = true,
 	["7600"] = true,
 	["7500"] = true,
@@ -303,13 +304,13 @@ function Commander:getAssigned(asset)
 	local msn = self.missions[asset.missionid]
 
 	if msn == nil then
-		asset.missionid = enum.misisonInvalidID
+		asset.missionid = enum.missionInvalidID
 		return nil
 	end
 
 	local member = msn:isMember(asset.name)
 	if not member then
-		asset.missionid = enum.misisonInvalidID
+		asset.missionid = enum.missionInvalidID
 		return nil
 	end
 	return msn

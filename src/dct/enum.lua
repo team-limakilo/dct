@@ -75,7 +75,7 @@ enum.assetTypePriority = {
 	[enum.assetType.KEEPOUT]     = 10000,
 }
 
-enum.missionInvalidID = 0
+enum.missionInvalidID = nil
 
 enum.missionType = {
 	["CAS"]        = 1,
