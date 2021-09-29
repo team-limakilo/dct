@@ -4,8 +4,8 @@
 -- Defines the Region class.
 --]]
 
-require("lfs")
-require("math")
+local lfs        = require("lfs")
+local math       = require("math")
 local class      = require("libs.namedclass")
 local utils      = require("libs.utils")
 local dctenums   = require("dct.enum")
@@ -45,9 +45,9 @@ local function processlimits(_, tbl)
 	for key, data in pairs(tbl.limits) do
 		local typenum = dctenums.assetType[string.upper(key)]
 		if typenum == nil then
-			Logger:warn("invalid asset type '"..key..
-				"' found in limits definition in file: "..
-				tbl.defpath or "nil")
+			Logger:warn("invalid asset type '%s' "..
+				"found in limits definition in file: %s",
+				key, tbl.defpath or "nil")
 		else
 			limits[typenum] = data
 		end
@@ -69,7 +69,7 @@ local function processlinks(keydata, tbl)
 end
 
 local function loadMetadata(self, regiondefpath)
-	Logger:debug("=> regiondefpath: "..regiondefpath)
+	Logger:debug("=> regiondefpath: %s", regiondefpath)
 	local keys = {
 		{
 			["name"] = "name",
@@ -119,7 +119,7 @@ local function getTemplates(self, basepath)
 		["region.def"] = true,
 	}
 
-	Logger:debug("=> basepath: "..basepath)
+	Logger:debug("=> basepath: %s", basepath)
 	for filename in lfs.dir(basepath) do
 		if ignorepaths[filename] == nil then
 			local fpath = basepath..utils.sep..filename
@@ -127,7 +127,7 @@ local function getTemplates(self, basepath)
 			if fattr.mode == "directory" then
 				getTemplates(self, basepath..utils.sep..filename)
 			elseif string.find(fpath, ".dct", -4, true) ~= nil then
-				Logger:debug("=> process template: "..fpath)
+				Logger:debug("=> process template: %s", fpath)
 				local stmpath = string.gsub(fpath, "[.]dct", ".stm")
 				if lfs.attributes(stmpath) == nil then
 					stmpath = nil
@@ -274,10 +274,10 @@ function Region:__init(regionpath)
 	self.DOMAIN        = nil
 	self.STATUS        = nil
 
-	Logger:debug("=> regionpath: "..regionpath)
+	Logger:debug("=> regionpath: %s", regionpath)
 	loadMetadata(self, regionpath..utils.sep.."region.def")
 	getTemplates(self, self.path)
-	Logger:debug("'"..self.name.."' Loaded")
+	Logger:debug("'%s' Loaded", self.name)
 end
 
 Region.DOMAIN = DOMAIN
@@ -287,14 +287,12 @@ function Region:addTemplate(tpl)
 	assert(self._templates[tpl.name] == nil,
 		"duplicate template '"..tpl.name.."' defined; "..tostring(tpl.path))
 	if tpl.theater ~= env.mission.theatre then
-		Logger:warn(string.format(
-			"Region(%s):Template(%s) not for map(%s):template(%s)"..
-			" - ignoring",
-			self.name, tpl.name, env.mission.theatre, tpl.theater))
+		Logger:warn("Region(%s):Template(%s) not for map(%s):template(%s) - ignoring",
+			self.name, tpl.name, env.mission.theatre, tpl.theater)
 		return
 	end
 
-	Logger:debug("  + add template: "..tpl.name)
+	Logger:debug("  + add template: %s", tpl.name)
 	self._templates[tpl.name] = tpl
 	if tpl.exclusion ~= nil then
 		if self._exclusions[tpl.exclusion] == nil then
@@ -420,7 +418,7 @@ local function get_asset_weight(asset)
 	if weight == 0 then
 		weight = 1
 	end
-	Logger:debug("asset weight("..asset.name.."): "..tostring(weight))
+	Logger:debug("asset weight(%s): %s", asset.name, tostring(weight))
 	return weight
 end
 
@@ -431,16 +429,16 @@ local function handleDead(region, event)
 	if region.weight[asset.owner] < 0 then
 		region.weight[asset.owner] = 0
 	end
-	Logger:debug("Region("..region.name..").handleDead - "..
-		"new weight: "..tostring(region.weight[asset.owner]))
+	Logger:debug("Region(%s).handleDead - new weight: %s",
+		region.name, tostring(region.weight[asset.owner]))
 end
 
 local function handleAddAsset(region, event)
 	local asset = event.initiator
 	region.weight[asset.owner] = region.weight[asset.owner] +
 		get_asset_weight(asset)
-	Logger:debug("Region("..region.name..").handleAddAsset - "..
-		"new weight: "..tostring(region.weight[asset.owner]))
+	Logger:debug("Region(%s).handleAddAsset - new weight: %s",
+		region.name, tostring(region.weight[asset.owner]))
 end
 
 local handlers = {
