@@ -352,12 +352,12 @@ function RenderManager:checkRegion(region, time)
 					for rt = 1, #distances do
 						for di = 1, #distances[rt] do
 							local object = objdist[distances[rt][di]]
+							ops = ops + 1
 							if self:tooFar(object, asset, region) then
-								ops = ops + 1
 								break
 							end
+							ops = ops + 1
 							if self:inRange(object, asset) then
-								ops = ops + 1
 								self.lastSeen[asset.name] = time
 								seen = true
 								break
@@ -375,18 +375,18 @@ function RenderManager:checkRegion(region, time)
 						local seen = false
 						for di = 1, #distances[rt] do
 							local object = objdist[distances[rt][di]]
+							ops = ops + 1
 							if self:tooFar(object, asset, region) then
-								ops = ops + 1
 								break
 							end
+							ops = ops + 1
 							if self:inRange(object, asset) then
-								ops = ops + 1
-								self.lastSeen[asset.name] = time
 								seen = true
 								break
 							end
 						end
 						if seen then
+							self.lastSeen[asset.name] = time
 							spawns = spawns + 1
 							asset:spawn()
 							break
