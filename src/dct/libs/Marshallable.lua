@@ -22,6 +22,10 @@ function Marshallable:__init()
 	self._marshalnames = {}
 end
 
+local function isMarshallable(val)
+	return type(val) == "table" and type(val.marshal) == "function"
+end
+
 --[[
 -- Add members of the class to the list of items to be marshalled.
 -- Returns: none
@@ -41,7 +45,11 @@ function Marshallable:marshal()
 	for attribute, _ in pairs(self._marshalnames or {}) do
 		assert(type(self[attribute]) ~= "function",
 			"value error: cannot marshal functions")
-		tbl[attribute] = self[attribute]
+		if isMarshallable(self[attribute]) then
+			tbl[attribute] = self[attribute]:marshal()
+		else
+			tbl[attribute] = self[attribute]
+		end
 	end
 	if next(tbl) == nil then
 		return nil
