@@ -1,0 +1,1139 @@
+staticTemplate = 
+{
+    ["coalition"] = 
+    {
+        ["neutrals"] = 
+        {
+            ["name"] = "neutrals",
+            ["country"] = 
+            {
+                [1] = 
+                {
+                    ["id"] = 70,
+                    ["name"] = "Algeria",
+                }, -- end of [1]
+                [2] = 
+                {
+                    ["id"] = 83,
+                    ["name"] = "Argentina",
+                }, -- end of [2]
+                [3] = 
+                {
+                    ["id"] = 23,
+                    ["name"] = "Austria",
+                }, -- end of [3]
+                [4] = 
+                {
+                    ["id"] = 65,
+                    ["name"] = "Bahrain",
+                }, -- end of [4]
+                [5] = 
+                {
+                    ["id"] = 64,
+                    ["name"] = "Brazil",
+                }, -- end of [5]
+                [6] = 
+                {
+                    ["id"] = 25,
+                    ["name"] = "Bulgaria",
+                }, -- end of [6]
+                [7] = 
+                {
+                    ["id"] = 63,
+                    ["name"] = "Chile",
+                }, -- end of [7]
+                [8] = 
+                {
+                    ["id"] = 76,
+                    ["name"] = "Cuba",
+                }, -- end of [8]
+                [9] = 
+                {
+                    ["id"] = 84,
+                    ["name"] = "Cyprus",
+                }, -- end of [9]
+                [10] = 
+                {
+                    ["id"] = 29,
+                    ["name"] = "Egypt",
+                }, -- end of [10]
+                [11] = 
+                {
+                    ["id"] = 62,
+                    ["name"] = "Ethiopia",
+                }, -- end of [11]
+                [12] = 
+                {
+                    ["id"] = 30,
+                    ["name"] = "Finland",
+                }, -- end of [12]
+                [13] = 
+                {
+                    ["id"] = 78,
+                    ["name"] = "GDR",
+                }, -- end of [13]
+                [14] = 
+                {
+                    ["id"] = 31,
+                    ["name"] = "Greece",
+                }, -- end of [14]
+                [15] = 
+                {
+                    ["id"] = 61,
+                    ["name"] = "Honduras",
+                }, -- end of [15]
+                [16] = 
+                {
+                    ["id"] = 32,
+                    ["name"] = "Hungary",
+                }, -- end of [16]
+                [17] = 
+                {
+                    ["id"] = 33,
+                    ["name"] = "India",
+                }, -- end of [17]
+                [18] = 
+                {
+                    ["id"] = 60,
+                    ["name"] = "Indonesia",
+                }, -- end of [18]
+                [19] = 
+                {
+                    ["id"] = 17,
+                    ["name"] = "Insurgents",
+                }, -- end of [19]
+                [20] = 
+                {
+                    ["id"] = 35,
+                    ["name"] = "Iraq",
+                }, -- end of [20]
+                [21] = 
+                {
+                    ["id"] = 69,
+                    ["name"] = "Italian Social Republic",
+                }, -- end of [21]
+                [22] = 
+                {
+                    ["id"] = 36,
+                    ["name"] = "Japan",
+                }, -- end of [22]
+                [23] = 
+                {
+                    ["id"] = 59,
+                    ["name"] = "Jordan",
+                }, -- end of [23]
+                [24] = 
+                {
+                    ["id"] = 71,
+                    ["name"] = "Kuwait",
+                }, -- end of [24]
+                [25] = 
+                {
+                    ["id"] = 79,
+                    ["name"] = "Lebanon",
+                }, -- end of [25]
+                [26] = 
+                {
+                    ["id"] = 58,
+                    ["name"] = "Libya",
+                }, -- end of [26]
+                [27] = 
+                {
+                    ["id"] = 57,
+                    ["name"] = "Malaysia",
+                }, -- end of [27]
+                [28] = 
+                {
+                    ["id"] = 56,
+                    ["name"] = "Mexico",
+                }, -- end of [28]
+                [29] = 
+                {
+                    ["id"] = 55,
+                    ["name"] = "Morocco",
+                }, -- end of [29]
+                [30] = 
+                {
+                    ["id"] = 73,
+                    ["name"] = "Oman",
+                }, -- end of [30]
+                [31] = 
+                {
+                    ["id"] = 39,
+                    ["name"] = "Pakistan",
+                }, -- end of [31]
+                [32] = 
+                {
+                    ["id"] = 54,
+                    ["name"] = "Philippines",
+                }, -- end of [32]
+                [33] = 
+                {
+                    ["id"] = 77,
+                    ["name"] = "Portugal",
+                }, -- end of [33]
+                [34] = 
+                {
+                    ["id"] = 72,
+                    ["name"] = "Qatar",
+                }, -- end of [34]
+                [35] = 
+                {
+                    ["id"] = 41,
+                    ["name"] = "Romania",
+                }, -- end of [35]
+                [36] = 
+                {
+                    ["id"] = 42,
+                    ["name"] = "Saudi Arabia",
+                }, -- end of [36]
+                [37] = 
+                {
+                    ["id"] = 44,
+                    ["name"] = "Slovakia",
+                }, -- end of [37]
+                [38] = 
+                {
+                    ["id"] = 85,
+                    ["name"] = "Slovenia",
+                }, -- end of [38]
+                [39] = 
+                {
+                    ["id"] = 75,
+                    ["name"] = "South Africa",
+                }, -- end of [39]
+                [40] = 
+                {
+                    ["id"] = 53,
+                    ["name"] = "Sudan",
+                }, -- end of [40]
+                [41] = 
+                {
+                    ["id"] = 22,
+                    ["name"] = "Switzerland",
+                }, -- end of [41]
+                [42] = 
+                {
+                    ["id"] = 52,
+                    ["name"] = "Thailand",
+                }, -- end of [42]
+                [43] = 
+                {
+                    ["id"] = 66,
+                    ["name"] = "Third Reich",
+                }, -- end of [43]
+                [44] = 
+                {
+                    ["id"] = 51,
+                    ["name"] = "Tunisia",
+                }, -- end of [44]
+                [45] = 
+                {
+                    ["id"] = 74,
+                    ["name"] = "United Arab Emirates",
+                }, -- end of [45]
+                [46] = 
+                {
+                    ["id"] = 82,
+                    ["name"] = "UN",
+                }, -- end of [46]
+                [47] = 
+                {
+                    ["id"] = 7,
+                    ["name"] = "USAF Aggressors",
+                }, -- end of [47]
+                [48] = 
+                {
+                    ["id"] = 68,
+                    ["name"] = "USSR",
+                }, -- end of [48]
+                [49] = 
+                {
+                    ["id"] = 50,
+                    ["name"] = "Venezuela",
+                }, -- end of [49]
+                [50] = 
+                {
+                    ["id"] = 49,
+                    ["name"] = "Vietnam",
+                }, -- end of [50]
+                [51] = 
+                {
+                    ["id"] = 48,
+                    ["name"] = "Yemen",
+                }, -- end of [51]
+                [52] = 
+                {
+                    ["id"] = 67,
+                    ["name"] = "Yugoslavia",
+                }, -- end of [52]
+            }, -- end of ["country"]
+        }, -- end of ["neutrals"]
+        ["blue"] = 
+        {
+            ["name"] = "blue",
+            ["country"] = 
+            {
+                [1] = 
+                {
+                    ["id"] = 21,
+                    ["name"] = "Australia",
+                }, -- end of [1]
+                [2] = 
+                {
+                    ["id"] = 11,
+                    ["name"] = "Belgium",
+                }, -- end of [2]
+                [3] = 
+                {
+                    ["id"] = 8,
+                    ["name"] = "Canada",
+                }, -- end of [3]
+                [4] = 
+                {
+                    ["id"] = 80,
+                    ["name"] = "CJTF Blue",
+                }, -- end of [4]
+                [5] = 
+                {
+                    ["id"] = 28,
+                    ["name"] = "Croatia",
+                }, -- end of [5]
+                [6] = 
+                {
+                    ["id"] = 26,
+                    ["name"] = "Czech Republic",
+                }, -- end of [6]
+                [7] = 
+                {
+                    ["id"] = 13,
+                    ["name"] = "Denmark",
+                }, -- end of [7]
+                [8] = 
+                {
+                    ["id"] = 5,
+                    ["name"] = "France",
+                }, -- end of [8]
+                [9] = 
+                {
+                    ["id"] = 16,
+                    ["name"] = "Georgia",
+                }, -- end of [9]
+                [10] = 
+                {
+                    ["id"] = 6,
+                    ["name"] = "Germany",
+                }, -- end of [10]
+                [11] = 
+                {
+                    ["id"] = 15,
+                    ["name"] = "Israel",
+                }, -- end of [11]
+                [12] = 
+                {
+                    ["id"] = 20,
+                    ["name"] = "Italy",
+                }, -- end of [12]
+                [13] = 
+                {
+                    ["id"] = 12,
+                    ["name"] = "Norway",
+                }, -- end of [13]
+                [14] = 
+                {
+                    ["id"] = 40,
+                    ["name"] = "Poland",
+                }, -- end of [14]
+                [15] = 
+                {
+                    ["id"] = 45,
+                    ["name"] = "South Korea",
+                }, -- end of [15]
+                [16] = 
+                {
+                    ["id"] = 9,
+                    ["name"] = "Spain",
+                }, -- end of [16]
+                [17] = 
+                {
+                    ["id"] = 46,
+                    ["name"] = "Sweden",
+                }, -- end of [17]
+                [18] = 
+                {
+                    ["id"] = 10,
+                    ["name"] = "The Netherlands",
+                }, -- end of [18]
+                [19] = 
+                {
+                    ["id"] = 3,
+                    ["name"] = "Turkey",
+                }, -- end of [19]
+                [20] = 
+                {
+                    ["id"] = 4,
+                    ["name"] = "UK",
+                }, -- end of [20]
+                [21] = 
+                {
+                    ["id"] = 1,
+                    ["name"] = "Ukraine",
+                }, -- end of [21]
+                [22] = 
+                {
+                    ["id"] = 2,
+                    ["name"] = "USA",
+                }, -- end of [22]
+            }, -- end of ["country"]
+        }, -- end of ["blue"]
+        ["red"] = 
+        {
+            ["name"] = "red",
+            ["country"] = 
+            {
+                [1] = 
+                {
+                    ["id"] = 18,
+                    ["name"] = "Abkhazia",
+                }, -- end of [1]
+                [2] = 
+                {
+                    ["id"] = 24,
+                    ["name"] = "Belarus",
+                }, -- end of [2]
+                [3] = 
+                {
+                    ["id"] = 27,
+                    ["name"] = "China",
+                }, -- end of [3]
+                [4] = 
+                {
+                    ["id"] = 81,
+                    ["name"] = "CJTF Red",
+                }, -- end of [4]
+                [5] = 
+                {
+                    ["id"] = 34,
+                    ["name"] = "Iran",
+                }, -- end of [5]
+                [6] = 
+                {
+                    ["id"] = 37,
+                    ["name"] = "Kazakhstan",
+                }, -- end of [6]
+                [7] = 
+                {
+                    ["id"] = 38,
+                    ["name"] = "North Korea",
+                }, -- end of [7]
+                [8] = 
+                {
+                    ["id"] = 0,
+                    ["vehicle"] = 
+                    {
+                        ["group"] = 
+                        {
+                            [1] = 
+                            {
+                                ["visible"] = false,
+                                ["tasks"] = 
+                                {
+                                }, -- end of ["tasks"]
+                                ["uncontrollable"] = false,
+                                ["route"] = 
+                                {
+                                    ["spans"] = 
+                                    {
+                                    }, -- end of ["spans"]
+                                    ["points"] = 
+                                    {
+                                        [1] = 
+                                        {
+                                            ["alt"] = 25,
+                                            ["type"] = "Turning Point",
+                                            ["ETA"] = 0,
+                                            ["alt_type"] = "BARO",
+                                            ["formation_template"] = "",
+                                            ["y"] = 364707.69138912,
+                                            ["x"] = 12423.76977686,
+                                            ["name"] = "",
+                                            ["ETA_locked"] = true,
+                                            ["speed"] = 0,
+                                            ["action"] = "Off Road",
+                                            ["task"] = 
+                                            {
+                                                ["id"] = "ComboTask",
+                                                ["params"] = 
+                                                {
+                                                    ["tasks"] = 
+                                                    {
+                                                    }, -- end of ["tasks"]
+                                                }, -- end of ["params"]
+                                            }, -- end of ["task"]
+                                            ["speed_locked"] = true,
+                                        }, -- end of [1]
+                                    }, -- end of ["points"]
+                                }, -- end of ["route"]
+                                ["groupId"] = 1,
+                                ["hidden"] = false,
+                                ["units"] = 
+                                {
+                                    [1] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "SNR_75V",
+                                        ["unitId"] = 3,
+                                        ["y"] = 364707.69138912,
+                                        ["x"] = 12423.76977686,
+                                        ["name"] = "Krasnodar SA2-1",
+                                        ["heading"] = 0.0038885041518015,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [1]
+                                    [2] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "S_75M_Volhov",
+                                        ["unitId"] = 4,
+                                        ["y"] = 364660.59469173,
+                                        ["x"] = 12502.86883863,
+                                        ["name"] = "Krasnodar SA2-2",
+                                        ["heading"] = 5.4803338512622,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [2]
+                                    [3] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "S_75M_Volhov",
+                                        ["unitId"] = 12,
+                                        ["y"] = 364814.49192161,
+                                        ["x"] = 12423.98798373,
+                                        ["name"] = "Krasnodar SA2-3",
+                                        ["heading"] = 1.535889741755,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [3]
+                                    [4] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "S_75M_Volhov",
+                                        ["unitId"] = 5,
+                                        ["y"] = 364609.44716333,
+                                        ["x"] = 12421.94208259,
+                                        ["name"] = "Krasnodar SA2-4",
+                                        ["heading"] = 4.6774823953448,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [4]
+                                    [5] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "S_75M_Volhov",
+                                        ["unitId"] = 9,
+                                        ["y"] = 364660.82201408,
+                                        ["x"] = 12338.51478072,
+                                        ["name"] = "Krasnodar SA2-5",
+                                        ["heading"] = 3.8048177693476,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [5]
+                                    [6] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "S_75M_Volhov",
+                                        ["unitId"] = 13,
+                                        ["y"] = 364765.6176167,
+                                        ["x"] = 12336.01423489,
+                                        ["name"] = "Krasnodar SA2-6",
+                                        ["heading"] = 2.3561944901923,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [6]
+                                    [7] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "S_75M_Volhov",
+                                        ["unitId"] = 2,
+                                        ["y"] = 364761.98045912,
+                                        ["x"] = 12504.46009507,
+                                        ["name"] = "Krasnodar SA2-7",
+                                        ["heading"] = 0.92502450355699,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [7]
+                                    [8] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "SKP-11",
+                                        ["unitId"] = 6,
+                                        ["y"] = 364752.32755423,
+                                        ["x"] = 12453.72644896,
+                                        ["name"] = "Krasnodar SA2-8",
+                                        ["heading"] = 4.1713369122664,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [8]
+                                    [9] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "SKP-11",
+                                        ["unitId"] = 8,
+                                        ["y"] = 364755.58053124,
+                                        ["x"] = 12448.89672672,
+                                        ["name"] = "Krasnodar SA2-9",
+                                        ["heading"] = 4.1713369122664,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [9]
+                                    [10] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "p-19 s-125 sr",
+                                        ["unitId"] = 10,
+                                        ["y"] = 364873.34723906,
+                                        ["x"] = 12362.62727863,
+                                        ["name"] = "Krasnodar SA2-10",
+                                        ["heading"] = 2.2165681500328,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [10]
+                                    [11] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "Ural-4320 APA-5D",
+                                        ["unitId"] = 15,
+                                        ["y"] = 364872.07614985,
+                                        ["x"] = 12373.828731115,
+                                        ["name"] = "Krasnodar SA2-11",
+                                        ["heading"] = 0.68067840827779,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [11]
+                                    [12] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "ATMZ-5",
+                                        ["unitId"] = 14,
+                                        ["y"] = 364536.52925701,
+                                        ["x"] = 12305.48414371,
+                                        ["name"] = "Krasnodar SA2-12",
+                                        ["heading"] = 0.87266462599716,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [12]
+                                    [13] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "ATMZ-5",
+                                        ["unitId"] = 1,
+                                        ["y"] = 364556.43234909,
+                                        ["x"] = 12286.41034713,
+                                        ["name"] = "Krasnodar SA2-13",
+                                        ["heading"] = 1.0297442586767,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [13]
+                                    [14] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "Ural-4320T",
+                                        ["unitId"] = 11,
+                                        ["y"] = 364618.74833532,
+                                        ["x"] = 12256.222743859,
+                                        ["name"] = "Krasnodar SA2-14",
+                                        ["heading"] = 5.4279739737024,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [14]
+                                    [15] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "Ural-4320T",
+                                        ["unitId"] = 7,
+                                        ["y"] = 364636.87401292,
+                                        ["x"] = 12272.31232357,
+                                        ["name"] = "Krasnodar SA2-15",
+                                        ["heading"] = 5.3407075111026,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [15]
+                                }, -- end of ["units"]
+                                ["y"] = 364707.69138912,
+                                ["x"] = 12423.76977686,
+                                ["name"] = "Krasnodar SA2",
+                                ["start_time"] = 0,
+                            }, -- end of [1]
+                            [2] = 
+                            {
+                                ["visible"] = false,
+                                ["tasks"] = 
+                                {
+                                }, -- end of ["tasks"]
+                                ["uncontrollable"] = false,
+                                ["task"] = "Ground Nothing",
+                                ["manualHeading"] = false,
+                                ["route"] = 
+                                {
+                                    ["spans"] = 
+                                    {
+                                    }, -- end of ["spans"]
+                                    ["points"] = 
+                                    {
+                                        [1] = 
+                                        {
+                                            ["alt"] = 31,
+                                            ["type"] = "Turning Point",
+                                            ["ETA"] = 0,
+                                            ["alt_type"] = "BARO",
+                                            ["formation_template"] = "",
+                                            ["y"] = 372929.58402357,
+                                            ["x"] = 11558.032959007,
+                                            ["ETA_locked"] = true,
+                                            ["speed"] = 0,
+                                            ["action"] = "Off Road",
+                                            ["task"] = 
+                                            {
+                                                ["id"] = "ComboTask",
+                                                ["params"] = 
+                                                {
+                                                    ["tasks"] = 
+                                                    {
+                                                    }, -- end of ["tasks"]
+                                                }, -- end of ["params"]
+                                            }, -- end of ["task"]
+                                            ["speed_locked"] = true,
+                                        }, -- end of [1]
+                                    }, -- end of ["points"]
+                                }, -- end of ["route"]
+                                ["groupId"] = 2,
+                                ["hidden"] = false,
+                                ["units"] = 
+                                {
+                                    [1] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "S_75M_Volhov",
+                                        ["unitId"] = 16,
+                                        ["y"] = 372929.58402357,
+                                        ["x"] = 11558.032959007,
+                                        ["name"] = "Krasnodar SA2-1-1",
+                                        ["heading"] = 0,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [1]
+                                    [2] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "S_75M_Volhov",
+                                        ["unitId"] = 17,
+                                        ["y"] = 372844.44504885,
+                                        ["x"] = 11510.834692983,
+                                        ["name"] = "Krasnodar SA2-1-2",
+                                        ["heading"] = 5.4977871437821,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [2]
+                                    [3] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "S_75M_Volhov",
+                                        ["unitId"] = 18,
+                                        ["y"] = 373018.81919047,
+                                        ["x"] = 11514.02835858,
+                                        ["name"] = "Krasnodar SA2-1-3",
+                                        ["heading"] = 0.78539816339745,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [3]
+                                    [4] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "ZIL-135",
+                                        ["unitId"] = 28,
+                                        ["y"] = 372918.97538773,
+                                        ["x"] = 11451.231487063,
+                                        ["name"] = "Krasnodar SA2-1-10",
+                                        ["heading"] = 3.0543261909901,
+                                        ["playerCanDrive"] = true,
+                                    }, -- end of [4]
+                                    [5] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "ZIL-135",
+                                        ["unitId"] = 27,
+                                        ["y"] = 372913.23415439,
+                                        ["x"] = 11450.974416914,
+                                        ["name"] = "Krasnodar SA2-1-9",
+                                        ["heading"] = 3.0543261909901,
+                                        ["playerCanDrive"] = true,
+                                    }, -- end of [5]
+                                    [6] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "ZIL-135",
+                                        ["unitId"] = 26,
+                                        ["y"] = 372907.26598668,
+                                        ["x"] = 11450.680117449,
+                                        ["name"] = "Krasnodar SA2-1-8",
+                                        ["heading"] = 3.0543261909901,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [6]
+                                    [7] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "Ural-4320 APA-5D",
+                                        ["unitId"] = 25,
+                                        ["y"] = 372926.17335193,
+                                        ["x"] = 11452.773907962,
+                                        ["name"] = "Krasnodar SA2-1-7",
+                                        ["heading"] = 3.2812189937493,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [7]
+                                    [8] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "ZSU-23-4 Shilka",
+                                        ["unitId"] = 24,
+                                        ["y"] = 373001.97473859,
+                                        ["x"] = 11461.853230369,
+                                        ["name"] = "Krasnodar SA2-1-6",
+                                        ["heading"] = 2.0245819323134,
+                                        ["playerCanDrive"] = true,
+                                    }, -- end of [8]
+                                    [9] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "ZSU-23-4 Shilka",
+                                        ["unitId"] = 23,
+                                        ["y"] = 372871.43304999,
+                                        ["x"] = 11461.246059724,
+                                        ["name"] = "Krasnodar SA2-1-5",
+                                        ["heading"] = 4.5204027626653,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [9]
+                                    [10] = 
+                                    {
+                                        ["transportable"] = 
+                                        {
+                                            ["randomTransportable"] = false,
+                                        }, -- end of ["transportable"]
+                                        ["skill"] = "High",
+                                        ["type"] = "S_75M_Volhov",
+                                        ["unitId"] = 19,
+                                        ["y"] = 372843.19961501,
+                                        ["x"] = 11413.583164119,
+                                        ["name"] = "Krasnodar SA2-1-4",
+                                        ["heading"] = 3.9269908169872,
+                                        ["playerCanDrive"] = false,
+                                    }, -- end of [10]
+                                }, -- end of ["units"]
+                                ["y"] = 372929.58402357,
+                                ["x"] = 11558.032959007,
+                                ["name"] = "PRIMARY DAMAGED Construction Site",
+                                ["start_time"] = 0,
+                            }, -- end of [2]
+                        }, -- end of ["group"]
+                    }, -- end of ["vehicle"]
+                    ["name"] = "Russia",
+                    ["static"] = 
+                    {
+                        ["group"] = 
+                        {
+                            [1] = 
+                            {
+                                ["heading"] = 0,
+                                ["route"] = 
+                                {
+                                    ["points"] = 
+                                    {
+                                        [1] = 
+                                        {
+                                            ["alt"] = 0,
+                                            ["type"] = "",
+                                            ["name"] = "",
+                                            ["y"] = 372906.216072,
+                                            ["speed"] = 0,
+                                            ["x"] = 11491.39901216,
+                                            ["formation_template"] = "",
+                                            ["action"] = "",
+                                        }, -- end of [1]
+                                    }, -- end of ["points"]
+                                }, -- end of ["route"]
+                                ["groupId"] = 3,
+                                ["units"] = 
+                                {
+                                    [1] = 
+                                    {
+                                        ["mass"] = 4500,
+                                        ["category"] = "Cargos",
+                                        ["canCargo"] = true,
+                                        ["shape_name"] = "iso_container_cargo",
+                                        ["type"] = "iso_container",
+                                        ["unitId"] = 29,
+                                        ["rate"] = 100,
+                                        ["y"] = 372906.216072,
+                                        ["x"] = 11491.39901216,
+                                        ["name"] = "Static ISO container-1-1",
+                                        ["heading"] = 0,
+                                    }, -- end of [1]
+                                }, -- end of ["units"]
+                                ["y"] = 372906.216072,
+                                ["x"] = 11491.39901216,
+                                ["name"] = "Static ISO container-1",
+                                ["dead"] = false,
+                            }, -- end of [1]
+                            [2] = 
+                            {
+                                ["heading"] = 0,
+                                ["route"] = 
+                                {
+                                    ["points"] = 
+                                    {
+                                        [1] = 
+                                        {
+                                            ["alt"] = 0,
+                                            ["type"] = "",
+                                            ["name"] = "",
+                                            ["y"] = 372910.03462291,
+                                            ["speed"] = 0,
+                                            ["x"] = 11491.337436947,
+                                            ["formation_template"] = "",
+                                            ["action"] = "",
+                                        }, -- end of [1]
+                                    }, -- end of ["points"]
+                                }, -- end of ["route"]
+                                ["groupId"] = 4,
+                                ["units"] = 
+                                {
+                                    [1] = 
+                                    {
+                                        ["mass"] = 4500,
+                                        ["category"] = "Cargos",
+                                        ["canCargo"] = true,
+                                        ["shape_name"] = "iso_container_cargo",
+                                        ["type"] = "iso_container",
+                                        ["unitId"] = 30,
+                                        ["rate"] = 100,
+                                        ["y"] = 372910.03462291,
+                                        ["x"] = 11491.337436947,
+                                        ["name"] = "Static ISO container-1-1-1",
+                                        ["heading"] = 0,
+                                    }, -- end of [1]
+                                }, -- end of ["units"]
+                                ["y"] = 372910.03462291,
+                                ["x"] = 11491.337436947,
+                                ["name"] = "Static ISO container-2",
+                                ["dead"] = false,
+                            }, -- end of [2]
+                            [3] = 
+                            {
+                                ["heading"] = 0,
+                                ["route"] = 
+                                {
+                                    ["points"] = 
+                                    {
+                                        [1] = 
+                                        {
+                                            ["alt"] = 0,
+                                            ["type"] = "",
+                                            ["name"] = "",
+                                            ["y"] = 372913.86319434,
+                                            ["speed"] = 0,
+                                            ["x"] = 11491.337436947,
+                                            ["formation_template"] = "",
+                                            ["action"] = "",
+                                        }, -- end of [1]
+                                    }, -- end of ["points"]
+                                }, -- end of ["route"]
+                                ["groupId"] = 5,
+                                ["units"] = 
+                                {
+                                    [1] = 
+                                    {
+                                        ["mass"] = 4500,
+                                        ["category"] = "Cargos",
+                                        ["canCargo"] = true,
+                                        ["shape_name"] = "iso_container_cargo",
+                                        ["type"] = "iso_container",
+                                        ["unitId"] = 31,
+                                        ["rate"] = 100,
+                                        ["y"] = 372913.86319434,
+                                        ["x"] = 11491.337436947,
+                                        ["name"] = "Static ISO container-1-1-2",
+                                        ["heading"] = 0,
+                                    }, -- end of [1]
+                                }, -- end of ["units"]
+                                ["y"] = 372913.86319434,
+                                ["x"] = 11491.337436947,
+                                ["name"] = "Static ISO container-3",
+                                ["dead"] = false,
+                            }, -- end of [3]
+                            [4] = 
+                            {
+                                ["heading"] = 1.5707963267949,
+                                ["route"] = 
+                                {
+                                    ["points"] = 
+                                    {
+                                        [1] = 
+                                        {
+                                            ["alt"] = 0,
+                                            ["type"] = "",
+                                            ["name"] = "",
+                                            ["y"] = 372912.00605148,
+                                            ["speed"] = 0,
+                                            ["x"] = 11485.508865518,
+                                            ["formation_template"] = "",
+                                            ["action"] = "",
+                                        }, -- end of [1]
+                                    }, -- end of ["points"]
+                                }, -- end of ["route"]
+                                ["groupId"] = 6,
+                                ["units"] = 
+                                {
+                                    [1] = 
+                                    {
+                                        ["mass"] = 4500,
+                                        ["category"] = "Cargos",
+                                        ["canCargo"] = true,
+                                        ["shape_name"] = "iso_container_cargo",
+                                        ["type"] = "iso_container",
+                                        ["unitId"] = 32,
+                                        ["rate"] = 100,
+                                        ["y"] = 372912.00605148,
+                                        ["x"] = 11485.508865518,
+                                        ["name"] = "Static ISO container-1-1-3",
+                                        ["heading"] = 1.5707963267949,
+                                    }, -- end of [1]
+                                }, -- end of ["units"]
+                                ["y"] = 372912.00605148,
+                                ["x"] = 11485.508865518,
+                                ["name"] = "Static ISO container-4",
+                                ["dead"] = false,
+                            }, -- end of [4]
+                        }, -- end of ["group"]
+                    }, -- end of ["static"]
+                }, -- end of [8]
+                [9] = 
+                {
+                    ["id"] = 43,
+                    ["name"] = "Serbia",
+                }, -- end of [9]
+                [10] = 
+                {
+                    ["id"] = 19,
+                    ["name"] = "South Ossetia",
+                }, -- end of [10]
+                [11] = 
+                {
+                    ["id"] = 47,
+                    ["name"] = "Syria",
+                }, -- end of [11]
+            }, -- end of ["country"]
+        }, -- end of ["red"]
+    }, -- end of ["coalition"]
+    ["name"] = "KrasnodarSAMConstruction",
+    ["requiredModules"] = 
+    {
+    }, -- end of ["requiredModules"]
+    ["localization"] = 
+    {
+        ["DEFAULT"] = 
+        {
+            ["DictKey_descriptionNeutralsTask_4"] = "",
+            ["DictKey_sortie_5"] = "",
+            ["DictKey_descriptionText_1"] = "",
+            ["DictKey_descriptionBlueTask_3"] = "",
+            ["DictKey_descriptionRedTask_2"] = "",
+        }, -- end of ["DEFAULT"]
+    }, -- end of ["localization"]
+    ["theatre"] = "Caucasus",
+    ["desc"] = "%LOCATIONMETHOD% a new SA-2 being assembled in Krasnodar. The new site is not active yet, making it a time-critical target.\
+\
+Primary Objectives: Inflict damage on the unfinished SA-2 site.\
+\
+Secondary Objectives: Destroy remaining assets in the site.\
+\
+Recommended Pilots: 2\
+\
+Recommended Ordnance: General-purpose bombs or cluster munitions.",
+} -- end of staticTemplate

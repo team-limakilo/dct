@@ -1,0 +1,13 @@
+objtype = "logistics"
+intel = 2
+cost = 4
+conditions = {
+    spawn = {
+        when = {
+            {
+                ["KrasnodarEWR"] = "dead",
+            },
+        },
+        delay = 60,
+    },
+}

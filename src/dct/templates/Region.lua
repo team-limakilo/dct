@@ -273,7 +273,7 @@ end
 Region.DOMAIN = DOMAIN
 
 function Region:addTemplate(tpl)
-	assert(self._templates[tpl.name] == nil,
+	assert(self._templates[tpl.name:lower()] == nil,
 		"duplicate template '"..tpl.name.."' defined; "..tostring(tpl.path))
 	if tpl.theater ~= env.mission.theatre then
 		Logger:warn("Region(%s):Template(%s) not for map(%s):template(%s) - ignoring",
@@ -283,6 +283,7 @@ function Region:addTemplate(tpl)
 
 	Logger:debug("  + add template: %s", tpl.name)
 	self._templates[tpl.name] = tpl
+	self._templates[tpl.name:lower()] = tpl
 	if tpl.exclusion ~= nil then
 		if self._exclusions[tpl.exclusion] == nil then
 			createExclusion(self, tpl)

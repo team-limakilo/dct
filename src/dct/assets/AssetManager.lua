@@ -31,6 +31,10 @@ function AssetManager:__init(theater)
 	-- Means Asset names must be globally unique.
 	self._assetset = {}
 
+	-- List of assets that have not yet been fully added to the theater
+	-- because of pending spawn conditions
+	self._pending = {}
+
 	-- The per side lists to maintain "short-cuts" to assets that
 	-- belong to a given side and are alive or dead.
 	-- These lists are simply asset names as keys with values of
@@ -53,6 +57,7 @@ function AssetManager:__init(theater)
 	-- of their DCS objects with 'something', this will be the something.
 	self._object2asset = {}
 	self._spawnq = {}
+	self._conditional = {}
 	self._factoryclasses = {}
 	for _, path in ipairs(assetpaths) do
 		local obj = require(path)
@@ -84,6 +89,7 @@ function AssetManager:remove(asset)
 	self._logger:debug("Removing asset: %s", asset.name)
 
 	asset:removeObserver(self)
+	self._pending[asset.name] = nil
 	self._assetset[asset.name] = nil
 
 	-- remove asset name from per-side asset list
@@ -108,6 +114,15 @@ function AssetManager:add(asset)
 	if asset:isDead() then
 		self._logger:debug("AssetManager:add - not adding dead asset: %s", asset.name)
 		return
+	end
+
+	if asset.conditions ~= nil then
+		self._conditional[asset.name] = asset
+		if asset.conditions.spawn ~= nil then
+			self._logger:debug("Adding to pending list: %s", asset.name)
+			self._pending[asset.name] = asset
+			return
+		end
 	end
 
 	self._logger:debug("Adding asset: %s", asset.name)
@@ -333,6 +348,9 @@ function AssetManager:onDCSEvent(event)
 		--[world.event.S_EVENT_UNIT_LOST]     = true,
 		[enum.event.DCT_EVENT_DEAD]           = true,
 	}
+	local multicast = {
+		[enum.event.DCT_EVENT_DEAD]           = true,
+	}
 	local objmap = {
 		[world.event.S_EVENT_HIT]  = "target", -- type: Object
 		[world.event.S_EVENT_KILL] = "target", -- type: Unit
@@ -361,18 +379,26 @@ function AssetManager:onDCSEvent(event)
 	if handler ~= nil then
 		handler(self, event)
 	end
+
+	if multicast[event.id] then
+		self:notify(event)
+	end
+end
+
+local function marshalAssets(input, output)
+	for name, asset in pairs(input) do
+		if type(asset.marshal) == "function" and not asset:isDead() then
+			output[name] = asset:marshal()
+		end
+	end
 end
 
 function AssetManager:marshal()
 	local tbl = {
 		["assets"] = {},
 	}
-
-	for name, asset in pairs(self._assetset) do
-		if type(asset.marshal) == "function" and not asset:isDead() then
-			tbl.assets[name] = asset:marshal()
-		end
-	end
+	marshalAssets(self._assetset, tbl.assets)
+	marshalAssets(self._pending, tbl.assets)
 	return tbl
 end
 
@@ -389,6 +415,9 @@ function AssetManager:unmarshal(data)
 end
 
 function AssetManager:postinit()
+	for _, asset in pairs(self._conditional) do
+		asset.conditions:setup(self)
+	end
 	for assetname, _ in pairs(self._spawnq) do
 		self:getAsset(assetname):spawn(true)
 	end

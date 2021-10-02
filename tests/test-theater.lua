@@ -205,12 +205,24 @@ local function main()
 		["id"]        = world.event.S_EVENT_BIRTH,
 		["initiator"] = player1,
 	})
+
+	local condasset = "Krasnodar_1_KrasnodarSAMConstruction"
+	assert(theater:getAssetMgr():getAsset(condasset) == nil,
+		"asset conditions broken, asset created at start: "..condasset)
+
+	-- kill off some units
 	for _, eventdata in ipairs(events) do
 		theater:onEvent(createEvent(eventdata, player1))
 	end
 
-	-- run all pending commands
+	assert(theater:getAssetMgr():getAsset(condasset) == nil,
+		"asset conditions broken, asset did not wait for delay: "..condasset)
+
 	theater:exec(100)
+	assert(theater:getAssetMgr():getAsset(condasset) ~= nil,
+		"asset conditions broken, not created after conditions met: "..condasset)
+
+	-- finish running pending commands
 	theater:exec(200)
 	theater:export()
 	local f = io.open(settings.statepath, "r")
@@ -233,6 +245,10 @@ local function main()
 	local deadunit = "Sukhumi_SukhumiAmmoDump 2 GROUND_UNIT 11-1"
 	assert(Unit.getByName(deadunit) == nil,
 		"state saving has an issue, dead unit is alive: "..deadunit)
+
+	-- verify the conditional asset still exists after a reload
+	assert(newtheater:getAssetMgr():getAsset(condasset) ~= nil,
+		"asset conditions broken, asset lost on reload: "..condasset)
 
 	-- attempt to get theater status
 	newtheater:onEvent({
