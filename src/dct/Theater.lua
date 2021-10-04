@@ -240,7 +240,9 @@ local airbase_events = {
 -- if there is a FARP near the event and if so uses that FARP as the
 -- place for the event.
 local function fixup_airbase(event)
-	if airbase_events[event.id] ~= nil and event.place == nil then
+	if airbase_events[event.id] and
+	   event.place == nil and
+	   event.initiator:isExist() then
 		event.place = dctutils.nearestAirbase(
 			event.initiator:getPoint(), 700, filterfarps)
 	end
