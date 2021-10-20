@@ -179,7 +179,10 @@ local function addAndSpawnAsset(region, name, assetmgr)
 end
 
 local function calculateCentroidAndRadius(region, assets)
-	local centroid = {}
+	-- default centroid (in case of empty region)
+	local centroid = {
+		point = vector.Vector2D.create(0, 0)
+	}
 
 	-- default minimum radius
 	local radius = 25
