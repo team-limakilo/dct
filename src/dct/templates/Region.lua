@@ -33,11 +33,6 @@ local STATUS = {
 	["BLUE"]      = coalition.side.BLUE,
 }
 
-local airspaceDesc =
-	"Coordinate with friendly forces and provide cover in %s airspace.\n\n"..
-	"The mission status shows how many ground missions have been completed "..
-	"in the region, however, you can RTB at any time."
-
 local function processlimits(_, tbl)
 	-- process limits; convert the human readable asset type names into
 	-- their numerical equivalents.
@@ -390,7 +385,6 @@ function Region:generate()
 		["regionprio"] = self.priority,
 		["intel"]      = 1,
 		["cost"]       = 0,
-		["desc"]       = string.format(airspaceDesc, self.name),
 		["coalition"]  = coalition.side.NEUTRAL,
 		["location"]   = self.location,
 		["backfill"]   = true,
