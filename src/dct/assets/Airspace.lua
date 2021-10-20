@@ -11,6 +11,11 @@ local dctenum   = require("dct.enum")
 local dctutils  = require("dct.utils")
 local AssetBase = require("dct.assets.AssetBase")
 
+local BRIEFING =
+	"Coordinate with friendly forces and provide cover in %NAME% airspace.\n\n"..
+	"The mission status shows how many ground missions have been completed "..
+	"in the region, however, you can RTB at any time."
+
 local Airspace = require("libs.namedclass")("Airspace", AssetBase)
 function Airspace:__init(template)
 	AssetBase.__init(self, template)
@@ -27,10 +32,13 @@ function Airspace.assettypes()
 end
 
 function Airspace:_completeinit(template)
+	template.desc = dctutils.interp(BRIEFING, {
+		["NAME"] = template.regionname
+	})
 	AssetBase._completeinit(self, template)
 	assert(type(template.radius) == "number",
 		"runtime error: Airspace requires template to define a numeric radius")
-	self._radius   = template.radius
+	self._radius = template.radius
 end
 
 function Airspace:spawn(ignore)
