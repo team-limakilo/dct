@@ -46,25 +46,25 @@ function Airspace:spawn(ignore)
 	self:_trackStrategicAssets()
 end
 
-local function isStrategic(asset, inRegion)
+local function isStrategic(asset)
 	return dctenum.assetClass["STRATEGIC"][asset.type]
-		and asset.rgnname == inRegion
-		-- Airbases can't be captured normally, so they will not be tracked
+		-- Airbases can't be always be captured, so they will not be tracked
 		and asset.type ~= dctenum.assetType.AIRBASE
 end
 
 function Airspace:_recalculateCapacity()
 	local numAssets = #self._strategicAssets
 	local capacity = math.max(2, math.ceil(numAssets / 4))
-	self._logger:debug("setting minagents = %d", capacity)
+	self._logger:debug("set minagents = %d", capacity)
 	self.minagents = capacity
 end
 
 function Airspace:_trackStrategicAssets()
 	self._strategicAssets = {}
 	local theater = dct.Theater.singleton()
+	-- Add all strategic assets of the same region to a list
 	theater:getAssetMgr():filterAssets(function(asset)
-		if isStrategic(asset, self.rgnname) then
+		if isStrategic(asset) and asset.rgnname == self.rgnname then
 			self._logger:debug("add asset: %s", asset.name)
 			table.insert(self._strategicAssets, asset)
 		end
@@ -102,9 +102,6 @@ function Airspace:_trackStrategicAssets()
 end
 
 function Airspace:_updateAliveAssets()
-	if self._strategicAssets == nil then
-		return 0
-	end
 	local aliveAssets = {}
 	for _, asset in pairs(self._strategicAssets) do
 		if not asset:isDead() then
