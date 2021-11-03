@@ -280,10 +280,14 @@ function StaticAsset:despawn()
 	for name, obj in pairs(self._assets) do
 		if obj.category == Unit.Category.STRUCTURE then
 			local structure = StaticObject.getByName(name)
-			structure:destroy()
+			if structure ~= nil then
+				structure:destroy()
+			end
 		elseif isUnitGroup(obj.category) then
 			local group = Group.getByName(name)
-			group:destroy()
+			if group ~= nil then
+				group:destroy()
+			end
 		end
 	end
 
