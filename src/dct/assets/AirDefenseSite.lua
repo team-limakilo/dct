@@ -87,11 +87,13 @@ function AirDefenseSite:_splitUnits(template, shorad, gid)
 	end
 	-- prune empty groups
 	if next(originalGroup.units) == nil then
-		self._logger:debug("ORIGINAL group '%s' removed (%s)", originalGroup.name, gid)
+		self._logger:debug("ORIGINAL group '%s' removed (%s)",
+			originalGroup.name, gid)
 		table.remove(template.tpldata, gid)
 	end
 	if next(shoradGroup.units) == nil then
-		self._logger:debug("SHORAD group '%s' removed (%s)", shoradGroup.name, gid)
+		self._logger:debug("SHORAD group '%s' removed (%s)",
+			shoradGroup.name, gid)
 		table.remove(shorad.tpldata, gid)
 	end
 end
@@ -107,7 +109,8 @@ function AirDefenseSite:_modifyTemplate(template)
 	for gid = #template.tpldata, 1, -1 do
 		self:_splitUnits(template, shorad, gid)
 	end
-	-- remove any waypoints present in the SHORAD template to avoid unit pathing errors
+	-- remove any waypoints present in the SHORAD template to
+	-- avoid unit pathing errors
 	for g = 1, #shorad.tpldata do
 		shorad.tpldata[g].data.route = {
 			points = {},
