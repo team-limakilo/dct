@@ -116,7 +116,8 @@ end
 -- Right now, we only calculats how many strategic assets
 -- have been destroyed in the region
 function Airspace:getStatus()
-	if self._maxStrategicAssets == 0 then
+	if self._strategicAssets == nil or
+	   self._maxStrategicAssets == 0 then
 		return 0
 	end
 	local numAlive = self:_updateAliveAssets()
@@ -124,6 +125,11 @@ function Airspace:getStatus()
 end
 
 function Airspace:update()
+	-- In case this is called during init, we can't continue
+	if self._strategicAssets == nil then
+		return
+	end
+
 	self:_updateAliveAssets()
 	self:_recalculateCapacity()
 
