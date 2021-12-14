@@ -50,7 +50,6 @@ function OverlordBotRPC:init()
 			return GRPC.success(nil)
 		end
 
-
 		function GRPC.methods.joinMission(params)
 			-- Backwards compatible with previous API
 			local group = params.groupName or params.unitName
@@ -59,6 +58,31 @@ function OverlordBotRPC:init()
 				name = group,
 				type = dctEnum.uiRequestType.MISSIONJOIN,
 				value = tostring(params.missionCode)
+			})
+
+			return GRPC.success(nil)
+		end
+
+		function GRPC.methods.getMissionStatus(params)
+			-- Backwards compatible with previous API
+			local group = params.groupName or params.unitName
+
+			Theater.playerRequest({
+				name = group,
+				type = dctEnum.uiRequestType.MISSIONSTATUS
+			})
+
+			return GRPC.success(nil)
+		end
+
+		function GRPC.methods.abortMission(params)
+			-- Backwards compatible with previous API
+			local group = params.groupName or params.unitName
+
+			Theater.playerRequest({
+				name = group,
+				type = dctEnum.uiRequestType.MISSIONABORT,
+				value = dctEnum.missionAbortType.ABORT,
 			})
 
 			return GRPC.success(nil)

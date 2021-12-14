@@ -70,10 +70,10 @@ local function main()
         "player mission request did not complete")
 
     -- Leave mission
-    dct.Theater.playerRequest({
-        name = grp:getName(),
-        type = enum.uiRequestType.MISSIONABORT,
+    _, err, msg = GRPC.methods.abortMission({
+        groupName = grp:getName(),
     })
+    checkError(err, msg)
     theater:exec(70)
     assert(player.missionid == enum.missionInvalidID,
         "player did not leave the mission")
@@ -93,6 +93,23 @@ local function main()
     assert(player.missionid == mission.id, string.format(
         "player did not join mission '%s' (current mission: '%s')",
         tostring(mission.id), tostring(player.missionid)))
+
+    -- Request mission status
+    _, err, msg = GRPC.methods.getMissionStatus({
+        groupName = grp:getName(),
+    })
+    checkError(err, msg)
+    trigger.action.setassert(true)
+    trigger.action.setmsgbuffer(
+        "Mission State: Active\n"..
+        "Package: 3730\n"..
+        "Timeout: 2016-06-21 14:00z (in 180 mins)\n"..
+        "BDA: 0% complete\n"..
+        "\n"..
+        "Assigned Pilots:\n"..
+        "bobplayer (F/A-18C Hornet)")
+    theater:exec(90)
+    trigger.action.setassert(false)
 
     -- Test export system endpoint
     exportData, err, msg = GRPC.methods.getExportData()
