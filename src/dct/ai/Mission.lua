@@ -194,6 +194,9 @@ function Mission:__init(cmdr, missiontype, tgt, plan)
 	self.state = ActiveState()
 	self.state:enter(self)
 
+	self._assignedIds = {}
+	self._lastAssignedId = 0
+
 	-- update the mission when individual stages are completed
 	for _, action in pairs(plan) do
 		action:addObserver(self.onDCTEvent, self, self.__clsname..".onDCSEvent")
@@ -239,6 +242,10 @@ function Mission:addAssigned(asset)
 		return
 	end
 	table.insert(self.assigned, asset.name)
+	if self._assignedIds[asset.name] == nil then
+		self._assignedIds[asset.name] = self._lastAssignedId
+		self._lastAssignedId = self._lastAssignedId + 1
+	end
 	Logger:debug("Mission %d: addAssigned(%s)", self.id, asset.name)
 	if #self.assigned >= self.minagents then
 		self.isfull = true
@@ -351,6 +358,16 @@ end
 function Mission:addTime(time)
 	self.state:timeextend(time)
 	return time
+end
+
+function Mission:getIFFCodes(asset)
+	local assignedId = 0
+	if asset ~= nil then
+		assignedId = (self._assignedIds[asset.name] or 0) % 8
+	end
+	local m1 = string.format("%o", self.iffcodes.m1)
+	local m3 = string.format("%o", self.iffcodes.m3 + assignedId)
+	return { ["m1"] = m1, ["m3"] = m3 }
 end
 
 function Mission:getDescription(fmt)
