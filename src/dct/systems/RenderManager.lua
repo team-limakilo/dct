@@ -22,10 +22,10 @@ local StaticAsset = require("dct.assets.StaticAsset")
 local settings    = _G.dct.settings
 
 -- How many seconds to wait between render checks
-local CHECK_INTERVAL = 10
+local CHECK_INTERVAL = 5
 
 -- How many seconds to keep an asset in the world after it's out of range
-local DESPAWN_TIMEOUT = 180
+local DESPAWN_TIMEOUT = 5 * 60
 
 -- Default asset age (ensures everything is culled from the start)
 local AGE_OLD = -DESPAWN_TIMEOUT
@@ -38,9 +38,9 @@ local RangeType = {
 }
 
 local RadarDistanceFactor = {
-	[RangeType.Player]     = 2.5,
+	[RangeType.Player]     = 1.6,
 	[RangeType.CruiseMsl]  = nil,
-	[RangeType.AntiRadMsl] = 0.5,
+	[RangeType.AntiRadMsl] = 0.4,
 	[RangeType.GuidedBomb] = nil,
 }
 
@@ -52,35 +52,34 @@ local cruiseGuidance = {
 
 -- Maps specific unit types and attributes to minimum render ranges, in meters
 local UnitTypeRanges = {
-	[RangeType.Player]          = {},
+	[RangeType.Player]          = {
+		["SA-8 Osa LD 9T217"]   = 50000,
+		["Tor 9A331"]           = 40000,
+	},
 	[RangeType.CruiseMsl]       = {},
 	[RangeType.AntiRadMsl]      = {},
 	[RangeType.GuidedBomb]      = {},
 }
 local AttributeRanges = {
 	[RangeType.Player] = {
-		["Ships"]               = 150000,
-		["EWR"]                 = 300000,
+		["Ships"]               = 100000,
 	},
 	[RangeType.CruiseMsl] = {
-		["Ships"]               = 150000,
+		["Ships"]               = 50000,
 	},
 	[RangeType.AntiRadMsl]      = {},
 	[RangeType.GuidedBomb]      = {},
 }
 local DefaultRanges = {
 	[RangeType.Player]          = 30000,
-	[RangeType.CruiseMsl]       = 500,
-	[RangeType.AntiRadMsl]      = 500,
-	[RangeType.GuidedBomb]      = 1500,
+	[RangeType.CruiseMsl]       = 10000,
+	[RangeType.AntiRadMsl]      = 0,
+	[RangeType.GuidedBomb]      = 0,
 }
 
 local assetRanges = {}
 
 -- Gets the maximum radar detection range of an unit
--- Note: this sometimes combines all sensors of a group,
--- so a supply truck in a SAM group may return the search
--- radar sensor range.
 local function getRadarRange(unit)
 	local range = 0
 	local sensors = unit:getSensors()
@@ -177,7 +176,7 @@ local function weaponRangeType(weapon)
 	local desc = weapon:getDesc()
 	if desc.guidance == Weapon.GuidanceType.RADAR_PASSIVE then
 		return RangeType.AntiRadMsl
-	elseif desc.category == Weapon.Category.MISSILE and
+	elseif desc.missileCategory ~= Weapon.MissileCategory.AAM and
 	       cruiseGuidance[desc.guidance] ~= nil then
 		return RangeType.CruiseMsl
 	elseif desc.category == Weapon.Category.BOMB and
