@@ -74,15 +74,17 @@ end
 
 -- Expand assigned groups into a table containing the player name
 -- and aircraft type
-local function getAssignedUnitInfo(assignedGroups, assetmgr)
+local function getAssignedUnitInfo(mission, assetmgr)
     local output = {}
-    for idx, groupname in pairs(assignedGroups) do
+    local groups = mission.assigned
+    for idx, groupname in pairs(groups) do
         local asset = assetmgr:getAsset(groupname)
         if asset ~= nil and type(asset.getPlayerName) == "function" then
             output[idx] = {
                 group = groupname,
                 player = asset:getPlayerName(),
                 aircraft = asset:getAircraftName(),
+                iffmode3 = mission:getIFFCodes(asset).m3,
             }
         else
             output[idx] = {
@@ -127,7 +129,8 @@ local function getMissions(commander, assetmgr)
         local pos = dctutils.degrade_position(tgt.location, tgt.intellvl)
         id = tostring(id)
         missions[id] = {
-            assigned = getAssignedUnitInfo(mission.assigned, assetmgr),
+            assigned = getAssignedUnitInfo(mission, assetmgr),
+            iffmode1 = mission:getIFFCodes().m1,
             type = MISSION_TYPE[mission.type],
             state = mission:getStateName(),
             target = {
