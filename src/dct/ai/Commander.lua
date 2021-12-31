@@ -183,12 +183,26 @@ function Commander:requestMission(grpname, missiontype)
 
 	-- if no target, there is no mission to assign so return back
 	-- a nil object
-	local tgt = pq:pop()
-	if tgt == nil then
+	if pq:peek() == nil then
 		return nil
 	end
-	Logger:debug("requestMission() - tgt name: '%s'; isTargeted: %s",
-		tgt.name, tostring(tgt:isTargeted()))
+
+	-- take all max-priority missions from the queue and choose a random one
+	local tgt, prio = pq:pop()
+	local targets = { tgt }
+	local nextprio
+	while true do
+		tgt, nextprio = pq:pop()
+		if tgt == nil or nextprio ~= prio then
+			break
+		else
+			table.insert(targets, tgt)
+		end
+	end
+	tgt = targets[math.random(#targets)]
+
+	Logger:debug("requestMission() - tgt name: '%s'; isTargeted: %s; priority: %d",
+		tgt.name, tostring(tgt:isTargeted()), prio)
 
 	-- chosen target already has a mission assigned
 	local mission = self.missionsByTarget[tgt.name]
