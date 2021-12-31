@@ -269,8 +269,11 @@ function StaticAsset:spawn(ignore)
 
 	AssetBase.spawn(self)
 
-	for _, goal in pairs(self._deathgoals) do
+	for name, goal in pairs(self._deathgoals) do
 		goal:onSpawn()
+		if goal:isComplete() then
+			self:_removeDeathGoal(name)
+		end
 	end
 
 	self:getStatus()
