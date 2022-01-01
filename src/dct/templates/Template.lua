@@ -300,6 +300,20 @@ local function checkExtraMarks(keydata, tbl)
 	return true
 end
 
+local function checkTacan(keydata, tbl)
+	local Tacan = require("dct.data.tacan")
+	local channel = tbl[keydata.name]
+	if channel ~= nil then
+		tbl[keydata.name] = Tacan.decodeChannel(channel)
+		if tbl[keydata.name] == nil then
+			return false, string.format("invalid channel: '%s';"..
+				"must start with a string containing a number [1-127], followed by X or Y",
+				tostring(channel))
+		end
+	end
+	return true
+end
+
 local function getkeys(objtype)
 	local notpldata = {
 		[enum.assetType.AIRSPACE]       = true,
@@ -422,6 +436,9 @@ local function getkeys(objtype)
 			["type"]    = "string",
 			["default"] = "terminal",
 			["check"]   = checkrecovery,})
+		table.insert(keys, {
+			["name"]    = "tacan",
+			["check"]   = checkTacan,})
 	end
 
 	if objtype == enum.assetType.SQUADRONPLAYER then

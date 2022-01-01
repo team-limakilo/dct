@@ -7,4 +7,5 @@ subordinates = {
 desc = "CVN-71 Theodore Roosevelt"
 recoverytype = "land"
 takeofftype = "runway"
+tacan = "71X TR"
 cost = 20

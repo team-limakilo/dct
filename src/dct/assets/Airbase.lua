@@ -167,6 +167,28 @@ end
 function OperationalState:update(asset)
 	-- TODO: create departures
 	asset._logger:debug("operational state: update called")
+	if asset.tacan ~= nil then
+		local carrier = Airbase.getByName(asset.name)
+		if carrier and Object.getCategory(carrier) == Object.Category.UNIT then
+			asset._logger:debug("refreshing tacan: %d%s; callsign: '%s'; freq: %d",
+				asset.tacan.number, asset.tacan.mode, tostring(asset.tacan.callsign),
+				asset.tacan.frequency)
+			Unit.getController(carrier):setCommand({
+				id = "ActivateBeacon",
+				params = {
+					type = 4, -- TACAN
+					system = 3, -- Land-based TACAN
+					AA = false,
+					bearing = true,
+					unitId = carrier:getID(),
+					callsign = asset.tacan.callsign or carrier:getName(),
+					channel = asset.tacan.number,
+					modeChannel = asset.tacan.mode,
+					frequency = asset.tacan.frequency,
+				}
+			})
+		end
+	end
 end
 
 function OperationalState:onDCTEvent(asset, event)
@@ -252,8 +274,12 @@ function AirbaseAsset:__init(template)
 		"_subordinates",
 		"takeofftype",
 		"recoverytype",
+		"tacan",
 	})
 	self._eventhandlers = nil
+	if template ~= nil then
+		self.tacan = template.tacan
+	end
 end
 
 function AirbaseAsset.assettypes()
