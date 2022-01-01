@@ -3,5 +3,11 @@
 		{
 			"path": "src\\dct"
 		}
-	]
+	],
+	"settings": {
+		"Lua.diagnostics.disable": [
+			"undefined-global",
+			"deprecated"
+		]
+	}
 }
