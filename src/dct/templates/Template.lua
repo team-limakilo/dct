@@ -306,8 +306,9 @@ local function checkTacan(keydata, tbl)
 	if channel ~= nil then
 		tbl[keydata.name] = Tacan.decodeChannel(channel)
 		if tbl[keydata.name] == nil then
-			return false, string.format("invalid channel: '%s';"..
-				"must start with a string containing a number [1-127], followed by X or Y",
+			return false, string.format(
+				"invalid channel: '%s'; "..
+				"must start with a string containing a number [1-126], followed by X or Y",
 				tostring(channel))
 		end
 	end
