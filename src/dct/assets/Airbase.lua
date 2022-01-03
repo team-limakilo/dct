@@ -167,9 +167,9 @@ end
 function OperationalState:update(asset)
 	-- TODO: create departures
 	asset._logger:debug("operational state: update called")
-	if asset.tacan ~= nil then
-		local carrier = Airbase.getByName(asset.name)
-		if carrier and Object.getCategory(carrier) == Object.Category.UNIT then
+	local carrier = Airbase.getByName(asset.name)
+	if carrier and Object.getCategory(carrier) == Object.Category.UNIT then
+		if asset.tacan ~= nil then
 			asset._logger:debug("refreshing tacan: %d%s; callsign: '%s'; freq: %d",
 				asset.tacan.number, asset.tacan.mode, tostring(asset.tacan.callsign),
 				asset.tacan.frequency)
@@ -185,6 +185,17 @@ function OperationalState:update(asset)
 					channel = asset.tacan.number,
 					modeChannel = asset.tacan.mode,
 					frequency = asset.tacan.frequency,
+				}
+			})
+		end
+		if asset.icls ~= nil then
+			asset._logger:debug("refreshing icls: %d", asset.icls)
+			Unit.getController(carrier):setCommand({
+				id = "ActivateICLS",
+				params = {
+					type = 131584, -- ICLS Glideslope
+					unitId = carrier:getID(),
+					channel = asset.icls,
 				}
 			})
 		end
@@ -275,10 +286,12 @@ function AirbaseAsset:__init(template)
 		"takeofftype",
 		"recoverytype",
 		"tacan",
+		"icls",
 	})
 	self._eventhandlers = nil
 	if template ~= nil then
 		self.tacan = template.tacan
+		self.icls = template.icls
 	end
 end
 

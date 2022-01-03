@@ -315,6 +315,17 @@ local function checkTacan(keydata, tbl)
 	return true
 end
 
+local function checkIcls(keydata, tbl)
+	local channel = tbl[keydata.name]
+	if channel == nil or
+	   type(channel) == "number" and channel >= 1 and channel <= 20 then
+		return true
+	else
+		return false, string.format("invalid channel: %s; "..
+			"must be a number in the range [1-20]", tostring(channel))
+	end
+end
+
 local function getkeys(objtype)
 	local notpldata = {
 		[enum.assetType.AIRSPACE]       = true,
@@ -440,6 +451,9 @@ local function getkeys(objtype)
 		table.insert(keys, {
 			["name"]    = "tacan",
 			["check"]   = checkTacan,})
+		table.insert(keys, {
+			["name"]    = "icls",
+			["check"]   = checkIcls,})
 	end
 
 	if objtype == enum.assetType.SQUADRONPLAYER then
