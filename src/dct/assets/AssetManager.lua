@@ -24,7 +24,9 @@ local AssetManager = require("libs.namedclass")("AssetManager", Observable)
 function AssetManager:__init(theater)
 	Observable.__init(self,
 		require("dct.libs.Logger").getByName("AssetManager"))
+	self.theater = theater
 	self.updaterate = 120
+	self.cleanupdelay = 60 * 60
 	-- The master list of assets, regardless of side, indexed by name.
 	-- Means Asset names must be globally unique.
 	self._assetset = {}
@@ -227,14 +229,23 @@ function AssetManager:update()
 	return self.updaterate
 end
 
+local function cleanupAsset(asset, logger)
+	if asset ~= nil and asset:isDead() and asset:isSpawned() then
+		logger:debug("cleanup: '%s'", asset.name)
+		asset:despawn()
+	end
+end
+
 local function handleDead(self, event)
 	self._object2asset[tostring(event.initiator:getName())] = nil
 end
 
-local function handleAssetDeath(_ --[[self]], event)
+local function handleAssetDeath(self, event)
 	local asset = event.initiator
-	dct.Theater.singleton():getTickets():loss(asset.owner,
-		asset.cost, false)
+	self.theater:getTickets():loss(asset.owner, asset.cost, false)
+	self.theater:queueCommand(self.cleanupdelay,
+		Command("cleanupAsset('"..asset.name.."')",
+		cleanupAsset, asset, self._logger))
 end
 
 local handlers = {
