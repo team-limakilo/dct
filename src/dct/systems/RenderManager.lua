@@ -38,9 +38,9 @@ local RangeType = {
 }
 
 local RadarDistanceFactor = {
-	[RangeType.Player]     = 1.6,
+	[RangeType.Player]     = 2.5,
 	[RangeType.CruiseMsl]  = nil,
-	[RangeType.AntiRadMsl] = 0.4,
+	[RangeType.AntiRadMsl] = 0.5,
 	[RangeType.GuidedBomb] = nil,
 }
 
@@ -86,7 +86,7 @@ local function getRadarRange(unit)
 	if sensors ~= nil and sensors[Unit.SensorType.RADAR] ~= nil then
 		for _, sensor in pairs(sensors[Unit.SensorType.RADAR]) do
 			local detection = sensor.detectionDistanceAir
-			if sensor.type == 1 and detection ~= nil then
+			if detection ~= nil then
 				if detection.upperHemisphere.headOn > range then
 					range = detection.upperHemisphere.headOn
 				end
