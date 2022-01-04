@@ -26,9 +26,10 @@ local CHECK_INTERVAL = 5
 
 -- How many seconds to keep an asset in the world after it's out of range
 local DESPAWN_TIMEOUT = 5 * 60
+local ONDEMAND_TIMEOUT = 30 * 60
 
--- Default asset age (ensures everything is culled from the start)
-local AGE_OLD = -DESPAWN_TIMEOUT
+-- Default asset timestamp, ensuring everything is culled from the start
+local AGE_OLD = -99999
 
 local RangeType = {
 	Player     = 1, -- Player flights
@@ -218,15 +219,17 @@ function RenderManager:onDCSEvent(event)
 	end
 end
 
--- Check conditions on assets that are not range-based
-local function forcedVisibility(asset)
-	if asset.nocull then
+-- Check if the asset should be visible regardless of range to players
+function RenderManager:forcedVisibility(asset, time)
+	if asset.nocull and asset:isSpawned() then
 		return true
-	end
-	if asset:isTargeted(utils.getenemy(asset.owner)) then
+	elseif asset:isTargeted(utils.getenemy(asset.owner)) then
 		return true
-	elseif asset.ondemand and not asset:isSpawned() then
-		return false
+	elseif asset.ondemand then
+		-- Hide ondemand assets after even if players are nearby
+		if time - self.lastSeen[asset.name] > ONDEMAND_TIMEOUT then
+			return false
+		end
 	end
 end
 
@@ -343,7 +346,7 @@ function RenderManager:checkRegion(region, time)
 		local distances, objdist = self:getSortedDistances(region)
 		for i = 1, #assets do
 			local asset = assets[i]
-			local forcedVis = forcedVisibility(asset)
+			local forcedVis = self:forcedVisibility(asset, time)
 			if forcedVis == nil then
 				computeRanges(asset)
 				if asset:isSpawned() then
@@ -357,7 +360,9 @@ function RenderManager:checkRegion(region, time)
 							end
 							ops = ops + 1
 							if self:inRange(object, asset) then
-								self.lastSeen[asset.name] = time
+								if not asset.ondemand then
+									self.lastSeen[asset.name] = time
+								end
 								seen = true
 								break
 							end
