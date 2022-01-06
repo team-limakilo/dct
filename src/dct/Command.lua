@@ -33,7 +33,6 @@ function Command:execute(time)
 end
 Command.PRIORITY = cmdpriority
 
-local cmd = Command
 
 if dct.settings and dct.settings.server and
    dct.settings.server.profile == true then
@@ -41,12 +40,13 @@ if dct.settings and dct.settings.server and
 	local TimedCommand = class("TimedCommand", Command)
 	function TimedCommand:execute(time)
 		local tstart = os.clock()
-		local rc = Command.execute(self, time)
+		local rc = { Command.execute(self, time) }
 		Logger:info("'%s' exec time: %5.2fms", self.name, (os.clock()-tstart)*1000)
-		return rc
+		return unpack(rc)
 	end
 	TimedCommand.PRIORITY = cmdpriority
-	cmd = TimedCommand
+
+	return TimedCommand
 end
 
-return cmd
+return Command
