@@ -399,7 +399,7 @@ function Theater:exec(time)
 		end
 
 		local cmd = self.cmdq:pop()
-		local ok, requeue = xpcall(
+		local success, requeue = xpcall(
 			function()
 				return cmd:execute(time)
 			end,
@@ -407,10 +407,17 @@ function Theater:exec(time)
 				Logger:error("protected call - %s", debug.traceback(err, 2))
 			end
 		)
-		if ok and type(requeue) == "number" then
-			self:queueCommand(requeue, cmd)
+
+		if cmd:isDone() then
+			cmdctr = cmdctr + 1
+			if success and type(requeue) == "number" then
+				self:queueCommand(requeue, cmd)
+			end
+		else
+			-- Penalize long-running commands slightly
+			self.cmdq:push(prio + 0.5, cmd)
 		end
-		cmdctr = cmdctr + 1
+
 		self.qtimer:update()
 		if self.qtimer:expired() then
 			Logger:debug("exec(); quanta reached, quanta: %5.2fms", self.quanta*1000)

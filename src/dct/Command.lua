@@ -22,15 +22,22 @@ function Command:__init(name, func, ...)
 	self.func = check.func(func)
 	self.prio = cmdpriority.NORMAL
 	self.args = {select(1, ...)}
+	self.done = false
 	self.PRIORITY = nil
 end
 
 function Command:execute(time)
-	local args = utils.shallowclone(self.args)
 	Logger:debug("executing: %s", self.name)
+	local args = utils.shallowclone(self.args)
 	table.insert(args, time)
+	self.done = true
 	return self.func(unpack(args))
 end
+
+function Command:isDone()
+	return self.done
+end
+
 Command.PRIORITY = cmdpriority
 
 
