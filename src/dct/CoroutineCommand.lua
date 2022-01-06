@@ -34,6 +34,7 @@ function CoroutineCommand:execute(time)
 
     -- bubble up coroutine errors
     if rc[1] == false then
+        self.done = true
         error(select(2, unpack(rc)))
     end
 
