@@ -15,11 +15,12 @@
 
 local class     = require("libs.class")
 local utils     = require("dct.utils")
-local Command   = require("dct.Command")
 local vec       = require("dct.libs.vector")
 local Logger    = require("dct.libs.Logger").getByName("RenderManager")
-local StaticAsset = require("dct.assets.StaticAsset")
-local settings    = _G.dct.settings
+local StaticAsset  = require("dct.assets.StaticAsset")
+local CoroutineCmd = require("dct.CoroutineCommand")
+local settings     = _G.dct.settings
+local yield        = coroutine.yield
 
 -- How many seconds to wait between render checks
 local CHECK_INTERVAL = 5
@@ -203,7 +204,7 @@ function RenderManager:__init(theater)
 	theater:addObserver(self.onDCSEvent, self, "RenderManager.onDCSEvent")
 
 	-- Run update function continuously
-	theater:queueCommand(30, Command("RenderManager.update",
+	theater:queueCommand(30, CoroutineCmd("RenderManager.update",
 		self.update, self, theater))
 end
 
@@ -256,10 +257,10 @@ function RenderManager:tooFar(object, asset, region)
 	return dist > assetRanges[asset.name][object.rangeType] + region.radius
 end
 
-function RenderManager:update(theater)
+function RenderManager:update(theater, time)
 	local assetmgr = theater:getAssetMgr()
 	local regions = theater:getRegionMgr().regions
-	-- Update player and weapon locations
+	-- Update player locations
 	self.objects = {}
 	local players = getAllPlayers()
 	for i = 1, #players do
@@ -268,6 +269,8 @@ function RenderManager:update(theater)
 			rangeType = RangeType.Player,
 		})
 	end
+	yield()
+	-- Update weapon locations
 	for i = #self.weapons, 1, -1 do
 		local wpn = self.weapons[i]
 		if wpn:isExist() then
@@ -280,6 +283,7 @@ function RenderManager:update(theater)
 			table.remove(self.weapons, i)
 		end
 	end
+	yield()
 	-- Update asset locations
 	self.assets = {}
 	self.assetPos = {}
@@ -291,12 +295,11 @@ function RenderManager:update(theater)
 			table.insert(self.assets[asset.rgnname], asset)
 		end
 	end
-	-- Queue region checks
+	yield()
+	-- Check each region individually
 	for name, region in pairs(regions) do
-		local cmdname = string.format("RenderManager.checkRegion(%s)", name)
 		if self.assets[name] ~= nil then
-			theater:queueCommand(theater.cmdmindelay,
-				Command(cmdname, self.checkRegion, self, region))
+			self:checkRegion(region, time)
 		end
 	end
 	return CHECK_INTERVAL
@@ -338,6 +341,7 @@ function RenderManager:getSortedDistances(region)
 end
 
 function RenderManager:checkRegion(region, time)
+	Logger:debug("checkRegion(%s)", region.name)
 	local assets = self.assets[region.name]
 	if assets ~= nil then
 		local ops = 0
@@ -393,6 +397,7 @@ function RenderManager:checkRegion(region, time)
 							self.lastSeen[asset.name] = time
 							spawns = spawns + 1
 							asset:spawn()
+							yield()
 							break
 						end
 					end
@@ -405,19 +410,22 @@ function RenderManager:checkRegion(region, time)
 					if not asset:isSpawned() then
 						spawns = spawns + 1
 						asset:spawn()
+						yield()
 					end
 				end
 			end
 		end
 		if settings.server.profile == true then
 			Logger:info("checkRegion(%s): players = %d, weapons = %d, "..
-				" assets = %d, ops = %d, spawns = %d, time = %.2fms", region.name,
+				" assets = %d, ops = %d, spawns = %d, total time = %.2fms",
+				region.name,
 				#distances[RangeType.Player],
 				#distances[RangeType.AntiRadMsl] +
 				#distances[RangeType.CruiseMsl]  +
 				#distances[RangeType.GuidedBomb],
 				#assets, ops, spawns, (os.clock() - start)*1000)
 		end
+		yield()
 	end
 end
 
