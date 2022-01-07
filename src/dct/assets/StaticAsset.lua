@@ -293,10 +293,6 @@ function StaticAsset:handleDead(event)
 			self._assets[grpname] = nil
 		end
 	else
-		if self._assets[unitname].category == enum.UNIT_CAT_SCENERY then
-			dct.Theater.singleton():getSystem(
-				"dct.systems.bldgPersist"):addObject(unitname)
-		end
 		self:_removeDeathGoal(unitname)
 		self._assets[unitname] = nil
 	end
