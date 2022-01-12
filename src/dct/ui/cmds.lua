@@ -150,7 +150,7 @@ function TheaterUpdateCmd:_execute(_, cmdr)
 		string.format("\nAvailable missions:\n  %s\n",
 			table.concat(availableMsnList, "\n  "))..
 		string.format("\nRecommended Mission Type: %s",
-			utils.getkey(enum.missionType, recommended or "None"))
+			utils.getkey(enum.missionType, recommended) or "None")
 
 	return msg
 end
