@@ -98,13 +98,10 @@ function StaticAsset:_removeDeathGoal(name)
 	end
 
 	self._logger:debug("_removeDeathGoal() - obj name: %s", name)
-	if self:isDead() then
-		self._logger:error("_removeDeathGoal() called '%s' marked as dead", self.name)
-		return
-	end
 
 	self._deathgoals[name] = nil
 	self._curdeathgoals = self._curdeathgoals - 1
+
 	if next(self._deathgoals) == nil then
 		self:setDead(true)
 	end
