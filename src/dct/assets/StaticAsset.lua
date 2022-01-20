@@ -16,6 +16,8 @@ local vector   = require("dct.libs.vector")
 local Goal     = require("dct.Goal")
 local AssetBase= require("dct.assets.AssetBase")
 
+local SMOKE_INTERVAL = 5 * 60
+
 local function isUnitGroup(category)
 	return category == Unit.Category.AIRPLANE
 		or category == Unit.Category.HELICOPTER
@@ -67,6 +69,11 @@ function StaticAsset:_completeinit(template)
 	AssetBase._completeinit(self, template)
 	self._hasDeathGoals = template.hasDeathGoals
 	self._tpldata       = template:copyData()
+
+	if next(template.smoke) ~= nil then
+		self._smoke = template.smoke
+		self:_addMarshalNames({ "_smoke" })
+	end
 end
 
 --[[
@@ -154,6 +161,29 @@ end
 
 function StaticAsset:getTemplateData()
 	return self._tpldata
+end
+
+function StaticAsset:_refreshSmoke(time)
+	for id, smoke in pairs(self._smoke) do
+		self._logger:debug("refreshing smoke; id: %d, color: %s", id, smoke.color)
+		trigger.action.smoke(smoke, trigger.smokeColor[smoke.color])
+	end
+	return time + SMOKE_INTERVAL
+end
+
+function StaticAsset:setTargeted(side, val)
+	AssetBase.setTargeted(self, side, val)
+
+	if self._smoke ~= nil and dctutils.getenemy(self.owner) == side then
+		local targeted = self:isTargeted(side)
+		if targeted and self._smokeFunc == nil then
+			self._smokeFunc =
+				timer.scheduleFunction(self._refreshSmoke, self, timer.getTime() + 1)
+		elseif not targeted and self._smokeFunc ~= nil then
+			timer.removeFunction(self._smokeFunc)
+			self._smokeFunc = nil
+		end
+	end
 end
 
 function StaticAsset:getLocation()

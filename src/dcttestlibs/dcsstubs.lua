@@ -989,6 +989,14 @@ _G.coord = coord
 
 local gblflagtbl = {}
 local trigger = {}
+trigger.smokeColor = {
+	["Green"]  = 0,
+	["Red"]    = 1,
+	["White"]  = 2,
+	["Orange"] = 3,
+	["Blue"]   = 4,
+}
+
 trigger.action = {}
 
 local chkbuffer  = ""
@@ -1035,6 +1043,11 @@ end
 
 function trigger.action.setUserFlag(flagname, value)
 	gblflagtbl[flagname] = tonumber(value)
+end
+
+function trigger.action.smoke(pos, color)
+	assert(type(pos) == "table", "value error: pos must be a table")
+	assert(type(color) == "color", "value error: color must be a string")
 end
 
 function trigger.action.explosion(_, _)

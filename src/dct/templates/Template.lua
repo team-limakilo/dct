@@ -110,12 +110,24 @@ local function overrideGroupOptions(grp, idx, tpl)
 		if grp[k] ~= nil then grp[k] = v end
 	end
 
-	-- if the group name is a map mark spec, set it as such
+	-- check if the group is intended to be replaced with a map marker
 	local markLabel = string.match(grp.data.name, "^[Mm][Aa][Rr][Kk]=(.+)$")
 	if markLabel ~= nil then
 		grp.mark = {
 			label = markLabel,
 			x = grp.data.x,
+			z = grp.data.y,
+		}
+		return
+	end
+
+	-- check if the group is intended to be replaced with marking smoke
+	local smokeColor = string.match(grp.data.name, "^[Ss][Mm][Oo][Kk][Ee]=(.+)$")
+	if smokeColor ~= nil then
+		grp.smoke = {
+			color = smokeColor,
+			x = grp.data.x,
+			y = land.getHeight(grp.data),
 			z = grp.data.y,
 		}
 		return
@@ -300,6 +312,26 @@ local function checkExtraMarks(keydata, tbl)
 	return true
 end
 
+local function checkSmoke(keydata, tbl)
+	for _, val in ipairs(tbl[keydata.name]) do
+		if type(val.x) ~= "number" or
+		   type(val.y) ~= "number" or
+		   type(val.z) ~= "number" then
+			return false, "Smoke coordinates must be specified"
+		end
+		if trigger.smokeColor[val.color] == nil then
+			local colors = {}
+			for name, _ in pairs(trigger.smokeColor) do
+				table.insert(colors, string.format("'%s'", name))
+			end
+			return false, string.format(
+				"Invalid smoke color: '%s', accepted values: %s",
+				val.color, table.concat(colors, ", "))
+		end
+	end
+	return true
+end
+
 local function checkTacan(keydata, tbl)
 	local Tacan = require("dct.data.tacan")
 	local channel = tbl[keydata.name]
@@ -404,6 +436,10 @@ local function getkeys(objtype)
 			["name"]    = "extramarks",
 			["default"] = {},
 			["check"]   = checkExtraMarks,
+		}, {
+			["name"]    = "smoke",
+			["default"] = {},
+			["check"]   = checkSmoke,
 		}, {
 			["name"]    = "nocull",
 			["type"]	= "boolean",
@@ -530,12 +566,17 @@ end
 
 Template.checkLocation = checkLocation
 
--- filter units tagged as map marks into the mark list and out of the template
-function Template:_processMarkUnits()
+-- filter units tagged with special values into those values,
+-- and remove the units from the template
+function Template:_processTagUnits()
 	local del = {}
 	for idx, grp in ipairs(self.tpldata or {}) do
 		if grp.mark ~= nil then
 			table.insert(self.extramarks, grp.mark)
+			table.insert(del, idx)
+		end
+		if grp.smoke ~= nil then
+			table.insert(self.smoke, grp.smoke)
 			table.insert(del, idx)
 		end
 	end
@@ -581,8 +622,15 @@ function Template:validate()
 	},}, self)
 
 	utils.checkkeys(getkeys(self.objtype), self)
-	self:_processMarkUnits()
+	self:_processTagUnits()
 	self:_validateCoalition()
+
+	-- Re-check smoke after processing tag units
+	utils.checkkeys({{
+		["name"]    = "smoke",
+		["default"] = {},
+		["check"]   = checkSmoke,
+	}}, self)
 end
 
 -- PUBLIC INTERFACE
