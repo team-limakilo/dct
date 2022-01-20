@@ -170,9 +170,13 @@ end
 
 function StaticAsset:getCurrentLocation()
 	if self:isSpawned() and self.isMobile then
-		for name, group in pairs(self._assets) do
-			if isUnitGroup(group.category) then
-				return Group.getByName(name):getUnit(1):getPoint()
+		for name, _ in pairs(self._assets) do
+			local grp = Group.getByName(name)
+			if grp ~= nil then
+				local unit = grp:getUnit(1)
+				if unit ~= nil then
+					return vector.Vector3D(unit:getPoint())
+				end
 			end
 		end
 	end

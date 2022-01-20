@@ -301,7 +301,7 @@ function RenderManager:update(theater, time)
 		if asset:isa(StaticAsset) then
 			self.assets[asset.rgnname] = self.assets[asset.rgnname] or {}
 			self.lastSeen[asset.name] = self.lastSeen[asset.name] or AGE_OLD
-			self.assetPos[asset.name] = vec.Vector3D(asset:getCurrentLocation())
+			self.assetPos[asset.name] = asset:getCurrentLocation()
 			table.insert(self.assets[asset.rgnname], asset)
 		end
 	end
