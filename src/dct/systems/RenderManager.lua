@@ -186,7 +186,11 @@ local function getAllAircraft()
 end
 
 local function weaponRangeType(weapon)
-	if PLAYERS_ONLY and weapon:getLauncher():getPlayerName() == nil then
+	if weapon == nil or
+	   PLAYERS_ONLY and
+	   weapon:getLauncher() ~= nil and
+	   weapon:getLauncher():isExist() and
+	   weapon:getLauncher():getPlayerName() == nil then
 		return nil
 	end
 	local desc = weapon:getDesc()
@@ -224,12 +228,13 @@ end
 
 function RenderManager:onDCSEvent(event)
 	if event.id == world.event.S_EVENT_SHOT then
-		if weaponRangeType(event.weapon) ~= nil then
+		local rangeType = weaponRangeType(event.weapon)
+		if rangeType ~= nil then
 			Logger:debug("start tracking wpn %d ('%s') released by '%s'",
 				event.weapon.id_,
 				event.weapon:getTypeName(),
 				event.initiator:getPlayerName() or event.initiator:getName())
-			table.insert(self.weapons, event.weapon)
+			table.insert(self.weapons, { event.weapon, rangeType })
 		end
 	end
 end
@@ -282,11 +287,11 @@ function RenderManager:update(theater, time)
 	yield()
 	-- Update weapon locations
 	for i = #self.weapons, 1, -1 do
-		local wpn = self.weapons[i]
+		local wpn, rangeType = unpack(self.weapons[i])
 		if wpn:isExist() then
 			table.insert(self.objects, {
 				location = vec.Vector3D(wpn:getPoint()),
-				rangeType = weaponRangeType(wpn),
+				rangeType = rangeType,
 			})
 		else
 			Logger:debug("end tracking wpn %d", wpn.id_)
