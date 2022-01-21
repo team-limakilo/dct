@@ -20,9 +20,6 @@ local yield        = coroutine.yield
 -- Ignore AI aircraft if true
 local PLAYERS_ONLY = true
 
--- How many seconds to wait between render checks
-local CHECK_INTERVAL = 5
-
 -- How many seconds to keep an asset in the world after it's out of range
 local DESPAWN_TIMEOUT = 5 * 60
 local ONDEMAND_TIMEOUT = 30 * 60
@@ -317,7 +314,7 @@ function RenderManager:update(theater, time)
 			self:checkRegion(region, time)
 		end
 	end
-	return CHECK_INTERVAL
+	return 2
 end
 
 --[[
