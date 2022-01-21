@@ -10,6 +10,7 @@
 
 require("math")
 local utils    = require("libs.utils")
+local check    = require("libs.check")
 local enum     = require("dct.enum")
 local dctutils = require("dct.utils")
 local vector   = require("dct.libs.vector")
@@ -25,6 +26,11 @@ local function isUnitGroup(category)
 		or category == Unit.Category.SHIP
 end
 
+local function isAirborne(category)
+	return category == Unit.Category.AIRPLANE
+		or category == Unit.Category.HELICOPTER
+end
+
 local StaticAsset = require("libs.namedclass")("StaticAsset", AssetBase)
 function StaticAsset:__init(template)
 	self._maxdeathgoals = 0
@@ -32,6 +38,11 @@ function StaticAsset:__init(template)
 	self._status        = 0
 	self._deathgoals    = {}
 	self._assets        = {}
+	self._groups        = {}
+	self._units         = {}
+	self._tplGroupNames = {}
+	self._tplUnitNames  = {}
+	self._initialized   = {}
 	self._eventhandlers = {
 		[world.event.S_EVENT_DEAD] = self.handleDead,
 	}
@@ -39,6 +50,8 @@ function StaticAsset:__init(template)
 	self:_addMarshalNames({
 		"_hasDeathGoals",
 		"_maxdeathgoals",
+		"_tplGroupNames",
+		"_tplUnitNames",
 	})
 end
 
@@ -68,6 +81,8 @@ end
 function StaticAsset:_completeinit(template)
 	AssetBase._completeinit(self, template)
 	self._hasDeathGoals = template.hasDeathGoals
+	self._tplGroupNames = template.groupNames
+	self._tplUnitNames  = template.unitNames
 	self._tpldata       = template:copyData()
 
 	if next(template.smoke) ~= nil then
@@ -284,18 +299,99 @@ function StaticAsset:handleDead(event)
 	end
 end
 
+local function remapID(idmap, objmap, tbl, tblkey)
+	check.table(idmap)
+	check.table(tbl)
+	check.string(tblkey)
+	local oldid = tbl[tblkey]
+	local name = idmap[oldid]
+	local obj = objmap[name]
+	local newid
+	if obj ~= nil then
+		newid = obj:getID()
+		tbl[tblkey] = newid
+	end
+	return oldid, newid
+end
+
+function StaticAsset:_transformTask(task)
+	if task.id == "ComboTask" then
+		for _, subtask in pairs(task.params.tasks) do
+			self:_transformTask(subtask)
+		end
+	end
+
+	-- remap target IDs in the template to the spawned IDs
+	if task.params.groupId ~= nil then
+		local old, new =
+			remapID(self._tplGroupNames, self._groups, task.params, "groupId")
+		self._logger:debug("remapped task groupId: %d -> %s", old, tostring(new))
+	end
+
+	if task.params.unitId ~= nil then
+		local old, new =
+			remapID(self._tplUnitNames, self._units, task.params, "unitId")
+		self._logger:debug("remapped task unitId: %d -> %s", old, tostring(new))
+	end
+
+	-- the "action" sub-key has the same structure as "task"
+	if task.params.action ~= nil then
+		self:_transformTask(task.params.action)
+	end
+end
+
+function StaticAsset:_transformPoints(points)
+	for _, point in pairs(points) do
+		if point.task ~= nil then
+			self:_transformTask(point.task)
+		end
+	end
+end
+
+function StaticAsset:_afterspawn(group, obj)
+	local points = obj.data.route and obj.data.route.points
+	if points ~= nil then
+		if not self._initialized[obj.data.name] then
+			self:_transformPoints(points)
+		end
+		-- reapply transformed waypoints
+		group:getController():setTask({
+			id = "Mission",
+			route = {
+				airborne = isAirborne(obj.category),
+				points = points,
+			}
+		})
+	end
+	self._initialized[obj.data.name] = true
+end
+
 function StaticAsset:spawn(ignore)
 	if not ignore and self:isSpawned() then
 		self._logger:error("runtime bug - already spawned")
 		return
 	end
 
+	local spawnedObjects = {}
+
 	for _, obj in pairs(self._assets) do
 		if obj.category == Unit.Category.STRUCTURE then
-			coalition.addStaticObject(obj.countryid, obj.data)
+			local static = coalition.addStaticObject(obj.countryid, obj.data)
+			table.insert(spawnedObjects, { static, obj })
 		elseif isUnitGroup(obj.category) then
-			coalition.addGroup(obj.countryid, obj.category, obj.data)
+			local group = coalition.addGroup(obj.countryid, obj.category, obj.data)
+			table.insert(spawnedObjects, { group, obj })
+
+			-- record spawned groups and units for later lookups
+			self._groups[group:getName()] = group
+			for _, unit in pairs(group:getUnits()) do
+				self._units[unit:getName()] = unit
+			end
 		end
+	end
+
+	for _, spawned in pairs(spawnedObjects) do
+		self:_afterspawn(unpack(spawned))
 	end
 
 	AssetBase.spawn(self)
@@ -325,6 +421,8 @@ function StaticAsset:despawn()
 		end
 	end
 
+	self._groups = {}
+	self._units  = {}
 	AssetBase.despawn(self)
 end
 
@@ -333,7 +431,11 @@ end
 local function filterTemplateData(template, aliveGroups)
 	local out = {}
 	for _, grp in ipairs(template) do
-		table.insert(out, utils.deepcopy(aliveGroups[grp.data.name]))
+		local alivegrp = utils.deepcopy(aliveGroups[grp.data.name])
+		if alivegrp ~= nil then
+			alivegrp.data.route = grp.data.route
+			table.insert(out, alivegrp)
+		end
 	end
 	for _, grp in ipairs(out) do
 		grp.data.groupId = nil

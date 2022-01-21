@@ -83,16 +83,28 @@ local function makeNamesUnique(data)
 	end
 end
 
+local function sanitizeIds(data, tpl)
+	env.info("SANITIZING")
+	if data ~= nil and data.groupId ~= nil then
+		tpl.groupNames[data.groupId] = data.name
+		data.groupId = nil
+	end
+	if data ~= nil and data.unitId ~= nil then
+		tpl.unitNames[data.unitId] = data.name
+		data.unitId = nil
+	end
+end
+
 local function overrideUnitOptions(unit, key, tpl, basename)
 	if unit.playerCanDrive ~= nil then
 		unit.playerCanDrive = false
 	end
-	unit.unitId = nil
 	unit.dct_deathgoal = goalFromName(unit.name, Goal.objtype.UNIT)
 	if unit.dct_deathgoal ~= nil then
 		tpl.hasDeathGoals = true
 	end
 	unit.name = basename.."-"..key
+	sanitizeIds(unit, tpl)
 end
 
 local function overrideGroupOptions(grp, idx, tpl)
@@ -139,8 +151,6 @@ local function overrideGroupOptions(grp, idx, tpl)
 		goaltype = Goal.objtype.STATIC
 	end
 
-	grp.data.groupId = nil
-	grp.data.unitId  = nil
 	grp.data.start_time = 0
 	grp.data.dct_deathgoal = goalFromName(grp.data.name, goaltype)
 	if grp.data.dct_deathgoal ~= nil then
@@ -150,6 +160,8 @@ local function overrideGroupOptions(grp, idx, tpl)
 	local side = coalition.getCountryCoalition(grp.countryid)
 	grp.data.name = string.format("%s_%s %d %s %d", tpl.regionname, tpl.name,
 		side, utils.getkey(Unit.Category, grp.category), idx)
+
+	sanitizeIds(grp.data, tpl)
 
 	for i, unit in ipairs(grp.data.units or {}) do
 		overrideUnitOptions(unit, i, tpl, grp.data.name)
@@ -558,6 +570,8 @@ local Template = class()
 function Template:__init(data)
 	assert(data and type(data) == "table", "value error: data required")
 	self.hasDeathGoals = false
+	self.groupNames    = {}
+	self.unitNames     = {}
 	utils.mergetables(self, utils.deepcopy(data))
 	self:validate()
 	self.checklocation = nil
