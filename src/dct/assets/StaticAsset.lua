@@ -438,6 +438,7 @@ local function filterTemplateData(template, aliveGroups)
 		end
 	end
 	for _, grp in ipairs(out) do
+		grp.data.unitId = nil
 		grp.data.groupId = nil
 		if grp.data.units ~= nil then
 			for _, unit in ipairs(grp.data.units) do
