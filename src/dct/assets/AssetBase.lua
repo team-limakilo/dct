@@ -168,15 +168,6 @@ function AssetBase:__init(template)
 end
 
 function AssetBase:_completeinit(template)
-	if isMissionTarget(template.objtype) then
-		if template.desc == nil then
-			error(string.format(
-				"Template(%s) is a mission target but has no 'desc' field", template.name))
-		end
-		self.briefing = dctutils.interp(template.desc, {
-			["LOCATIONMETHOD"] = genLocationMethod(),
-		})
-	end
 	self.type     = template.objtype
 	self.ignore   = template.ignore
 	self.owner    = template.coalition
@@ -189,6 +180,8 @@ function AssetBase:_completeinit(template)
 	self.extramarks = template.extramarks
 	self.nocull     = template.nocull
 	self.ondemand   = template.ondemand
+	self.codename   = generateCodename(template)
+
 	if norenametype[self.type] == true then
 		self.name = self.tplname
 	else
@@ -198,7 +191,17 @@ function AssetBase:_completeinit(template)
 				dct.Theater.singleton():getcntr()
 		end
 	end
-	self.codename = generateCodename(template)
+
+	if isMissionTarget(template.objtype) then
+		if template.desc == nil then
+			error(string.format(
+				"Template(%s) is a mission target but has no 'desc' field", template.name))
+		end
+		self.briefing = dctutils.interp(template.desc, {
+			["CODENAME"]       = self.codename,
+			["LOCATIONMETHOD"] = genLocationMethod(),
+		})
+	end
 
 	for _, side in pairs(coalition.side) do
 		self._intel[side] = template.intel or 0

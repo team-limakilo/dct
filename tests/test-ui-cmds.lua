@@ -27,9 +27,9 @@ local unit1 = Unit({
 
 local briefingtxt = "Package: #5720\n"..
 			"IFF Codes: M1(50), M3(5720)\n"..
-			"Target AO: 88°07.38'N 063°27.36'W (HOUSTON)\n"..
+			"Target AO: 88°07.38'N 063°27.36'W (LAGOS)\n"..
 			"Briefing:\n"..
-			"Reconnaissance elements have located"..
+			"A recon flight earlier today discovered"..
 			" a fuel storage facility at 88°07.38'N 063°27.36'W,"..
 			" East of Krasnodar-Center.\n\n"..
 			"Primary Objectives: Destroy the fuel tanks embedded in "..
@@ -40,7 +40,7 @@ local briefingtxt = "Package: #5720\n"..
 
 local capbriefingtxt = "Package: #2730\n"..
 			"IFF Codes: M1(20), M3(2730)\n"..
-			"Station AO: 88°06'N 063°24'W (SEOUL)\n"..
+			"Station AO: 88°06'N 063°24'W (SHANGHAI)\n"..
 			"Briefing:\n"..
 			"Coordinate with friendly forces and provide cover in Krasnodar "..
 			"airspace.\n\n"..
