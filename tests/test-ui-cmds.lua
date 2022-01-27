@@ -58,8 +58,8 @@ local testcmds = {
 		["assert"]     = true,
 		["expected"]   = "== Theater Status ==\n"..
 			"Friendly Force Str: Nominal\nEnemy Force Str: Nominal\n\n"..
-			"Airbases:\n  CVN-71 Theodore Roosevelt: Friendly\n  "..
-			"Krymsk: Hostile\n  Kutaisi: Friendly\n  Senaki-Kolkhi: Friendly\n\n"..
+			"Airbases:\n  Friendly: CVN-71 Theodore Roosevelt\n  "..
+			"Friendly: Kutaisi\n  Friendly: Senaki-Kolkhi\n  Hostile: Krymsk\n\n"..
 			"Current Active Air Missions:\n  None\n\n"..
 			"Available missions:\n  CAP:  2\n  "..
 			"SEAD:  2\n  STRIKE:  3\n\n"..
@@ -83,8 +83,8 @@ local testcmds = {
 		["assert"]     = true,
 		["expected"]   = "== Theater Status ==\n"..
 			"Friendly Force Str: Nominal\nEnemy Force Str: Nominal\n\n"..
-			"Airbases:\n  CVN-71 Theodore Roosevelt: Friendly\n  "..
-			"Krymsk: Hostile\n  Kutaisi: Friendly\n  Senaki-Kolkhi: Friendly\n\n"..
+			"Airbases:\n  Friendly: CVN-71 Theodore Roosevelt\n  "..
+			"Friendly: Kutaisi\n  Friendly: Senaki-Kolkhi\n  Hostile: Krymsk\n\n"..
 			"Current Active Air Missions:\n  STRIKE:  1\n\n"..
 			"Available missions:\n  CAP:  2\n  "..
 			"SEAD:  2\n  STRIKE:  2\n\n"..
