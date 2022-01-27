@@ -172,7 +172,7 @@ function Theater.singleton()
 	end
 	local ok = xpcall(
 		function()
-			dct.theater = Theater()
+			_G.dct.theater = Theater()
 		end,
 		function(err)
 			Logger:error("protected call (init) - %s", debug.traceback(err, 2))
