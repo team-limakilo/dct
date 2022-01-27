@@ -167,11 +167,21 @@ function Theater:__init()
 end
 
 function Theater.singleton()
-	if _G.dct.theater ~= nil then
-		return _G.dct.theater
+	if dct.theater ~= nil then
+		return dct.theater
 	end
-	_G.dct.theater = Theater()
-	return _G.dct.theater
+	local ok = xpcall(
+		function()
+			dct.theater = Theater()
+		end,
+		function(err)
+			Logger:error("protected call (init) - %s", debug.traceback(err, 2))
+		end
+	)
+	if not ok then
+		error("failed to initialize DCT theater")
+	end
+	return dct.theater
 end
 
 function Theater:setTimings(cmdfreq, tgtfps, percent)
