@@ -31,7 +31,8 @@ local function makeData()
         coalitions = {},
         version = dct._VERSION,
         theater = env.mission.theatre,
-        date = os.date("!%F %TZ"),
+        sortie  = env.getValueDictByKey(env.mission.sortie),
+        date    = os.date("!%F %TZ"),
     }
 end
 
@@ -136,7 +137,7 @@ local function getMissions(commander, assetmgr)
             target = {
                 name = mission.target,
                 region = tgt.region,
-                coalition = tgt.coalition,
+                coalition = tostring(tgt.coalition),
                 location_degraded = getLocation(pos),
                 intel = tgt.intellvl,
                 status = tgt.status,
