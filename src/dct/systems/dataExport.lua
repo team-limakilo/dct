@@ -10,6 +10,7 @@ local class    = require("libs.class")
 local utils    = require("libs.utils")
 local dctenum  = require("dct.enum")
 local dctutils = require("dct.utils")
+local human    = require("dct.ui.human")
 local Command  = require("dct.Command")
 local Logger   = require("dct.libs.Logger").getByName("DataExport")
 local settings = _G.dct.settings.server
@@ -54,7 +55,9 @@ end
 -- Get the ticket counts for each coalition
 local function getTickets(tickets, coalition)
     local current, start = tickets:get(coalition)
+    local percentage = math.floor((current / start) * 100)
     return {
+        text = human.strength(percentage),
         current = current,
         start = start,
     }
