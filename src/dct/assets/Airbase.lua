@@ -318,6 +318,13 @@ function AirbaseAsset:_setup()
 		self:setDead(true)
 		return
 	end
+	local dcscoalition = dcsab:getCoalition()
+	if self.owner ~= dcscoalition then
+		self._logger:warn(
+			"airbase coalition does not match asset state; asset: %s, airbase: %s",
+			tostring(self.owner), tostring(dcscoalition))
+		self.owner = dcscoalition
+	end
 	self._abcategory = dcsab:getDesc().airbaseCategory
 	self._location = dcsab:getPoint()
 end
