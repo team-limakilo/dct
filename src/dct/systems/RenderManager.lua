@@ -210,8 +210,8 @@ function RenderManager:__init(theater)
 	self.lastSeen  = {} -- Time each asset was last seen
 	self.weapons   = {} -- Tracked weapons in flight
 
-	-- Disable automatic execution in tests
-	if _G.DCT_TEST then
+	if not settings.server.renderManager then
+		Logger:info("disabled by server setting")
 		return
 	end
 

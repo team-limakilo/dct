@@ -147,6 +147,7 @@ local function servercfgs(config)
 				["dctid"] = "changeme",
 				["emptyslottimeout"] = 0, -- seconds
 				["exportperiod"] = 0, -- seconds
+				["renderManager"] = false,
 				["showErrors"] = false,
 			},
 		},}, config)
