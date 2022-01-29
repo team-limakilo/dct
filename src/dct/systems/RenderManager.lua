@@ -281,7 +281,6 @@ function RenderManager:update(theater, time)
 			rangeType = RangeType.Aircraft,
 		})
 	end
-	yield()
 	-- Update weapon locations
 	for i = #self.weapons, 1, -1 do
 		local wpn, rangeType = unpack(self.weapons[i])
@@ -295,7 +294,6 @@ function RenderManager:update(theater, time)
 			table.remove(self.weapons, i)
 		end
 	end
-	yield()
 	-- Update asset locations
 	self.assets = {}
 	self.assetPos = {}
