@@ -12,6 +12,7 @@ read_globals = {
 	-- DCS specific globals
 	"country",
 	"env",
+	"net",
 	"Unit",
 	"Object",
 	"StaticObject",
@@ -36,6 +37,9 @@ read_globals = {
 
 files["mission/dct-mission-init.lua"] = {
 	globals = {"dctsettings", "luapath",},
+}
+files["hooks/*.lua"] = {
+	read_globals = {"DCS", "log",},
 }
 files["src/dct/Region.lua"] = { globals = {"region",} }
 files["src/dct/settings.lua"] = { globals = {"dctserverconfig",} }
