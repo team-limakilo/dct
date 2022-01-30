@@ -45,7 +45,8 @@ local capbriefingtxt = "Package: #2730\n"..
 			"Coordinate with friendly forces and provide cover in Krasnodar "..
 			"airspace.\n\n"..
 			"The mission status shows how many ground missions have been completed "..
-			"in the region, however, you can RTB at any time."
+			"in the region, however, you can RTB at any time.\n\n"..
+			"Recommended Pilots: 2"
 
 local assignedPilots = "Assigned Pilots:\nbobplayer (F/A-18C Hornet)"
 

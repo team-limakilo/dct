@@ -379,7 +379,8 @@ function Mission:getDescription(fmt)
 		["LOCATION"] = dctutils.fmtposition(
 			tgt:getLocation(),
 			tgt:getIntel(self.cmdr.owner),
-			fmt)
+			fmt),
+		["MINAGENTS"] = tostring(self.minagents),
 	}
 	return dctutils.interp(self.briefing, interptbl)
 end
