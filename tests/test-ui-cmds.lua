@@ -25,8 +25,8 @@ local unit1 = Unit({
 	},
 }, grp, "bobplayer")
 
-local briefingtxt = "Package: #5720\n"..
-			"IFF Codes: M1(50), M3(5720)\n"..
+local briefingtxt = "Package: #5410\n"..
+			"IFF Codes: M1(50), M3(5410)\n"..
 			"Target AO: 88°07.38'N 063°27.36'W (BEIJING)\n"..
 			"Briefing:\n"..
 			"A recon flight earlier today discovered"..
@@ -38,8 +38,8 @@ local briefingtxt = "Package: #5720\n"..
 			"Recommended Pilots: 2\n\n"..
 			"Recommended Ordnance: Pilot discretion."
 
-local capbriefingtxt = "Package: #2730\n"..
-			"IFF Codes: M1(20), M3(2730)\n"..
+local capbriefingtxt = "Package: #2120\n"..
+			"IFF Codes: M1(20), M3(2120)\n"..
 			"Station AO: 88°06'N 063°24'W (MEMPHIS)\n"..
 			"Briefing:\n"..
 			"Coordinate with friendly forces and provide cover in Krasnodar "..
@@ -72,7 +72,7 @@ local testcmds = {
 			["value"]  = enum.missionType.STRIKE,
 		},
 		["assert"]     = true,
-		["expected"]   = "Mission 5720 assigned, use F10 menu to "..
+		["expected"]   = "Mission 5410 assigned, use F10 menu to "..
 			"see this briefing again\n"..
 			briefingtxt.."\n\n"..
 			assignedPilots
@@ -104,7 +104,7 @@ local testcmds = {
 		},
 		["assert"]     = true,
 		["expected"]   = "Mission State: Active\n"..
-			"Package: 5720\n"..
+			"Package: 5410\n"..
 			"Timeout: 2016-06-21 14:00z (in 180 mins)\n"..
 			"BDA: 0% complete\n\n"..
 			assignedPilots
@@ -141,7 +141,7 @@ local testcmds = {
 		["modelTime"]  = 300,
 		["assert"]     = true,
 		["expected"]   = "Mission State: Active\n"..
-			"Package: 5720\n"..
+			"Package: 5410\n"..
 			"Timeout: 2016-06-21 14:02z (in 177 mins)\n"..
 			"BDA: 0% complete\n\n"..
 			assignedPilots
@@ -152,7 +152,7 @@ local testcmds = {
 			["value"]  = enum.missionAbortType.ABORT,
 		},
 		["assert"]     = true,
-		["expected"]   = "Mission 5720 aborted",
+		["expected"]   = "Mission 5410 aborted",
 	}, {
 		["data"] = {
 			["name"]   = grp:getName(),
@@ -160,7 +160,7 @@ local testcmds = {
 			["value"]  = enum.missionType.CAP,
 		},
 		["assert"]     = true,
-		["expected"]   = "Mission 2730 assigned, use F10 menu to "..
+		["expected"]   = "Mission 2120 assigned, use F10 menu to "..
 			"see this briefing again\n"..
 			capbriefingtxt.."\n\n"..
 			assignedPilots

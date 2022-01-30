@@ -106,7 +106,6 @@ function Commander:getTheaterUpdate()
 	return theaterUpdate
 end
 
-local MISSION_ID = math.random(1,63)
 local invalidXpdrTbl = {
 	["0000"] = true,
 	["7700"] = true,
@@ -127,16 +126,17 @@ local invalidXpdrTbl = {
 --]]
 function Commander:genMissionCodes(msntype)
 	local id
+	local missionId
 	local digit1 = enum.squawkMissionType[msntype]
 	while true do
-		MISSION_ID = (MISSION_ID + 1) % 64
-		id = string.format("%01o%02o0", digit1, MISSION_ID)
+		missionId = math.random(1, 63)
+		id = string.format("%01o%02o0", digit1, missionId)
 		if invalidXpdrTbl[id] == nil and self:getMission(id) == nil then
 			break
 		end
 	end
 	local m1 = (8*digit1)+(enum.squawkMissionSubType[msntype] or 0)
-	local m3 = (512*digit1)+(MISSION_ID*8)
+	local m3 = (512*digit1)+(missionId*8)
 	return { ["id"] = id, ["m1"] = m1, ["m3"] = m3, }
 end
 
