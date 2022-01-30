@@ -105,14 +105,15 @@ local function getAssets(regionmgr, assetmgr, coalition)
     for region, _ in pairs(regionmgr.regions) do
         export[region] = {}
     end
-    for name, asset in pairs(assetmgr._assetset) do
+    for name, asset in assetmgr:iterate() do
         local region = asset.rgnname
         if asset.owner == coalition and
            dctenum.assetClass["INITIALIZE"][asset.type] then
             export[region][name] = {
-                dead = asset._dead,
+                dead = asset:isDead(),
                 intel = asset.intel,
                 codename = asset.codename,
+                spawned = asset:isSpawned(),
                 location = getLocation(asset:getLocation()),
                 strategic = dctenum.assetClass["STRATEGIC"][asset.type] ~= nil,
                 status = asset:getStatus(),
