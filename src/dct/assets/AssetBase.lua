@@ -69,10 +69,12 @@ local function genLocationMethod()
 		"A recon flight earlier today discovered",
 		"We have reason to believe there is",
 		"Aerial photography shows that there is",
-		"Satellite imaging has found",
 		"Ground units operating in the area have informed us of",
 	}
-	local idx = math.random(1,#txt)
+	if env.mission.date.Year >= 1960 then
+		table.insert(txt, "Satellite imaging has found")
+	end
+	local idx = math.random(1, #txt)
 	return txt[idx]
 end
 
