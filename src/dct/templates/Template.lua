@@ -497,6 +497,10 @@ local function getkeys(objtype)
 			["default"] = "terminal",
 			["check"]   = checkrecovery,})
 		table.insert(keys, {
+			["name"]    = "capturable",
+			["type"]    = "boolean",
+			["default"] = false,})
+		table.insert(keys, {
 			["name"]    = "tacan",
 			["check"]   = checkTacan,})
 		table.insert(keys, {

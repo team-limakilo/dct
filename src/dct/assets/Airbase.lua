@@ -218,7 +218,8 @@ function OperationalState:onDCTEvent(asset, event)
 	--
 	-- For now, we'll only handle capture by ground units
 	--]]
-	if event.id == world.event.S_EVENT_BASE_CAPTURED and
+	if asset.capturable and
+	   event.id == world.event.S_EVENT_BASE_CAPTURED and
 	   event.place:getName() == asset.name and
 	   event.place:getCoalition() ~= self.owner then
 		asset.owner = event.place:getCoalition()
@@ -285,11 +286,13 @@ function AirbaseAsset:__init(template)
 		"_subordinates",
 		"takeofftype",
 		"recoverytype",
+		"capturable",
 		"tacan",
 		"icls",
 	})
 	self._eventhandlers = nil
 	if template ~= nil then
+		self.capturable = template.capturable
 		self.tacan = template.tacan
 		self.icls = template.icls
 	end
