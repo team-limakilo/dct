@@ -1076,3 +1076,10 @@ function land.getHeight(_ --[[vec2]])
 	return 10
 end
 _G.land = land
+
+local net = {}
+
+function net.get_player_list()
+	return { 1 }
+end
+_G.net = net

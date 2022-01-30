@@ -5,6 +5,7 @@
 -- JSON format
 --]]
 
+local lfs      = require("lfs")
 local json     = require("libs.json")
 local class    = require("libs.class")
 local utils    = require("libs.utils")
@@ -27,13 +28,25 @@ for name, id in pairs(dctenum.missionType) do
     MISSION_TYPE[id] = name
 end
 
-local function makeData()
+local function countPlayers()
+    local num = 0
+    for _ in pairs(net.get_player_list()) do
+        num = num + 1
+    end
+    return num
+end
+
+local function makeData(export)
     return {
         coalitions = {},
         version = dct._VERSION,
         theater = env.mission.theatre,
         sortie  = env.getValueDictByKey(env.mission.sortie),
         date    = os.date("!%F %TZ"),
+        players = {
+            current = countPlayers(),
+            max = export.maxPlayers,
+        },
     }
 end
 
@@ -42,7 +55,10 @@ function DataExport:__init(theater)
     self.theater = theater
     self.saveToDisk = true
     if settings.exportperiod > 0 then
-        self.cachedData = makeData()
+        local dcsServerSettings =
+            utils.readlua(lfs.writedir().."/Config/serverSettings.lua", "cfg")
+        self.maxPlayers = dcsServerSettings.maxPlayers
+        self.cachedData = makeData(self)
         Logger:debug("running data export every %d seconds",
             settings.exportperiod)
         theater:queueCommand(settings.exportperiod,
@@ -175,8 +191,7 @@ function DataExport:update()
     local assetmgr = theater:getAssetMgr()
     local regionmgr = theater:getRegionMgr()
     local tickets = theater:getSystem("dct.systems.tickets")
-    local data = makeData()
-
+    local data = makeData(self)
     local coalitions = data.coalitions
 
     for _, coalition in pairs(coalition.side) do
