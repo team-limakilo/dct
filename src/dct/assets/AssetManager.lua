@@ -241,6 +241,7 @@ local function handleDead(self, event)
 end
 
 local function handleAssetDeath(self, event)
+	self:notify(event)
 	local asset = event.initiator
 	self.theater:getTickets():loss(asset.owner, asset.cost, false)
 	self.theater:queueCommand(self.cleanupdelay,
@@ -313,6 +314,7 @@ function AssetManager:onDCSEvent(event)
 	for _, obj in ipairs(objs) do
 		self:doOneObject(obj, event)
 	end
+
 	local handler = handlers[event.id]
 	if handler ~= nil then
 		handler(self, event)
