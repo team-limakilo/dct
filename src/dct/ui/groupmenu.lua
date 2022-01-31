@@ -19,10 +19,12 @@
 --]]
 
 local enum     = require("dct.enum")
+local dctutils = require("dct.utils")
 local Theater  = require("dct.Theater")
 local loadout  = require("dct.systems.loadouts")
 local utils    = require("libs.utils")
 local msncodes = require("dct.ui.missioncodes")
+local vec      = require("dct.libs.vector")
 local Logger   = dct.Logger.getByName("UI")
 
 local function addmenu(asset, name, path)
@@ -74,14 +76,43 @@ function menus.createMenu(asset)
 
 	local msnmenu = addmenu(asset, "Mission", nil)
 	local rqstmenu = addmenu(asset, "Request", msnmenu)
-	for k, v in utils.sortedpairs(asset.ato) do
-		addcmd(asset, k, rqstmenu, Theater.playerRequest,
+	for typename, msntype in utils.sortedpairs(asset.ato) do
+		local title = string.format("Give me %s", typename)
+		addcmd(asset, title, rqstmenu, Theater.playerRequest,
 			{
 				["name"]   = name,
 				["type"]   = enum.uiRequestType.MISSIONREQUEST,
-				["value"]  = v,
+				["value"]  = msntype,
 			})
 	end
+
+	local msnListMenu = addmenu(asset, "Let me choose", rqstmenu)
+	local msnListItems = {}
+	asset.uimenus.refresh = function()
+		for _, msn in pairs(msnListItems) do
+			missionCommands.removeItemForGroup(asset.groupId, msn)
+		end
+		msnListItems = {}
+		local tgtlist = dct.theater:getCommander(asset.owner)
+			:getTopTargets(asset.ato, 10)
+		for _, tgt in pairs(tgtlist) do
+			local typename = utils.getkey(enum.assetType, tgt.type)
+			local missiontype = dctutils.assettype2mission(tgt.type)
+			local missiontypename = utils.getkey(enum.missionType, missiontype)
+			local distance = vec.distance(asset:getLocation(), tgt:getLocation())
+			local nmi = distance * 0.00054 -- meters to nautical miles
+			local msn = addcmd(asset, string.format("%s(%s): %s - %dnm", missiontypename,
+				typename, tgt.codename, nmi), msnListMenu, Theater.playerRequest,
+				{
+					["name"]   = name,
+					["type"]   = enum.uiRequestType.MISSIONREQUEST,
+					["value"]  = missiontype,
+					["target"] = tgt.name,
+				})
+			table.insert(msnListItems, msn)
+		end
+	end
+	asset.uimenus.refresh()
 
 	local joinmenu = addmenu(asset, "Join", msnmenu)
 	addcmd(asset, "Use Scratch Pad Value", joinmenu, Theater.playerRequest,
@@ -121,7 +152,7 @@ end
 
 function menus.removeMenu(asset)
 	Logger:debug("removeMenu - removing menu for group: %s", asset.name)
-	for _, menu in pairs(asset.uimenus) do
+	for _, menu in ipairs(asset.uimenus) do
 		missionCommands.removeItemForGroup(asset.groupId, menu)
 	end
 	asset.uimenus = nil

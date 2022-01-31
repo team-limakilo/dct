@@ -313,31 +313,37 @@ function MissionRqstCmd:__init(theater, data)
 	MissionCmd.__init(self, theater, data)
 	self.name = "MissionRqstCmd:"..data.name
 	self.missiontype = data.value
+	self.missiontgt  = data.target
 	self.displaytime = 120
 	self.assetmgr = theater:getAssetMgr()
 end
 
 function MissionRqstCmd:_execute(_, cmdr)
 	local msn = cmdr:getAssigned(self.asset)
-	local msg
-
-	if msn then
-		msg = string.format("You have mission %s already assigned, "..
+	if msn ~= nil then
+		return string.format("You have mission %s already assigned, "..
 			"use the F10 Menu to abort first.", msn:getID())
-		return msg
 	end
 
-	msn = cmdr:requestMission(self.asset.name, self.missiontype)
-	if msn == nil then
-		msg = string.format("No %s missions available.",
-			human.missiontype(self.missiontype))
+	if self.missiontgt ~= nil then
+		local tgt = self.assetmgr:getAsset(self.missiontgt)
+		msn = tgt and cmdr:createMission(self.asset.name, self.missiontype, tgt)
+		if msn == nil then
+			return "Mission target is no longer valid, please choose another"
+		end
 	else
-		msg = string.format("Mission %s assigned, use F10 menu "..
-			"to see this briefing again\n", msn:getID())
-		msg = msg..briefingmsg(msn, self.asset)
-		msg = msg.."\n\nAssigned Pilots:\n"..assignedPilots(msn, self.assetmgr)
-		human.drawTargetIntel(msn, self.asset.groupId, false)
+		msn = cmdr:requestMission(self.asset.name, self.missiontype)
+		if msn == nil then
+			return string.format("No %s missions available.",
+				human.missiontype(self.missiontype))
+		end
 	end
+
+	local msg = string.format("Mission %s assigned, use F10 menu "..
+		"to see this briefing again\n", msn:getID())
+	msg = msg..briefingmsg(msn, self.asset)
+	msg = msg.."\n\nAssigned Pilots:\n"..assignedPilots(msn, self.assetmgr)
+	human.drawTargetIntel(msn, self.asset.groupId, false)
 	return msg
 end
 

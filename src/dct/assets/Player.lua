@@ -42,6 +42,7 @@ local cmds    = require("dct.ui.cmds")
 local uimenu  = require("dct.ui.groupmenu")
 local loadout = require("dct.systems.loadouts")
 local State   = require("dct.libs.State")
+local vec     = require("dct.libs.vector")
 local settings = _G.dct.settings
 
 local notifymsg =
@@ -160,6 +161,10 @@ function OccupiedState:__init(inair)
 		[world.event.S_EVENT_PILOT_DEAD]        = self.handleDead,
 		[world.event.S_EVENT_CRASH]             = self.handleDead,
 		[world.event.S_EVENT_LAND]              = self.handleLand,
+		[dctenum.event.DCT_EVENT_DEAD]          = self.handleTheaterChange,
+		[dctenum.event.DCT_EVENT_ADD_ASSET]     = self.handleTheaterChange,
+		[dctenum.event.DCT_EVENT_ADD_MISSION]   = self.handleTheaterChange,
+		[dctenum.event.DCT_EVENT_REMOVE_MISSION]= self.handleTheaterChange,
 	}
 end
 
@@ -344,6 +349,13 @@ function OccupiedState:handleSwitchOccupied(asset, event)
 	return OccupiedState()
 end
 
+function OccupiedState:handleTheaterChange(asset)
+	if asset.uimenus ~= nil then
+		asset._logger:debug("updating menus for '%s'", asset.name)
+		asset.uimenus.refresh()
+	end
+end
+
 --[[
 -- Player - represents a player slot in DCS
 --]]
@@ -408,6 +420,7 @@ function Player:_completeinit(template)
 	self._tpldata   = template:copyData()
 	self.unittype   = self._tpldata.data.units[1].type
 	self.cmdpending = false
+	self.firstspawn = true
 	self.groupId    = self._tpldata.data.groupId
 	self.squadron   = self.name:match("(%w+)(.+)")
 	self.airbase    = findAirbase(self._tpldata)
@@ -423,6 +436,11 @@ function Player:_completeinit(template)
 		require("libs.json"):encode_pretty(self.payloadlimits))
 	self._logger:debug("ato: %s",
 		require("libs.json"):encode_pretty(self.ato))
+end
+
+function Player:registerObservable(observable)
+	local name = string.format("%s.onDCTEvent('%s')", self.__clsname, self.name)
+	observable:addObserver(self.onDCTEvent, self, name)
 end
 
 function Player:_setup()
@@ -447,7 +465,7 @@ end
 
 function Player:getLocation()
 	local p = Group.getByName(self.name)
-	self._location = p:getUnit(1):getPoint()
+	self._location = vec.Vector3D(p:getUnit(1):getPoint())
 	return AssetBase.getLocation(self)
 end
 
@@ -497,6 +515,11 @@ end
 function Player:spawn()
 	AssetBase.spawn(self)
 	self:doEnable()
+	if self.firstspawn then
+		self:registerObservable(dct.theater:getAssetMgr())
+		self:registerObservable(dct.theater:getCommander(self.owner))
+		self.firstspawn = false
+	end
 end
 
 function Player:despawn()
