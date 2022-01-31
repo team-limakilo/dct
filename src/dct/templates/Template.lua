@@ -84,7 +84,6 @@ local function makeNamesUnique(data)
 end
 
 local function sanitizeIds(data, tpl)
-	env.info("SANITIZING")
 	if data ~= nil and data.groupId ~= nil then
 		tpl.groupNames[data.groupId] = data.name
 		data.groupId = nil
