@@ -323,4 +323,28 @@ function utils.buildevent.addasset(asset)
 	return event
 end
 
+function utils.buildevent.addMission(cmdr, mission, target)
+	check.table(cmdr)
+	check.table(mission)
+	check.table(target)
+	return {
+		id = enum.event.DCT_EVENT_ADD_MISSION,
+		initiator = cmdr,
+		mission = mission,
+		target = target,
+	}
+end
+
+function utils.buildevent.removeMission(cmdr, mission, reason)
+	check.table(cmdr)
+	check.table(mission)
+	check.number(reason)
+	return {
+		id = enum.event.DCT_EVENT_REMOVE_MISSION,
+		initiator = cmdr,
+		mission = mission,
+		reason = reason,
+	}
+end
+
 return utils

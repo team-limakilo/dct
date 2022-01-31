@@ -407,8 +407,7 @@ function MissionAbortCmd:_mission(_ --[[time]], _, msn)
 	end
 	human.removeIntel(msn, self.asset.groupId)
 	return string.format("Mission %s %s",
-		msn:abort(self.asset),
-		msg)
+		msn:abort(self.asset, self.reason), msg)
 end
 
 

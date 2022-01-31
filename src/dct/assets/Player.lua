@@ -133,7 +133,7 @@ function EmptyState:update(asset)
 		local cmdr = dct.Theater.singleton():getCommander(asset.owner)
 		local msn = cmdr:getMission(asset.missionid)
 		if msn then
-			msn:abort(asset)
+			msn:abort(asset, dctenum.missionAbortType.ABORT)
 		end
 	end
 end

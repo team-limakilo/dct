@@ -11,6 +11,7 @@ local dctutils   = require("dct.utils")
 local Mission    = require("dct.ai.Mission")
 local Stats      = require("dct.libs.Stats")
 local Command    = require("dct.Command")
+local Observable = require("dct.libs.Observable")
 local Logger     = dct.Logger.getByName("Commander")
 
 local function heapsort_tgtlist(assetmgr, cmdr, filterlist)
@@ -40,9 +41,10 @@ end
 --[[
 -- For now the commander is only concerned with flight missions
 --]]
-local Commander = require("libs.namedclass")("Commander")
+local Commander = require("libs.namedclass")("Commander", Observable)
 
 function Commander:__init(theater, side)
+	Observable.__init(self, Logger)
 	self.theater      = theater
 	self.owner        = side
 	self.missionstats = Stats(genstatids())
@@ -221,6 +223,7 @@ function Commander:requestMission(grpname, missiontype)
 		"requestMission() - assigned target '%s' to mission %d (codename: %s)",
 		tgt.name, mission.id, tgt.codename)
 
+	self:notify(dctutils.buildevent.addMission(self, mission, tgt))
 	return mission
 end
 

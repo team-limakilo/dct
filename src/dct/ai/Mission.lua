@@ -278,11 +278,12 @@ end
 --    - release the targeted asset by resetting the asset's targeted
 --      bit
 --]]
-function Mission:abort(asset)
+function Mission:abort(asset, reason)
 	Logger:debug("%s:abort()", self.__clsname)
 	self:removeAssigned(asset)
 	if next(self.assigned) == nil then
 		self.cmdr:removeMission(self.id)
+		self.cmdr:notify(dctutils.buildevent.removeMission(self.cmdr, self, reason))
 		local tgt = self.cmdr:getAsset(self.target)
 		if tgt then
 			tgt:setTargeted(self.cmdr.owner, false)
