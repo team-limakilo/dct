@@ -54,19 +54,17 @@ function UICmd:uicmd(time)
 		return nil
 	end
 
-	local ok, result = pcall(function()
+	xpcall(function()
 		local cmdr = self.theater:getCommander(self.asset.owner)
 		local msg  = self:_execute(time, cmdr)
 		self.asset.cmdpending = false
 		self:_print(msg)
-	end)
-
-	if not ok then
+	end, function(err)
 		self.asset.cmdpending = false
 		self:_print("F10 menu command failed to execute, please report a bug", true)
-		error(string.format(
-			"\nui command failed: %s - %s", self.__clsname, tostring(result)))
-	end
+		Logger:error(string.format("UICmd(%s): %s",
+			self.__clsname, debug.traceback(err, 2)))
+	end)
 end
 
 local ScratchPadDisplay = class("ScratchPadDisplay", UICmd)
