@@ -77,8 +77,7 @@ function menus.createMenu(asset)
 	local msnmenu = addmenu(asset, "Mission", nil)
 	local rqstmenu = addmenu(asset, "Request", msnmenu)
 	for typename, msntype in utils.sortedpairs(asset.ato) do
-		local title = string.format("Give me %s", typename)
-		addcmd(asset, title, rqstmenu, Theater.playerRequest,
+		addcmd(asset, typename, rqstmenu, Theater.playerRequest,
 			{
 				["name"]   = name,
 				["type"]   = enum.uiRequestType.MISSIONREQUEST,
@@ -86,7 +85,7 @@ function menus.createMenu(asset)
 			})
 	end
 
-	local msnListMenu = addmenu(asset, "Let me choose", rqstmenu)
+	local msnListMenu = addmenu(asset, "List", rqstmenu)
 	local msnListItems = {}
 	asset.uimenus.refresh = function()
 		for _, msn in pairs(msnListItems) do
