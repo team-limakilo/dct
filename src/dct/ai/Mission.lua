@@ -251,19 +251,24 @@ function Mission:addAssigned(asset)
 		self.isfull = true
 	end
 	asset.missionid = self:getID()
+	asset:notify(dctutils.buildevent.joinMission(asset, self))
 end
 
-function Mission:removeAssigned(asset)
+function Mission:removeAssigned(asset, reason)
 	local member, i = self:isMember(asset.name)
 	if not member then
 		return
 	end
 	table.remove(self.assigned, i)
-	Logger:debug("Mission %d: removeAssigned(%s)", self.id, asset.name)
+	if Logger:isDebugEnabled() then
+		Logger:debug("Mission %d: removeAssigned(%s, %s)",
+			self.id, asset.name, tostring(utils.getkey(enum.missionAbortType, reason)))
+	end
 	if self.backfill and #self.assigned < self.minagents then
 		self.isfull = false
 	end
 	asset.missionid = enum.missionInvalidID
+	asset:notify(dctutils.buildevent.leaveMission(asset, self, reason))
 end
 
 --[[
@@ -280,7 +285,7 @@ end
 --]]
 function Mission:abort(asset, reason)
 	Logger:debug("%s:abort()", self.__clsname)
-	self:removeAssigned(asset)
+	self:removeAssigned(asset, reason)
 	if next(self.assigned) == nil then
 		self.cmdr:removeMission(self.id)
 		self.cmdr:notify(dctutils.buildevent.removeMission(self.cmdr, self, reason))

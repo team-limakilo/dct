@@ -360,4 +360,25 @@ function utils.buildevent.removeMission(cmdr, mission, reason)
 	}
 end
 
+function utils.buildevent.joinMission(asset, mission)
+	check.table(asset)
+	check.table(mission)
+	return {
+		id = enum.event.DCT_EVENT_JOIN_MISSION,
+		initiator = asset,
+		mission = mission,
+	}
+end
+
+function utils.buildevent.leaveMission(asset, mission, reason)
+	check.table(asset)
+	check.table(mission)
+	return {
+		id = enum.event.DCT_EVENT_LEAVE_MISSION,
+		initiator = asset,
+		mission = mission,
+		reason = reason,
+	}
+end
+
 return utils

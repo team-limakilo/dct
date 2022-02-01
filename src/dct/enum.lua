@@ -284,7 +284,24 @@ enum.event = {
 		--   mission = mission object to be destroyed
 		--   reason = reason for mission removal
 		--]]
-	["DCT_EVENT_MAX"] = enum.eventbase + 9,
+	["DCT_EVENT_JOIN_MISSION"] = enum.eventbase + 9,
+		--[[
+		-- JOIN_MISSION definition:
+		--  An asset has joined a mission.
+		--   id = id of this event
+		--   initiator = asset
+		--   mission = mission object
+		--]]
+	["DCT_EVENT_LEAVE_MISSION"] = enum.eventbase + 10,
+		--[[
+		-- LEAVE_MISSION definition:
+		--  An asset has left a mission.
+		--   id = id of this event
+		--   initiator = asset
+		--   mission = mission object
+		--   reason = reason for leaving
+		--]]
+	["DCT_EVENT_MAX"] = enum.eventbase + 11,
 }
 
 enum.kickCode = require("dct.libs.kickinfo").kickCode
