@@ -63,6 +63,9 @@ local function on_birth(asset, event)
 end
 
 local function reset_slot(asset)
+	-- update location so it's not nil when the player is despawned
+	asset:getLocation()
+
 	local theater = dct.Theater.singleton()
 	if asset.squadron then
 		asset._logger:debug("squadron set: %s", asset.squadron)
@@ -465,7 +468,7 @@ end
 
 function Player:getLocation()
 	local p = Group.getByName(self.name)
-	self._location = vec.Vector3D(p:getUnit(1):getPoint())
+		self._location = vec.Vector3D(p:getUnit(1):getPoint())
 	return AssetBase.getLocation(self)
 end
 
