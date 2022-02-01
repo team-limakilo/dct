@@ -144,6 +144,11 @@ utils.posfmt = {
 	["MGRS"] = 4,
 }
 
+utils.units = {
+	["IMPERIAL"] = 1,
+	["METRIC"]   = 2,
+}
+
 -- reduce the accuracy of the position to the precision specified
 function utils.degradeLL(lat, long, precision)
 	local multiplier = math.pow(10, precision)

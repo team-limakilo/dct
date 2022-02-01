@@ -93,20 +93,26 @@ function menus.createMenu(asset)
 			missionCommands.removeItemForGroup(asset.groupId, msn)
 		end
 		msnListItems = {}
-		local tgtlist = dct.theater:getCommander(asset.owner)
-			:getTopTargets(asset.ato, 10)
-		for _, tgt in pairs(tgtlist) do
-			local typename = utils.getkey(enum.assetType, tgt.type)
-			local missiontype = dctutils.assettype2mission(tgt.type)
-			local missiontypename = utils.getkey(enum.missionType, missiontype)
-			local distance = vec.distance(asset:getLocation(), tgt:getLocation())
-			local nmi = distance * 0.00054 -- meters to nautical miles
-			local msn = addcmd(asset, string.format("%s(%s): %s - %dnm", missiontypename,
-				typename, tgt.codename, nmi), msnListMenu, Theater.playerRequest,
+		local cmdr = Theater.singleton():getCommander(asset.owner)
+		local targetList = cmdr:getTopTargets(asset.ato, 10)
+		local playerLocation = asset:getLocation()
+		for _, tgt in pairs(targetList) do
+			local assetTypeName = utils.getkey(enum.assetType, tgt.type)
+			local missionTypeId = dctutils.assettype2mission(tgt.type)
+			local missionTypeName = utils.getkey(enum.missionType, missionTypeId)
+			local distance = vec.distance(playerLocation, tgt:getLocation())
+			if asset.units == dctutils.units.IMPERIAL then
+				distance = string.format("%dnm", distance * 0.00054)
+			else
+				distance = string.format("%dkm", distance * 0.001)
+			end
+			local msn = addcmd(asset, string.format("%s(%s): %s - %s",
+				missionTypeName, assetTypeName, tgt.codename, distance),
+				msnListMenu, Theater.playerRequest,
 				{
 					["name"]   = name,
 					["type"]   = enum.uiRequestType.MISSIONREQUEST,
-					["value"]  = missiontype,
+					["value"]  = missionTypeId,
 					["target"] = tgt.name,
 				})
 			table.insert(msnListItems, msn)

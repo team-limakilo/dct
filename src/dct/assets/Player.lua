@@ -428,11 +428,10 @@ function Player:_completeinit(template)
 	self.squadron   = self.name:match("(%w+)(.+)")
 	self.airbase    = findAirbase(self._tpldata)
 	self.parking    = airbaseParkingId(self._tpldata)
-	self.ato        = settings.ui.ato[self.unittype] or
-		dctenum.missionType
 	self.payloadlimits = settings.payloadlimits
-	self.gridfmt    = settings.ui.gridfmt[self.unittype] or
-		dctutils.posfmt.DMS
+	self.ato     = settings.ui.ato[self.unittype] or dctenum.missionType
+	self.gridfmt = settings.ui.gridfmt[self.unittype] or dctutils.posfmt.DMS
+	self.units   = settings.ui.units[self.unittype] or dctutils.units.IMPERIAL
 	self._logger:debug("unittype: %s", tostring(self.unittype))
 	self._logger:debug("airbase: %s", tostring(self.airbase))
 	self._logger:debug("payloadlimits: %s",
@@ -468,7 +467,9 @@ end
 
 function Player:getLocation()
 	local p = Group.getByName(self.name)
+	if p ~= nil then
 		self._location = vec.Vector3D(p:getUnit(1):getPoint())
+	end
 	return AssetBase.getLocation(self)
 end
 
