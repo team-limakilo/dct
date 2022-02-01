@@ -38,8 +38,8 @@ local utils   = require("libs.utils")
 local dctenum = require("dct.enum")
 local dctutils= require("dct.utils")
 local AssetBase = require("dct.assets.AssetBase")
+local GroupMenu = require("dct.ui.groupmenu")
 local cmds    = require("dct.ui.cmds")
-local uimenu  = require("dct.ui.groupmenu")
 local loadout = require("dct.systems.loadouts")
 local State   = require("dct.libs.State")
 local vec     = require("dct.libs.vector")
@@ -84,7 +84,7 @@ local function reset_slot(asset)
 			asset._logger:warn("squadron does not exist, using default settings")
 		end
 	end
-	uimenu.createMenu(asset)
+
 	local cmdr = theater:getCommander(asset.owner)
 	local msn  = cmdr:getAssigned(asset)
 
@@ -174,10 +174,11 @@ end
 function OccupiedState:enter(asset)
 	asset:setDead(false)
 	reset_slot(asset)
+	asset.menu:create()
 end
 
 function OccupiedState:exit(asset)
-	uimenu.removeMenu(asset)
+	asset.menu:destroy()
 	if self.loseticket then
 		asset:setDead(true)
 	end
@@ -269,13 +270,13 @@ function OccupiedState:update(asset)
 	if grp == nil then
 		return EmptyState(dctenum.kickCode.EMPTY)
 	end
-	-- Periodic ground loadout check
 	if not self.inair then
 		local newstate, _ = self:_checkPayload(asset, true)
 		if newstate ~= nil then
 			return newstate
 		end
 	end
+	asset.menu:update()
 	return self:_bleed(asset)
 end
 
@@ -353,7 +354,7 @@ function OccupiedState:handleSwitchOccupied(asset, event)
 end
 
 function OccupiedState:handleTheaterChange(asset)
-	uimenu.update(asset)
+	asset.menu:update()
 end
 
 --[[
@@ -435,6 +436,7 @@ function Player:_completeinit(template)
 		require("libs.json"):encode_pretty(self.payloadlimits))
 	self._logger:debug("ato: %s",
 		require("libs.json"):encode_pretty(self.ato))
+	self.menu = GroupMenu(self)
 end
 
 function Player:registerObservable(observable)
@@ -487,7 +489,6 @@ function Player:update()
 		self.state = newstate
 		self.state:enter(self)
 	end
-	uimenu.update(self)
 end
 
 function Player:handleBaseState(event)

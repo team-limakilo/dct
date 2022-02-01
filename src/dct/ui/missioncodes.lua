@@ -20,6 +20,7 @@ for _, m1 in pairs(enum.squawkMissionType) do
 	validFirstDigit[m1] = true
 end
 
+-- digits __3_ and ___4 (mission codes always end in zero)
 local function createJoinCmds(gid, name, parentMenu, halfCode)
 	for digit3 = 1, 10 do
 		if digit3 % 10 < 8 then
@@ -37,6 +38,7 @@ local function createJoinCmds(gid, name, parentMenu, halfCode)
 	end
 end
 
+-- digit _2__
 local function createDigit2Menu(gid, name, parentMenu, quarterCode)
 	for digit2 = 1, 10 do
 		if digit2 % 10 < 8 then
@@ -50,6 +52,7 @@ local function createDigit2Menu(gid, name, parentMenu, quarterCode)
 	end
 end
 
+-- digit 1___
 local function createDigit1Menu(gid, name, parentMenu)
 	for digit1 = 1, 10 do
 		if validFirstDigit[digit1] then
@@ -64,8 +67,8 @@ local function createDigit1Menu(gid, name, parentMenu)
 end
 
 local missioncodes = {}
-function missioncodes.addMissionCodes(asset, name, parentMenu)
-	createDigit1Menu(asset.groupId, name, parentMenu)
+function missioncodes.addMissionCodes(asset, parentMenu)
+	createDigit1Menu(asset.groupId, asset.name, parentMenu)
 end
 
 return missioncodes

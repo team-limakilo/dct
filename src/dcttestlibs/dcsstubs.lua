@@ -5,9 +5,11 @@
 --]]
 
 require("os")
-local utils = require("libs.utils")
-
 require("lfs")
+local utils = require("libs.utils")
+local check = require("libs.check")
+local class = require("libs.class")
+
 lfs.dct_testdata = os.getenv("DCT_DATA_ROOT") or "."
 function lfs.writedir()
 	return lfs.dct_testdata
@@ -16,7 +18,6 @@ end
 function lfs.tempdir()
 	return lfs.dct_testdata .. utils.sep .. "mission"
 end
-local class = require("libs.class")
 
 local logfile = io.open(lfs.dct_testdata .. utils.sep .. "dct_test.log", "a+")
 
@@ -957,13 +958,30 @@ end
 function missionCommands.removeItemForCoalition(_, _)
 end
 
-function missionCommands.addCommandForGroup(_, _, _, _, _)
+function missionCommands.addCommandForGroup(groupId, name, path, fn, _)
+	check.number(groupId)
+	check.string(name)
+	if path ~= nil then
+		check.table(path)
+	end
+	check.func(fn)
+	return {}
 end
 
-function missionCommands.addSubMenuForGroup(_, _, _)
+function missionCommands.addSubMenuForGroup(groupId, name, path)
+	check.number(groupId)
+	check.string(name)
+	if path ~= nil then
+		check.table(path)
+	end
+	return {}
 end
 
-function missionCommands.removeItemForGroup(_, _)
+function missionCommands.removeItemForGroup(groupId, path)
+	check.number(groupId)
+	if path ~= nil then
+		check.table(path)
+	end
 end
 _G.missionCommands = missionCommands
 
