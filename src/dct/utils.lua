@@ -276,6 +276,14 @@ function utils.fmtposition(position, precision, fmt)
 	return utils.LLtostring(lat, long, precision, fmt)
 end
 
+function utils.fmtdistance(meters, unitSystem)
+	if unitSystem == utils.units.METRIC then
+		return string.format("%dkm", meters * 0.00100)
+	else
+		return string.format("%dnm", meters * 0.00054)
+	end
+end
+
 function utils.trimTypeName(typename)
 	if typename ~= nil then
 		return string.match(typename, "[^.]-$")

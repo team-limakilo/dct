@@ -353,10 +353,7 @@ function OccupiedState:handleSwitchOccupied(asset, event)
 end
 
 function OccupiedState:handleTheaterChange(asset)
-	if asset.uimenus ~= nil then
-		asset._logger:debug("updating menus for '%s'", asset.name)
-		asset.uimenus.refresh()
-	end
+	uimenu.update(asset)
 end
 
 --[[
@@ -490,6 +487,7 @@ function Player:update()
 		self.state = newstate
 		self.state:enter(self)
 	end
+	uimenu.update(self)
 end
 
 function Player:handleBaseState(event)

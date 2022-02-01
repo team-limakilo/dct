@@ -6,7 +6,6 @@
 --]]
 
 local enum    = require("dct.enum")
-local Theater = require("dct.Theater")
 local addmenu = missionCommands.addSubMenuForGroup
 local addcmd  = missionCommands.addCommandForGroup
 
@@ -26,7 +25,7 @@ local function createJoinCmds(gid, name, parentMenu, halfCode)
 		if digit3 % 10 < 8 then
 			local missionCode = string.format("%s%d0", halfCode, digit3 % 10)
 			addcmd(gid, string.format("Mission %s", missionCode), parentMenu,
-				Theater.playerRequest, {
+				dct.Theater.playerRequest, {
 					["name"]  = name,
 					["type"]  = enum.uiRequestType.MISSIONJOIN,
 					["value"] = missionCode,
