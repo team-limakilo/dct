@@ -278,14 +278,15 @@ function Commander:requestMission(grpname, missiontype)
 	-- no mission for target, create a new one
 	local plan = { require("dct.ai.actions.KillTarget")(tgt) }
 	mission = Mission(self, missiontype, tgt, plan)
-	mission:addAssigned(assetmgr:getAsset(grpname))
 	self:addMission(mission)
+
+	self:notify(dctutils.buildevent.addMission(self, mission, tgt))
+	mission:addAssigned(assetmgr:getAsset(grpname))
 
 	Logger:debug(
 		"requestMission() - assigned target '%s' to mission %d (codename: %s)",
 		tgt.name, mission.id, tgt.codename)
 
-	self:notify(dctutils.buildevent.addMission(self, mission, tgt))
 	return mission
 end
 
