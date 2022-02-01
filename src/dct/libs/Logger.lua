@@ -46,6 +46,10 @@ function Logger:setLevel(lvl)
 	self.__lvl = lvl
 end
 
+function Logger:isDebugEnabled()
+	return self.__lvl >= Logger.level["debug"]
+end
+
 function Logger:_log(sink, fmtstr, userfmt, showErrors, ...)
 	sink(string.format(fmtstr, self.name,
 		string.format(userfmt, ...)), showErrors)
