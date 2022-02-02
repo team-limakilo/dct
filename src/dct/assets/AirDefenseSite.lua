@@ -102,6 +102,7 @@ end
 function AirDefenseSite:_modifyTemplate(template)
     local shorad = utils.deepcopy(template)
 	shorad.hasDeathGoals = false
+	shorad.regenerate = self.regenerate
 	shorad.objtype = enum.assetType.SHORAD
 	shorad.name = template.name.."-SHORAD"
 	shorad.desc = nil
