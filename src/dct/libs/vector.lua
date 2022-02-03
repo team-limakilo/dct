@@ -57,6 +57,10 @@ function mt2d.__eq(vec, rhs)
 	return vec.x == rhs.x and vec.y == rhs.y
 end
 
+function mt2d.__tostring(vec)
+	return string.format("(%g, %g)", vec.x, vec.y)
+end
+
 function Vector2D:__init(obj)
 	self.x = obj.x or 0
 	if obj.z then
@@ -126,6 +130,10 @@ end
 
 function mt3d.__eq(vec, rhs)
 	return vec.x == rhs.x and vec.y == rhs.y and vec.z == rhs.z
+end
+
+function mt3d.__tostring(vec)
+	return string.format("(%f, %f, %f)", vec.x, vec.y, vec.z)
 end
 
 function Vector3D:__init(obj, height)
