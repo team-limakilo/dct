@@ -11,6 +11,13 @@ local DEBUG = false
 
 local events = {
 	{
+		["id"] = world.event.S_EVENT_TAKEOFF,
+		["object"] = {
+			["name"] = "player1",
+			["objtype"] = Object.Category.UNIT,
+		},
+		["airbase"] = "CVN-71 Theodore Roosevelt",
+	},{
 		["id"] = world.event.S_EVENT_DEAD,
 		["object"] = {
 			["name"] = "Novorossiysk_NovoShipsinPort 1 SHIP 1-1",
@@ -64,6 +71,13 @@ local events = {
 			["name"] = "Sukhumi_SukhumiAmmoDump 2 GROUND_UNIT 11-1",
 			["objtype"] = Object.Category.UNIT,
 		},
+	},{
+		["id"] = world.event.S_EVENT_LAND,
+		["object"] = {
+			["name"] = "player1",
+			["objtype"] = Object.Category.UNIT,
+		},
+		["airbase"] = "CVN-71 Theodore Roosevelt",
 	},
 }
 
@@ -102,12 +116,17 @@ local function createEvent(eventdata, player)
 		event.weapon = nil
 		event.target = objref
 		objref.clife = objref.clife - eventdata.object.life
+	elseif event.id == world.event.S_EVENT_TAKEOFF then
+		event.initiator = objref
+		event.place = Airbase.getByName(eventdata.airbase)
+	elseif event.id == world.event.S_EVENT_LAND then
+		event.initiator = objref
+		event.place = Airbase.getByName(eventdata.airbase)
 	else
 		assert(false, "other event types not supported: "..tostring(event.id))
 	end
 	return event
 end
-
 
 local function main()
 	local startdate = os.date("!*t")
