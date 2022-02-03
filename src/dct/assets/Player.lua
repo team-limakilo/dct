@@ -426,16 +426,32 @@ function Player:_completeinit(template)
 	self.squadron   = self.name:match("(%w+)(.+)")
 	self.airbase    = findAirbase(self._tpldata)
 	self.parking    = airbaseParkingId(self._tpldata)
-	self.payloadlimits = settings.payloadlimits
-	self.ato     = settings.ui.ato[self.unittype] or dctenum.missionType
-	self.gridfmt = settings.ui.gridfmt[self.unittype] or dctutils.posfmt.DMS
-	self.units   = settings.ui.units[self.unittype] or dctutils.units.IMPERIAL
-	self._logger:debug("unittype: %s", tostring(self.unittype))
-	self._logger:debug("airbase: %s", tostring(self.airbase))
-	self._logger:debug("payloadlimits: %s",
-		require("libs.json"):encode_pretty(self.payloadlimits))
-	self._logger:debug("ato: %s",
-		require("libs.json"):encode_pretty(self.ato))
+	if settings.players.costs[self.unittype] ~= nil then
+		self.cost = template.cost * settings.players.costs[self.unittype]
+	end
+	self.payloadlimits = settings.players.payloadlimits[self.unittype]
+		or settings.payloadlimits
+	self.ato = settings.players.ato[self.unittype]
+		or dctenum.missionType
+	self.gridfmt = settings.players.gridfmt[self.unittype]
+		or dctutils.posfmt.DMS
+	self.units = settings.players.units[self.unittype]
+		or dctutils.units.IMPERIAL
+
+	if self._logger:isDebugEnabled() then
+		self._logger:debug("unittype: %s", tostring(self.unittype))
+		self._logger:debug("airbase: %s", tostring(self.airbase))
+		self._logger:debug("ato: %s",
+			require("libs.json"):encode_pretty(self.ato))
+		self._logger:debug("cost: %g", self.cost, type(self.cost))
+		self._logger:debug("gridfmt: %s",
+			utils.getkey(dctutils.posfmt, self.gridfmt))
+		self._logger:debug("payloadlimits: %s",
+			require("libs.json"):encode_pretty(self.payloadlimits))
+		self._logger:debug("units: %s",
+			utils.getkey(dctutils.units, self.units))
+	end
+
 	self.menu = GroupMenu(self)
 end
 

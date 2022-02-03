@@ -90,6 +90,13 @@ local function ato_transform(tbl)
 	return ntbl
 end
 
+local function costs_transform(tbl)
+	for k, v in pairs(tbl) do
+		assert(type(v) == "number", "cost for '"..k.."'' is not a number")
+	end
+	return tbl
+end
+
 local function gridfmt_transform(tbl)
 	local ntbl = {}
 	for k, v in pairs(tbl) do
@@ -104,9 +111,34 @@ local function gridfmt_transform(tbl)
 	return ntbl
 end
 
+local function payloadlimits_transform(tbl, cfgdata)
+	local ntbl = {}
+	for k, v in pairs(tbl) do
+		ntbl[k] = validate_payload_limits(cfgdata, v)
+	end
+	return ntbl
+end
+
+local function units_transform(tbl)
+	local ntbl = {}
+	for k, v in pairs(tbl) do
+		if type(v) == "number" then
+			ntbl[k] = v
+		else
+			ntbl[k] = dctutils.units[string.upper(v)]
+			assert(ntbl[k] ~= nil,
+				"invalid unit system "..tostring(v).." for '"..k.."'")
+		end
+	end
+	return ntbl
+end
+
 local player_transforms = {
-	["ato"]     = ato_transform,
-	["gridfmt"] = gridfmt_transform,
+	["ato"]           = ato_transform,
+	["costs"]         = costs_transform,
+	["gridfmt"]       = gridfmt_transform,
+	["payloadlimits"] = payloadlimits_transform,
+	["units"]         = units_transform,
 }
 
 local function validate_players(cfgdata, tbl)

@@ -7,6 +7,8 @@
 local utils = require("dct.utils")
 
 return {
+    ["ato"] = {},
+    ["costs"] = {},
     ["gridfmt"] = {
         -- default is DMS
         ["Ka-50"]         = utils.posfmt.DDM,
@@ -22,6 +24,7 @@ return {
         ["FA-18C_hornet"] = utils.posfmt.DDM,
         ["M-2000C"]       = utils.posfmt.DDM,
     },
+    ["payloadlimits"] = {},
     ["units"] = {
         -- default is imperial
         ["AJS37"]     = utils.units.METRIC,
@@ -43,5 +46,4 @@ return {
         ["Su-33"]     = utils.units.METRIC,
         ["Yak-52"]    = utils.units.METRIC,
     },
-    ["ato"] = {},
 }
