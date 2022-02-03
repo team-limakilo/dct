@@ -152,7 +152,7 @@ end
 
 function OccupiedState:__init(inair)
 	self.inair = inair
-	self.loseticket = false
+	self.loseticket = inair
 	self.bleedctr = 0
 	self.bleedperiod = 5
 	self.bleedwarn = false
