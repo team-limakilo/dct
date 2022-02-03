@@ -1097,6 +1097,16 @@ function trigger.action.setMarkupColorFill(id, color)
 	check.table(color)
 end
 
+function trigger.action.setMarkupTypeLine(id, lineType)
+	check.number(id)
+	check.number(lineType)
+end
+
+function trigger.action.setMarkupText(id, text)
+	check.number(id)
+	check.string(text)
+end
+
 function trigger.action.setUserFlag(flagname, value)
 	gblflagtbl[flagname] = tonumber(value)
 end

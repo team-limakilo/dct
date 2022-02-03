@@ -8,13 +8,7 @@ require("math")
 local utils    = require("libs.utils")
 local enum     = require("dct.enum")
 local dctutils = require("dct.utils")
-
-local lineColor = {
-	[dctutils.COALITION_CONTESTED] = { 1,   0,   1,   1 },
-	[coalition.side.NEUTRAL]       = { 1,   1,   1,   1 },
-	[coalition.side.BLUE]          = { 0,   0,   1,   1 },
-	[coalition.side.RED]           = { 1,   0,   0,   1 },
-}
+local Logger   = dct.Logger.getByName("UI")
 
 local lineType = {
 	[dctutils.COALITION_CONTESTED] = enum.lineType.LongDash,
@@ -23,16 +17,23 @@ local lineType = {
 	[coalition.side.RED]           = enum.lineType.Solid,
 }
 
+local lineColor = {
+	[dctutils.COALITION_CONTESTED] = { 0.5, 0,   0.5, 1 },
+	[coalition.side.NEUTRAL]       = { 0.5, 0.5, 0.5, 1 },
+	[coalition.side.BLUE]          = { 0,   0,   1,   1 },
+	[coalition.side.RED]           = { 1,   0,   0,   1 },
+}
+
 local fillColor = {
-	[dctutils.COALITION_CONTESTED] = { 1,   0,    1,   0.1 },
-	[coalition.side.NEUTRAL]       = { 0.5, 0.5,  0.5, 0.1 },
+	[dctutils.COALITION_CONTESTED] = { 0.8, 0.2,  0.8, 0.1 },
+	[coalition.side.NEUTRAL]       = { 0,   0,    0,   0.1 },
 	[coalition.side.BLUE]          = { 0,   0.25, 1,   0.1 },
 	[coalition.side.RED]           = { 1,   0.25, 0,   0.1 },
 }
 
 local textColor = {
-	[dctutils.COALITION_CONTESTED] = { 1,    0,    1,    1 },
-	[coalition.side.NEUTRAL]       = { 0.75, 0.75, 0.75, 1 },
+	[dctutils.COALITION_CONTESTED] = { 0.4,  0,    0.4,  1 },
+	[coalition.side.NEUTRAL]       = { 1,    1,    1,    1 },
 	[coalition.side.BLUE]          = { 0,    0,    0.75, 1 },
 	[coalition.side.RED]           = { 0.75, 0,    0,    1 },
 }
@@ -41,11 +42,15 @@ local transparent = { 0, 0, 0, 0 }
 
 local human = {}
 
-local mapDrawings
+local mapBorders = {}
+local mapLabels  = {}
 
 local markindex = 10
-function human.getMarkID()
+function human.getMarkID(list)
 	markindex = markindex + 1
+	if list ~= nil then
+		table.insert(list, markindex)
+	end
 	return markindex
 end
 
@@ -127,29 +132,64 @@ local function drawPolygon(side, id, lineType, points, lineColor, fillColor)
 	trigger.action.markupToAll(enum.markShape.Freeform, side, id, unpack(args))
 end
 
-function human.updateBorders(regions, borders)
-	if mapDrawings == nil then
-		mapDrawings = {}
-		for _, region in pairs(regions) do
-			for _, border in pairs(borders[region.name]) do
-				local polygonId = human.getMarkID()
-				local textId = human.getMarkID()
+function human.createBorders(regions, borders)
+	for _, region in pairs(regions) do
+		Logger:debug("creating borders for region %s", region.name)
+		local lines, triangles, text = {}, {}, {}
+		for _, border in pairs(borders[region.name]) do
 
-				-- note: fill color doesn't work on polygons with too many vertices
-				drawPolygon(-1, polygonId, lineType[region.owner],
-					border.polygon, lineColor[region.owner], transparent)
+			-- note: fill color doesn't work on polygons with too many vertices
+			local polygonId = human.getMarkID(lines)
+			drawPolygon(-1, polygonId, lineType[region.owner],
+				border.polygon, lineColor[region.owner], transparent)
 
-				-- so we draw the triangulated mesh to make the fill instead
-				for _, triangle in ipairs(border.triangles) do
-					drawPolygon(-1, human.getMarkID(), enum.lineType.NoLine,
-						triangle, transparent, fillColor[region.owner])
-				end
-
-				local meanCenter = { x = border.center.x, y = 0, z = border.center.y }
-				trigger.action.textToAll(-1, textId, meanCenter,
-					textColor[region.owner], transparent, 24, true, border.title)
+			-- so we draw a triangulated mesh to make the fill instead
+			for _, triangle in ipairs(border.triangles) do
+				local triangleId = human.getMarkID(triangles)
+				drawPolygon(-1, triangleId, enum.lineType.NoLine,
+					triangle, transparent, fillColor[region.owner])
 			end
+
+			local meanCenter = { x = border.center.x, y = 0, z = border.center.y }
+			local textId = human.getMarkID(text)
+			mapLabels[textId] = border.title
+			trigger.action.textToAll(-1, textId, meanCenter,
+				textColor[region.owner], transparent, 24, true, border.title)
 		end
+		mapBorders[region.name] = {
+			owner = region.owner,
+			lines = lines,
+			triangles = triangles,
+			text = text,
+		}
+	end
+end
+
+function human.updateBorders(region)
+	local regionBorders = mapBorders[region.name]
+	if regionBorders ~= nil and regionBorders.owner ~= region.owner then
+		Logger:debug("updating borders for region %s from coalition %d to %d",
+			region.name, regionBorders.owner, region.owner)
+		for _, line in ipairs(regionBorders.lines) do
+			trigger.action.setMarkupColor(line, lineColor[region.owner])
+			trigger.action.setMarkupTypeLine(line, lineType[region.owner])
+		end
+		for _, tri in ipairs(regionBorders.triangles) do
+			trigger.action.setMarkupColorFill(tri, fillColor[region.owner])
+		end
+		for _, text in ipairs(regionBorders.text) do
+			-- text color update is buggy, requires a string change to apply
+			trigger.action.setMarkupColor(text, textColor[region.owner])
+			trigger.action.setMarkupText(text, mapLabels[text].." ")
+			timer.scheduleFunction(
+				function()
+					trigger.action.setMarkupText(text, mapLabels[text])
+				end,
+				nil,
+				timer.getTime() + 1
+			)
+		end
+		regionBorders.owner = region.owner
 	end
 end
 

@@ -121,7 +121,7 @@ function RegionManager:generate()
 end
 
 function RegionManager:postinit()
-	human.updateBorders(self.regions, self.borders)
+	human.createBorders(self.regions, self.borders)
 end
 
 function RegionManager:marshal()
