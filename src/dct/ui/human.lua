@@ -9,7 +9,39 @@ local utils    = require("libs.utils")
 local enum     = require("dct.enum")
 local dctutils = require("dct.utils")
 
+local lineColor = {
+	[dctutils.COALITION_CONTESTED] = { 1,   0,   1,   1 },
+	[coalition.side.NEUTRAL]       = { 1,   1,   1,   1 },
+	[coalition.side.BLUE]          = { 0,   0,   1,   1 },
+	[coalition.side.RED]           = { 1,   0,   0,   1 },
+}
+
+local lineType = {
+	[dctutils.COALITION_CONTESTED] = enum.lineType.LongDash,
+	[coalition.side.NEUTRAL]       = enum.lineType.Solid,
+	[coalition.side.BLUE]          = enum.lineType.Solid,
+	[coalition.side.RED]           = enum.lineType.Solid,
+}
+
+local fillColor = {
+	[dctutils.COALITION_CONTESTED] = { 1,   0,    1,   0.1 },
+	[coalition.side.NEUTRAL]       = { 0.5, 0.5,  0.5, 0.1 },
+	[coalition.side.BLUE]          = { 0,   0.25, 1,   0.1 },
+	[coalition.side.RED]           = { 1,   0.25, 0,   0.1 },
+}
+
+local textColor = {
+	[dctutils.COALITION_CONTESTED] = { 1,    0,    1,    1 },
+	[coalition.side.NEUTRAL]       = { 0.75, 0.75, 0.75, 1 },
+	[coalition.side.BLUE]          = { 0,    0,    0.75, 1 },
+	[coalition.side.RED]           = { 0.75, 0,    0,    1 },
+}
+
+local transparent = { 0, 0, 0, 0 }
+
 local human = {}
+
+local mapDrawings
 
 local markindex = 10
 function human.getMarkID()
@@ -77,6 +109,48 @@ function human.locationhdr(msntype)
 		hdr = "Station AO"
 	end
 	return hdr
+end
+
+local function drawPolygon(side, id, lineType, points, lineColor, fillColor)
+	-- create vararg list expected by DCS
+	local args = {}
+	for _, point in ipairs(points) do
+		table.insert(args, {
+			x = point.x,
+			y = land.getHeight(point),
+			z = point.y
+		})
+	end
+	table.insert(args, lineColor)
+	table.insert(args, fillColor)
+	table.insert(args, lineType)
+	trigger.action.markupToAll(enum.markShape.Freeform, side, id, unpack(args))
+end
+
+function human.updateBorders(regions, borders)
+	if mapDrawings == nil then
+		mapDrawings = {}
+		for _, region in pairs(regions) do
+			for _, border in pairs(borders[region.name]) do
+				local polygonId = human.getMarkID()
+				local textId = human.getMarkID()
+
+				-- note: fill color doesn't work on polygons with too many vertices
+				drawPolygon(-1, polygonId, lineType[region.owner],
+					border.polygon, lineColor[region.owner], transparent)
+
+				-- so we draw the triangulated mesh to make the fill instead
+				for _, triangle in ipairs(border.triangles) do
+					drawPolygon(-1, human.getMarkID(), enum.lineType.NoLine,
+						triangle, transparent, fillColor[region.owner])
+				end
+
+				local meanCenter = { x = border.center.x, y = 0, z = border.center.y }
+				trigger.action.textToAll(-1, textId, meanCenter,
+					textColor[region.owner], transparent, 24, true, border.title)
+			end
+		end
+	end
 end
 
 local function markToGroup(label, pos, missionId, groupId, readonly)

@@ -92,6 +92,10 @@ function IADS:__init(cmdr)
 	self.toHide   = {}
 	self.trkFiles = {}
 
+	if _G.DCT_TEST then
+		return
+	end
+
 	local theater = require("dct.Theater").singleton()
 	local prefix = string.format("iads(%s)",
 		utils.getkey(coalition.side, cmdr.owner))
