@@ -774,6 +774,7 @@ local Unit = class(Coalition)
 function Unit:__init(objdata, group, pname)
 	objdata.category = Object.Category.UNIT
 	Coalition.__init(self, objdata)
+	self.coalition = group.coalition
 	self.clife = self.desc.life
 	self.group = group
 	self.ammo = objdata.ammo

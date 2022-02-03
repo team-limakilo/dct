@@ -1,6 +1,7 @@
 objtype = "airbase"
 name = "Kutaisi"
 coalition = 2
+capturable = true
 subordinates = {
 	"KutaisiAirbaseDefense",
 	"VMFA251",

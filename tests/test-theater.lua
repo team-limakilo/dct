@@ -16,7 +16,14 @@ local events = {
 			["name"] = "player1",
 			["objtype"] = Object.Category.UNIT,
 		},
-		["airbase"] = "CVN-71 Theodore Roosevelt",
+		["airbase"] = "Kutaisi",
+	},{
+		["id"] = world.event.S_EVENT_BASE_CAPTURED,
+		["object"] = {
+			["name"] = "BMP-2-1",
+			["objtype"] = Object.Category.UNIT,
+		},
+		["airbase"] = "Kutaisi",
 	},{
 		["id"] = world.event.S_EVENT_DEAD,
 		["object"] = {
@@ -72,12 +79,19 @@ local events = {
 			["objtype"] = Object.Category.UNIT,
 		},
 	},{
+		["id"] = world.event.S_EVENT_BASE_CAPTURED,
+		["object"] = {
+			["name"] = "player1",
+			["objtype"] = Object.Category.UNIT,
+		},
+		["airbase"] = "Kutaisi",
+	},{
 		["id"] = world.event.S_EVENT_LAND,
 		["object"] = {
 			["name"] = "player1",
 			["objtype"] = Object.Category.UNIT,
 		},
-		["airbase"] = "CVN-71 Theodore Roosevelt",
+		["airbase"] = "Kutaisi",
 	},
 }
 
@@ -122,6 +136,10 @@ local function createEvent(eventdata, player)
 	elseif event.id == world.event.S_EVENT_LAND then
 		event.initiator = objref
 		event.place = Airbase.getByName(eventdata.airbase)
+	elseif event.id == world.event.S_EVENT_BASE_CAPTURED then
+		event.initiator = objref
+		event.place = Airbase.getByName(eventdata.airbase)
+		event.place.coalition = objref.coalition
 	else
 		assert(false, "other event types not supported: "..tostring(event.id))
 	end
@@ -142,9 +160,22 @@ local function main()
 		["desc"] = {
 			["displayName"] = "F/A-18C Hornet",
 			["typeName"] = "FA-18C_hornet",
-			["attributes"] = {},
 		},
 	}, playergrp, "bobplayer")
+
+	local enemygrp = Group(1, {
+		["name"] = "BMP-2",
+		["coalition"] = coalition.side.RED,
+		["exists"] = true,
+	})
+	local _ = Unit({
+		["name"]   = "BMP-2-1",
+		["exists"] = true,
+		["desc"] = {
+			["displayName"] = "BMP-2",
+			["typeName"] = "BMP-2",
+		},
+	}, enemygrp)
 
 	local theater = dct.Theater()
 	_G.dct.theater = theater
@@ -169,7 +200,7 @@ local function main()
 	end
 	--]]
 
-	-- kill off some units
+	-- run several events
 	for _, eventdata in ipairs(events) do
 		theater:onEvent(createEvent(eventdata, player1))
 	end
