@@ -1072,6 +1072,15 @@ function trigger.action.markupToAll(shape, side, id, ...)
 	check.number(args[#args - 0])
 end
 
+function trigger.action.lineToAll(side, id, head, tail, color, lineType)
+	check.number(side)
+	check.number(id)
+	check.table(head)
+	check.table(tail)
+	check.table(color)
+	check.number(lineType)
+end
+
 function trigger.action.textToAll(side, id, point, color, fillColor, size, readOnly, text)
 	check.number(side)
 	check.number(id)

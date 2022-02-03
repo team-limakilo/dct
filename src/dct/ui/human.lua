@@ -116,20 +116,12 @@ function human.locationhdr(msntype)
 	return hdr
 end
 
-local function drawPolygon(side, id, lineType, points, lineColor, fillColor)
-	-- create vararg list expected by DCS
-	local args = {}
-	for _, point in ipairs(points) do
-		table.insert(args, {
-			x = point.x,
-			y = land.getHeight(point),
-			z = point.y
-		})
-	end
-	table.insert(args, lineColor)
-	table.insert(args, fillColor)
-	table.insert(args, lineType)
-	trigger.action.markupToAll(enum.markShape.Freeform, side, id, unpack(args))
+local function point3D(point)
+	return {
+		x = point.x,
+		y = land.getHeight(point),
+		z = point.y
+	}
 end
 
 function human.createBorders(regions, borders)
@@ -139,21 +131,31 @@ function human.createBorders(regions, borders)
 		for _, border in pairs(borders[region.name]) do
 
 			-- note: fill color doesn't work on polygons with too many vertices
-			local polygonId = human.getMarkID(lines)
-			drawPolygon(-1, polygonId, lineType[region.owner],
-				border.polygon, lineColor[region.owner], transparent)
+			local points = border.polygon
+			for i = 1, #points do
+				local prev
+				if i == 1 then
+					prev = points[#points]
+				else
+					prev = points[i - 1]
+				end
+				local curr = points[i]
+				local lineId = human.getMarkID(lines)
+				trigger.action.lineToAll(-1, lineId, point3D(prev), point3D(curr),
+					lineColor[region.owner], lineType[region.owner])
+			end
 
 			-- so we draw a triangulated mesh to make the fill instead
 			for _, triangle in ipairs(border.triangles) do
 				local triangleId = human.getMarkID(triangles)
-				drawPolygon(-1, triangleId, enum.lineType.NoLine,
-					triangle, transparent, fillColor[region.owner])
+				trigger.action.markupToAll(enum.markShape.Freeform, -1, triangleId,
+					point3D(triangle[1]), point3D(triangle[2]), point3D(triangle[3]),
+					transparent, fillColor[region.owner], enum.lineType.NoLine)
 			end
 
-			local meanCenter = { x = border.center.x, y = 0, z = border.center.y }
 			local textId = human.getMarkID(text)
 			mapLabels[textId] = border.title
-			trigger.action.textToAll(-1, textId, meanCenter,
+			trigger.action.textToAll(-1, textId, point3D(border.center),
 				textColor[region.owner], transparent, 24, true, border.title)
 		end
 		mapBorders[region.name] = {
