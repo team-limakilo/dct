@@ -26,13 +26,6 @@ local DOMAIN = {
 	["SEA"]  = "sea",
 }
 
-local STATUS = {
-	["CONTESTED"] = dctutils.COALITION_CONTESTED,
-	["NEUTRAL"]   = coalition.side.NEUTRAL,
-	["RED"]       = coalition.side.RED,
-	["BLUE"]      = coalition.side.BLUE,
-}
-
 local function processlimits(_, tbl)
 	-- process limits; convert the human readable asset type names into
 	-- their numerical equivalents.
@@ -268,9 +261,8 @@ function Region:__init(regionpath)
 	for _, side in pairs(coalition.side) do
 		self.weight[side] = 0
 	end
-	self.owner         = STATUS.NEUTRAL
-	self.DOMAIN        = nil
-	self.STATUS        = nil
+	self.owner  = coalition.side.NEUTRAL
+	self.DOMAIN = nil
 
 	Logger:debug("=> regionpath: %s", regionpath)
 	loadMetadata(self, regionpath..utils.sep.."region.def")
@@ -279,7 +271,6 @@ function Region:__init(regionpath)
 end
 
 Region.DOMAIN = DOMAIN
-Region.STATUS = STATUS
 
 function Region:addTemplate(tpl)
 	assert(self._templates[tpl.name] == nil,
@@ -410,72 +401,88 @@ function Region:getEdges(domain)
 	return utils.deepcopy(self.links[domain])
 end
 
+local function isStrategic(asset)
+	return dctenums.assetClass.STRATEGIC[asset.type]
+end
+
 local function get_asset_weight(asset)
 	local weight = asset.cost
 	if weight == 0 then
 		weight = 1
 	end
+	if not isStrategic(asset) then
+		weight = weight * 0.2
+	end
 	Logger:debug("asset weight(%s): %s", asset.name, tostring(weight))
 	return weight
 end
 
+function Region:updateOwner()
+	local side = coalition.side
+
+	if self.weight[side.RED] == 0 or self.weight[side.BLUE] == 0 then
+		if self.weight[side.RED] - self.weight[side.BLUE] == 0 then
+			self.owner = side.NEUTRAL
+		else
+			if self.weight[side.RED] > self.weight[side.BLUE] then
+				self.owner = side.RED
+			else
+				self.owner = side.BLUE
+			end
+		end
+		return
+	end
+
+	local c = 4
+	local ratioB = self.weight[side.BLUE] / self.weight[side.RED]
+
+	if ratioB > c then
+		self.owner = side.BLUE
+	elseif ratioB < 1/c then
+		self.owner = side.RED
+	else
+		self.owner = dctutils.COALITION_CONTESTED
+	end
+end
+
 local function handleDead(region, event)
 	local asset = event.initiator
-	region.weight[asset.owner] = region.weight[asset.owner] -
-		get_asset_weight(asset)
+	region.weight[asset.owner] =
+		region.weight[asset.owner] - get_asset_weight(asset)
 	if region.weight[asset.owner] < 0 then
 		region.weight[asset.owner] = 0
 	end
-	Logger:debug("Region(%s).handleDead - new weight: %s",
-		region.name, tostring(region.weight[asset.owner]))
+	Logger:debug("Region(%s).handleDead %d - new weight: %s",
+		region.name, asset.owner, tostring(region.weight[asset.owner]))
 end
 
 local function handleAddAsset(region, event)
 	local asset = event.initiator
 	region.weight[asset.owner] = region.weight[asset.owner] +
 		get_asset_weight(asset)
-	Logger:debug("Region(%s).handleAddAsset - new weight: %s",
-		region.name, tostring(region.weight[asset.owner]))
+	Logger:debug("Region(%s).handleAddAsset %d - new weight: %s",
+		region.name, asset.owner, tostring(region.weight[asset.owner]))
+end
+
+local function handleCaptured(region, event)
+	local base = event.target
+	region.weight[event.owner] = region.weight[event.owner] - get_asset_weight(base)
+	region.weight[base.owner] = region.weight[base.owner] + get_asset_weight(base)
+	Logger:debug("Region(%s).handleCaptured %d - new weight: %s",
+		region.name, base.owner, tostring(region.weight[base.owner]))
 end
 
 local handlers = {
-	[dctenums.event.DCT_EVENT_DEAD] = handleDead,
+	[dctenums.event.DCT_EVENT_DEAD]      = handleDead,
 	[dctenums.event.DCT_EVENT_ADD_ASSET] = handleAddAsset,
+	[dctenums.event.DCT_EVENT_CAPTURED]  = handleCaptured,
 }
 
 function Region:onDCTEvent(event)
-	local side = coalition.side
 	local handler = handlers[event.id]
-
-	if handler == nil or
-	   dctenums.assetClass.STRATEGIC[event.initiator.type] == nil then
-		return
-	end
-
-	handler(self, event)
-
-	if self.weight[side.RED] == 0 or self.weight[side.BLUE] == 0 then
-		if self.weight[side.RED] - self.weight[side.BLUE] == 0 then
-			self.owner = STATUS.NEUTRAL
-		else
-			if self.weight[side.RED] > self.weight[side.BLUE] then
-				self.owner = STATUS.RED
-			else
-				self.owner = STATUS.BLUE
-			end
-		end
-		return
-	end
-
-	local c = 2
-	local ratioB = self.weight[side.BLUE] / self.weight[side.RED]
-
-	if ratioB > c then
-		self.owner = STATUS.BLUE
-	elseif ratioB < 1/c then
-		self.owner = STATUS.RED
-	else
-		self.owner = STATUS.CONTESTED
+	if handler ~= nil then
+		handler(self, event)
+		self:updateOwner()
 	end
 end
 

@@ -320,6 +320,20 @@ function utils.buildevent.operational(base, state)
 	return event
 end
 
+function utils.buildevent.captured(unit, base, owner)
+	if unit ~= nil then
+		check.table(unit)
+	end
+	check.table(base)
+	check.number(owner)
+	local event = {}
+	event.id = enum.event.DCT_EVENT_CAPTURED
+	event.initiator = unit
+	event.target = base
+	event.owner = owner
+	return event
+end
+
 function utils.buildevent.impact(wpn)
 	check.table(wpn)
 	local event = {}

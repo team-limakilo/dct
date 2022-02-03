@@ -251,6 +251,7 @@ enum.event = {
 		--   id = id of this event
 		--   initiator = object that initiated the capture
 		--   target = the base that has been captured
+		--   owner = previous coalition of the base
 		--]]
 	["DCT_EVENT_IMPACT"] = enum.eventbase + 5,
 		--[[

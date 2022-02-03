@@ -250,9 +250,15 @@ local function handleAssetDeath(self, event)
 		cleanupAsset, asset, self._logger))
 end
 
+local function handleCaptured(self, event)
+	self._logger:debug("executing handler: RegionManager.onDCTEvent")
+	self.theater:getRegionMgr():onDCTEvent(event)
+end
+
 local handlers = {
-	[world.event.S_EVENT_DEAD] = handleDead,
-	[enum.event.DCT_EVENT_DEAD] = handleAssetDeath,
+	[world.event.S_EVENT_DEAD]      = handleDead,
+	[enum.event.DCT_EVENT_DEAD]     = handleAssetDeath,
+	[enum.event.DCT_EVENT_CAPTURED] = handleCaptured,
 }
 
 function AssetManager:doOneObject(obj, event)
@@ -289,8 +295,9 @@ function AssetManager:onDCSEvent(event)
 		[world.event.S_EVENT_HIT]             = true,
 		[world.event.S_EVENT_DEAD]            = true,
 		[world.event.S_EVENT_BASE_CAPTURED]   = true,
-		[enum.event.DCT_EVENT_DEAD]           = true,
 		--[world.event.S_EVENT_UNIT_LOST]     = true,
+		[enum.event.DCT_EVENT_DEAD]           = true,
+		[enum.event.DCT_EVENT_CAPTURED]       = true,
 	}
 	local objmap = {
 		[world.event.S_EVENT_HIT]  = "target", -- type: Object

@@ -218,13 +218,15 @@ function OperationalState:onDCTEvent(asset, event)
 	--
 	-- For now, we'll only handle capture by ground units
 	--]]
-	if asset.capturable and
-	   event.id == world.event.S_EVENT_BASE_CAPTURED and
+	if event.id == world.event.S_EVENT_BASE_CAPTURED and
 	   event.place:getName() == asset.name and
-	   event.place:getCoalition() ~= self.owner then
+	   event.place:getCoalition() ~= self.owner and
+	   asset.capturable then
+		local previous = asset.owner
 		asset.owner = event.place:getCoalition()
 		asset._logger:debug("Captured by %s coalition",
 			utils.getkey(coalition.side, asset.owner))
+		asset:notify(dctutils.buildevent.captured(event.initiator, asset, previous))
 	end
 	return nil
 end

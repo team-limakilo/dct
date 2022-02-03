@@ -146,6 +146,7 @@ end
 local relevants = {
 	[dctenum.event.DCT_EVENT_DEAD]      = true,
 	[dctenum.event.DCT_EVENT_ADD_ASSET] = true,
+	[dctenum.event.DCT_EVENT_CAPTURED]  = true,
 }
 
 function RegionManager:onDCTEvent(event)
@@ -153,9 +154,16 @@ function RegionManager:onDCTEvent(event)
 		return
 	end
 
-	local region = self.regions[event.initiator.rgnname]
+	local region
+	if event.id == dctenum.event.DCT_EVENT_CAPTURED then
+		region = self.regions[event.target.rgnname]
+	else
+		region = self.regions[event.initiator.rgnname]
+	end
+
 	if region then
 		region:onDCTEvent(event)
+		human.updateBorders(region)
 	end
 end
 
