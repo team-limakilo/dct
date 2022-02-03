@@ -191,4 +191,21 @@ function vmath.dot(U, V)
 	return sum
 end
 
+function vmath.angle(U, V)
+	return math.acos(vmath.dot(vmath.unitvec(U), vmath.unitvec(V)))
+end
+
+function vmath.cross(U, V)
+	if U:isa(Vector3D) or V:isa(Vector3D) then
+		assert(V:isa(Vector2D) and V:isa(Vector2D),
+			"cross product is only implemented for Vector2D")
+	end
+	U = Vector3D(U)
+	V = Vector3D(V)
+	local up = Vector3D { x = 0, y = 1, z = 0 }
+	return (U.y * V.z - V.y * U.z) * up.x
+	     - (U.x * V.z - V.x * U.z) * up.y
+		 + (U.x * V.y - V.x * U.y) * up.z
+end
+
 return vmath

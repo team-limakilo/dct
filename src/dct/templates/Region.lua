@@ -27,7 +27,7 @@ local DOMAIN = {
 }
 
 local STATUS = {
-	["CONTESTED"] = -1,
+	["CONTESTED"] = dctutils.COALITION_CONTESTED,
 	["NEUTRAL"]   = coalition.side.NEUTRAL,
 	["RED"]       = coalition.side.RED,
 	["BLUE"]      = coalition.side.BLUE,

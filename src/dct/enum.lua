@@ -306,6 +306,26 @@ enum.event = {
 
 enum.kickCode = require("dct.libs.kickinfo").kickCode
 
+enum.markShape = {
+	["Line"]     = 1,
+	["Circle"]   = 2,
+	["Rect"]     = 3,
+	["Arrow"]    = 4,
+	["Text"]     = 5,
+	["Quad"]     = 6,
+	["Freeform"] = 7,
+}
+
+enum.lineType = {
+	["NoLine"]   = 0,
+	["Solid"]    = 1,
+	["Dashed"]   = 2,
+	["Dotted"]   = 3,
+	["DotDash"]  = 4,
+	["LongDash"] = 5,
+	["TwoDash"]  = 6,
+}
+
 for _, msntype in pairs(enum.missionType) do
 	assert(enum.squawkMissionType[msntype],
 		"not all mission types are mapped to squawk codes")

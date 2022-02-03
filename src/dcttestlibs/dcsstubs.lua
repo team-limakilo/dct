@@ -1058,8 +1058,42 @@ function trigger.action.markToGroup(id, title, pos, grpid,
 	assert(type(grpid) == "number", "value error: grpid must be a number")
 end
 
+function trigger.action.markupToAll(shape, side, id, ...)
+	check.number(shape)
+	check.number(side)
+	check.number(id)
+	local args = { select(1, ...) }
+	-- outline color
+	check.table(args[#args - 2])
+	-- fill color
+	check.table(args[#args - 1])
+	-- line type
+	check.number(args[#args - 0])
+end
+
+function trigger.action.textToAll(side, id, point, color, fillColor, size, readOnly, text)
+	check.number(side)
+	check.number(id)
+	check.table(point)
+	check.table(color)
+	check.table(fillColor)
+	check.number(size)
+	check.bool(readOnly)
+	check.string(text)
+end
+
 function trigger.action.removeMark(id)
 	assert(type(id) == "number", "value error: id must be a number")
+end
+
+function trigger.action.setMarkupColor(id, color)
+	check.number(id)
+	check.table(color)
+end
+
+function trigger.action.setMarkupColorFill(id, color)
+	check.number(id)
+	check.table(color)
 end
 
 function trigger.action.setUserFlag(flagname, value)
