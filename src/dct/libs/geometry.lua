@@ -5,6 +5,7 @@
 --]]
 
 -- luacheck: max comment line length 100
+-- luacheck: max cyclomatic complexity 15
 
 local class = require("libs.class")
 local vec   = require("dct.libs.vector")
@@ -17,7 +18,7 @@ function Line:__init(head, tail)
 		head, tail = tail, head
 	end
 	self.head = vec.Vector2D(head)
-	self.tail = vec.Vector2D(tail)	
+	self.tail = vec.Vector2D(tail)
 	assert(self.head ~= self.tail, "line must have non-zero length")
 end
 
@@ -177,27 +178,49 @@ function geometry.triangulate(polygon)
 	return triangulated
 end
 
-local result
-result = Line({ x = 1, y = 1 }, { x = 2, y = 2 }):intersection(Line({ x = 1.5, y = 1.5 }, { x = 3, y = 3 }))
-assert(vec.Vector2D.create(1.5, 1.5) == result, "result not (1.5, 1.5): "..tostring(result))
+-- tests (should be moved to another file)
+local function runTests()
+	local result, a, b
+	a = Line({ x = 1, y = 1 }, { x = 2, y = 2 })
+	b = Line({ x = 1.5, y = 1.5 }, { x = 3, y = 3 })
+	result = a:intersection(b)
+	assert(vec.Vector2D.create(1.5, 1.5) == result,
+		"result not (1.5, 1.5): "..tostring(result))
 
-result = Line({ x = 0, y = 0 }, { x = 1, y = 1 }):intersection(Line({ x = 2, y = 2 }, { x = 4, y = 4 }))
-assert(nil == result, "result not nil: "..tostring(result))
+	a = Line({ x = 0, y = 0 }, { x = 1, y = 1 })
+	b = Line({ x = 2, y = 2 }, { x = 4, y = 4 })
+	result = a:intersection(b)
+	assert(nil == result, "result not nil: "..tostring(result))
 
-result = Line({ x = 0, y = 0 }, { x = 1, y = 1 }):intersection(Line({ x = 1, y = 0 }, { x = 0, y = 1 }))
-assert(vec.Vector2D.create(0.5, 0.5) == result, "result not (.5, .5): "..tostring(result))
+	a = Line({ x = 0, y = 0 }, { x = 1, y = 1 })
+	b = Line({ x = 1, y = 0 }, { x = 0, y = 1 })
+	result = a:intersection(b)
+	assert(vec.Vector2D.create(0.5, 0.5) == result,
+		"result not (.5, .5): "..tostring(result))
 
-result = Line({ x = 0, y = 0 }, { x = 100000, y = 0 }):intersection(Line({ x = 0, y = -1 }, { x = 20000, y = 1 }))
-assert(nil ~= result, "result is nil: "..tostring(result))
+	a = Line({ x = 0, y = 0 }, { x = 100000, y = 0 })
+	b = Line({ x = 0, y = -1 }, { x = 20000, y = 1 })
+	result = a:intersection(b)
+	assert(nil ~= result, "result is nil: "..tostring(result))
 
-result = Line({ x = -50000, y = -50000 }, { x = 50000, y = 50000 }):intersection(Line({ x = -50000, y = 50000 }, { x = 50000, y = -50000 }))
-assert(vec.Vector2D.create(0, 0) == result, "result not (0, 0): "..tostring(result))
+	a = Line({ x = -50000, y = -50000 }, { x = 50000, y = 50000 })
+	b = Line({ x = -50000, y = 50000 }, { x = 50000, y = -50000 })
+	result = a:intersection(b)
+	assert(vec.Vector2D.create(0, 0) == result,
+		"result not (0, 0): "..tostring(result))
 
-result = Line({ x = 0, y = 0 }, { x = 0, y = 100000 }):intersection(Line({ x = -1, y = 0 }, { x = 1, y = 20000 }))
-assert(nil ~= result, "result is nil: "..tostring(result))
+	a = Line({ x = 0, y = 0 }, { x = 0, y = 100000 })
+	b = Line({ x = -1, y = 0 }, { x = 1, y = 20000 })
+	result = a:intersection(b)
+	assert(nil ~= result, "result is nil: "..tostring(result))
 
-result = Line({ x = -1, y = 0 }, { x = 1, y = 20000 }):intersection(Line({ x = 0, y = 0 }, { x = 0, y = 100000 }))
-assert(nil ~= result, "result is nil: "..tostring(result))
+	a = Line({ x = -1, y = 0 }, { x = 1, y = 20000 })
+	b = Line({ x = 0, y = 0 }, { x = 0, y = 100000 })
+	result = a:intersection(b)
+	assert(nil ~= result, "result is nil: "..tostring(result))
+end
+
+runTests()
 
 geometry.Line = Line
 return geometry

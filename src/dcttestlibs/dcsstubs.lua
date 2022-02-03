@@ -1081,7 +1081,10 @@ function trigger.action.lineToAll(side, id, head, tail, color, lineType)
 	check.number(lineType)
 end
 
-function trigger.action.textToAll(side, id, point, color, fillColor, size, readOnly, text)
+function trigger.action.textToAll(
+		side, id, point, color,
+		fillColor, size,
+		readOnly, text)
 	check.number(side)
 	check.number(id)
 	check.table(point)
