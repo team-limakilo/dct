@@ -62,7 +62,6 @@
 --   determine if those events render the slot non-operational.
 --]]
 
-local utils         = require("libs.utils")
 local class         = require("libs.namedclass")
 local PriorityQueue = require("libs.containers.pqueue")
 local dctenum       = require("dct.enum")
@@ -202,7 +201,7 @@ function OperationalState:update(asset)
 	end
 end
 
-function OperationalState:onDCTEvent(asset, event)
+function OperationalState:onDCTEvent(_, _ --[[ asset, event ]])
 	--[[
 	-- TODO: write this event handler
 	-- events to handle:
@@ -215,19 +214,7 @@ function OperationalState:onDCTEvent(asset, event)
 	--  * S_EVENT_LAND - no need to handle
 	--  * S_EVENT_HIT - no need to handle at this time
 	--  * S_EVENT_DEAD - no need to handle at this time
-	--
-	-- For now, we'll only handle capture by ground units
 	--]]
-	if event.id == world.event.S_EVENT_BASE_CAPTURED and
-	   event.place:getName() == asset.name and
-	   event.place:getCoalition() ~= self.owner and
-	   asset.capturable then
-		local previous = asset.owner
-		asset.owner = event.place:getCoalition()
-		asset._logger:debug("Captured by %s coalition",
-			utils.getkey(coalition.side, asset.owner))
-		asset:notify(dctutils.buildevent.captured(event.initiator, asset, previous))
-	end
 	return nil
 end
 

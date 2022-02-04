@@ -464,22 +464,9 @@ local function handleAddAsset(region, event)
 		region.name, asset.owner, tostring(region.weight[asset.owner]))
 end
 
-local function handleCaptured(region, event)
-	local base = event.target
-	-- remove from old coalition
-	region.weight[event.owner] =
-		region.weight[event.owner] - get_asset_weight(base)
-	-- add to new coalition
-	region.weight[base.owner] =
-		region.weight[base.owner] + get_asset_weight(base)
-	Logger:debug("Region(%s).handleCaptured %d - new weight: %s",
-		region.name, base.owner, tostring(region.weight[base.owner]))
-end
-
 local handlers = {
 	[dctenums.event.DCT_EVENT_DEAD]      = handleDead,
 	[dctenums.event.DCT_EVENT_ADD_ASSET] = handleAddAsset,
-	[dctenums.event.DCT_EVENT_CAPTURED]  = handleCaptured,
 }
 
 function Region:onDCTEvent(event)

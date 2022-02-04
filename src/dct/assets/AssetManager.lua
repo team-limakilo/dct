@@ -251,14 +251,41 @@ local function handleAssetDeath(self, event)
 end
 
 local function handleCaptured(self, event)
-	self._logger:debug("executing handler: RegionManager.onDCTEvent")
-	self.theater:getRegionMgr():onDCTEvent(event)
+	local airbase = event.place
+	local asset = self:getAsset(airbase:getName())
+	if asset == nil or asset.owner == airbase:getCoalition() then
+		return
+	end
+
+	-- Delete the old airbase
+	asset:despawn()
+	asset:setDead(true)
+	self:remove(asset)
+
+	-- Create a new airbase asset under the new owner
+	local regionmgr = self.theater:getRegionMgr()
+	local region = regionmgr:getRegion(asset.rgnname)
+	local tpl = region:getTemplateByName(asset.tplname)
+	tpl = utils.shallowclone(tpl)
+	tpl.coalition = airbase:getCoalition()
+
+	local newasset = self:factory(tpl.objtype)(tpl, region)
+	self:add(newasset)
+	newasset:spawn()
+
+	-- Award tickets according to the owner's *loss* modifier.
+	-- This is because, if a coalition repeatedly captures and loses a
+	-- base, we need to ensure it doesn't cause the ticket count to drift.
+	self.theater:getTickets():reward(newasset.owner, newasset.cost, "loss")
+
+	newasset._logger:debug("captured by %s coalition",
+		utils.getkey(coalition.side, newasset.owner))
 end
 
 local handlers = {
-	[world.event.S_EVENT_DEAD]      = handleDead,
-	[enum.event.DCT_EVENT_DEAD]     = handleAssetDeath,
-	[enum.event.DCT_EVENT_CAPTURED] = handleCaptured,
+	[world.event.S_EVENT_DEAD]          = handleDead,
+	[world.event.S_EVENT_BASE_CAPTURED] = handleCaptured,
+	[enum.event.DCT_EVENT_DEAD]         = handleAssetDeath,
 }
 
 function AssetManager:doOneObject(obj, event)
@@ -297,7 +324,6 @@ function AssetManager:onDCSEvent(event)
 		[world.event.S_EVENT_BASE_CAPTURED]   = true,
 		--[world.event.S_EVENT_UNIT_LOST]     = true,
 		[enum.event.DCT_EVENT_DEAD]           = true,
-		[enum.event.DCT_EVENT_CAPTURED]       = true,
 	}
 	local objmap = {
 		[world.event.S_EVENT_HIT]  = "target", -- type: Object

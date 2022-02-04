@@ -195,6 +195,9 @@ function Tickets:reward(side, cost, mod)
 	if mod == true then
 		op = "modifier_reward"
 	end
+	if mod == "loss" then
+		op = "modifier_loss"
+	end
 	self:_add(side, math.abs(cost), op)
 end
 

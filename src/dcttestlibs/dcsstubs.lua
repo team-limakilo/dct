@@ -379,6 +379,8 @@ AI.Option = {
 }
 _G.AI = AI
 
+local DEFAULT_ID = 123
+
 local objdefaults = {
 	["name"] = "obj1",
 	["exists"] = false,
@@ -426,10 +428,10 @@ local objdefaults = {
 	},
 	["vel"] = {["x"] = 1, ["y"] = 0, ["z"] = 1},
 	["inair"] = false,
-	["id"] = 123,
+	["id"] = DEFAULT_ID,
 }
 
-local objects = {}
+local objects   = {}
 for _,v in pairs(objectcat) do
 	objects[v] = {}
 end
@@ -452,10 +454,11 @@ function coalition.getAirbases(side)
 end
 
 function coalition.addGroup(cntryid, groupcat, groupdata)
-	--print("new group: "..require("libs.json"):encode_pretty(groupdata))
-	assert(groupdata.groupId == nil, "groupId field defined")
+	assert(groupdata.groupId == nil or groupdata.groupId == DEFAULT_ID,
+		"groupId field defined in template")
 	for _, unit in pairs(groupdata.units or {}) do
-		assert(unit.unitId == nil, "unitId field defined")
+		assert(unit.unitId == nil or unit.unitId == DEFAULT_ID,
+			"unitId field defined in template")
 	end
 	dctcheck.spawngroups = dctcheck.spawngroups + 1
 	dctcheck.spawnunits = dctcheck.spawnunits + #(groupdata.units)
@@ -471,8 +474,8 @@ function coalition.addGroup(cntryid, groupcat, groupdata)
 end
 
 function coalition.addStaticObject(cntryid, groupdata)
-	--print("new static: "..require("libs.json"):encode_pretty(groupdata))
-	assert(groupdata.unitId == nil, "unitId field defined")
+	assert(groupdata.unitId == nil or groupdata.unitId == DEFAULT_ID,
+		"unitId field defined in template")
 	dctcheck.spawnstatics = dctcheck.spawnstatics + 1
 	groupdata.country = cntryid
 	groupdata.exists = true
