@@ -62,7 +62,11 @@ function Subordinates:spawn_despawn(action)
 					asset:spawn()
 				end
 			else
-				asset:despawn()
+				self:removeObserver(asset)
+				asset:removeObserver(self)
+				if asset:isSpawned() then
+					asset:despawn()
+				end
 			end
 		else
 			Logger:info("%s(%s):spawn_despawn - asset(%s) doesn't exist, "..

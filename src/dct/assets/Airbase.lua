@@ -469,7 +469,7 @@ function AirbaseAsset:spawn(ignore)
 end
 
 function AirbaseAsset:despawn()
-	self:spawn_despawn(self, "despawn")
+	self:spawn_despawn("despawn")
 	AssetBase.despawn(self)
 end
 
