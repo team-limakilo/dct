@@ -244,7 +244,7 @@ local function handleAssetDeath(self, event)
 	self:notify(event)
 	local asset = event.initiator
 	self._logger:debug("'%s' dead; cost = %g", asset.name, asset.cost)
-	self.theater:getTickets():loss(asset.owner, asset.cost, false)
+	self.theater:getTickets():loss(asset.owner, asset.cost, true)
 	self.theater:queueCommand(self.cleanupdelay,
 		Command("cleanupAsset('"..asset.name.."')",
 		cleanupAsset, asset, self._logger))
