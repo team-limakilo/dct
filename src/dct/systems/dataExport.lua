@@ -42,6 +42,7 @@ local function makeData(export)
         version = dct._VERSION,
         theater = env.mission.theatre,
         sortie  = env.getValueDictByKey(env.mission.sortie),
+        startdate = os.date("%F %TZ", os.time(export.theater.startdate)),
         date    = os.date("!%F %TZ"),
         players = {
             current = countPlayers(),
