@@ -260,7 +260,7 @@ local function handleCaptured(self, event)
 	-- Delete the old airbase
 	asset:despawn()
 	asset:setDead(true)
-	self:remove(asset)
+	self:update()
 
 	-- Create a new airbase asset under the new owner
 	local regionmgr = self.theater:getRegionMgr()
@@ -271,6 +271,7 @@ local function handleCaptured(self, event)
 
 	local newasset = self:factory(tpl.objtype)(tpl, region)
 	self:add(newasset)
+	newasset:generate(self, region)
 	newasset:spawn()
 
 	-- Award tickets according to the owner's *loss* modifier.
