@@ -94,6 +94,9 @@ end
 function DamageGoal:getStatus()
 	if self:isComplete() then return 100 end
 
+	-- assume assets that were never spawned are intact
+	if self._maxlife == nil then return 0 end
+
 	local health = 0
 	local obj, getlife = getobject(self.objtype, self.name)
 	if obj ~= nil then
