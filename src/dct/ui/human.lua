@@ -43,7 +43,6 @@ local transparent = { 0, 0, 0, 0 }
 local human = {}
 
 local mapBorders = {}
-local mapLabels  = {}
 
 local markindex = 10
 function human.getMarkID(list)
@@ -124,75 +123,57 @@ local function point3D(point)
 	}
 end
 
-function human.createBorders(regions, borders)
-	for _, region in pairs(regions) do
-		Logger:debug("creating borders for region %s", region.name)
-		local lines, triangles, text = {}, {}, {}
-		for _, border in pairs(borders[region.name]) do
-
-			-- note: fill color doesn't work on polygons with too many vertices
-			local points = border.polygon
-			for i = 1, #points do
-				local prev
-				if i == 1 then
-					prev = points[#points]
-				else
-					prev = points[i - 1]
-				end
-				local curr = points[i]
-				local lineId = human.getMarkID(lines)
-				trigger.action.lineToAll(-1, lineId, point3D(prev), point3D(curr),
-					lineColor[region.owner], lineType[region.owner])
-			end
-
-			-- so we draw a triangulated mesh to make the fill instead
-			for _, triangle in ipairs(border.triangles) do
-				local triangleId = human.getMarkID(triangles)
-				trigger.action.markupToAll(enum.markShape.Freeform, -1, triangleId,
-					point3D(triangle[1]), point3D(triangle[2]), point3D(triangle[3]),
-					transparent, fillColor[region.owner], enum.lineType.NoLine)
-			end
-
-			local textId = human.getMarkID(text)
-			mapLabels[textId] = border.title
-			trigger.action.textToAll(-1, textId, point3D(border.center),
-				textColor[region.owner], transparent, 24, true, border.title)
-		end
-		mapBorders[region.name] = {
-			owner = region.owner,
-			lines = lines,
-			triangles = triangles,
-			text = text,
-		}
+function human.updateBorders(region, borders)
+	local oldBorders = mapBorders[region.name]
+	if oldBorders ~= nil and oldBorders.owner == region.owner then
+		return
 	end
-end
 
-function human.updateBorders(region)
-	local regionBorders = mapBorders[region.name]
-	if regionBorders ~= nil and regionBorders.owner ~= region.owner then
-		Logger:debug("updating borders for region %s from coalition %d to %d",
-			region.name, regionBorders.owner, region.owner)
-		for _, line in ipairs(regionBorders.lines) do
-			trigger.action.setMarkupColor(line, lineColor[region.owner])
-			trigger.action.setMarkupTypeLine(line, lineType[region.owner])
-		end
-		for _, tri in ipairs(regionBorders.triangles) do
-			trigger.action.setMarkupColorFill(tri, fillColor[region.owner])
-		end
-		for _, text in ipairs(regionBorders.text) do
-			-- text color update is buggy, requires a string change to apply
-			trigger.action.setMarkupColor(text, textColor[region.owner])
-			trigger.action.setMarkupText(text, mapLabels[text].." ")
-			timer.scheduleFunction(
-				function()
-					trigger.action.setMarkupText(text, mapLabels[text])
-				end,
-				nil,
-				timer.getTime() + 1
-			)
-		end
-		regionBorders.owner = region.owner
+	if oldBorders == nil then
+		oldBorders = { marks = {} }
 	end
+
+	Logger:debug("updating borders for region %s from coalition %s to %d",
+		region.name, tostring(oldBorders.owner), region.owner)
+
+	for _, oldMark in pairs(oldBorders.marks) do
+		trigger.action.removeMark(oldMark)
+	end
+
+	local borderMarks = {}
+	for _, border in pairs(borders) do
+		-- note: fill color doesn't work on polygons with too many vertices
+		local points = border.polygon
+		for i = 1, #points do
+			local prev
+			if i == 1 then
+				prev = points[#points]
+			else
+				prev = points[i - 1]
+			end
+			local curr = points[i]
+			local lineId = human.getMarkID(borderMarks)
+			trigger.action.lineToAll(-1, lineId, point3D(prev), point3D(curr),
+				lineColor[region.owner], lineType[region.owner])
+		end
+
+		-- so we draw a triangulated mesh to make the fill instead
+		for _, triangle in ipairs(border.triangles) do
+			local triangleId = human.getMarkID(borderMarks)
+			trigger.action.markupToAll(enum.markShape.Freeform, -1, triangleId,
+				point3D(triangle[1]), point3D(triangle[2]), point3D(triangle[3]),
+				transparent, fillColor[region.owner], enum.lineType.NoLine)
+		end
+
+		local textId = human.getMarkID(borderMarks)
+		trigger.action.textToAll(-1, textId, point3D(border.center),
+			textColor[region.owner], transparent, 24, true, border.title)
+	end
+
+	mapBorders[region.name] = {
+		owner = region.owner,
+		marks = borderMarks,
+	}
 end
 
 local function markToGroup(label, pos, missionId, groupId, readonly)

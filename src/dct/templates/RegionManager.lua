@@ -121,7 +121,9 @@ function RegionManager:generate()
 end
 
 function RegionManager:postinit()
-	human.createBorders(self.regions, self.borders)
+	for rgnname, borders in pairs(self.borders) do
+		human.updateBorders(self.regions[rgnname], borders)
+	end
 end
 
 function RegionManager:marshal()
@@ -157,7 +159,9 @@ function RegionManager:onDCTEvent(event)
 
 	if region then
 		region:onDCTEvent(event)
-		human.updateBorders(region)
+		if self.borders[region.name] ~= nil then
+			human.updateBorders(region, self.borders[region.name])
+		end
 	end
 end
 
