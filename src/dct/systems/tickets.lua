@@ -9,6 +9,7 @@ local class    = require("libs.class")
 local utils    = require("libs.utils")
 local Marshallable = require("dct.libs.Marshallable")
 local Command  = require("dct.Command")
+local Logger   = dct.Logger.getByName("Tickets")
 
 local function checkvalue(keydata, tbl)
 	if tbl[keydata.name] >= 0 then
@@ -186,6 +187,13 @@ function Tickets:_add(side, cost, mod)
 	local v = cost
 	if mod ~= nil then
 		v = v * t[mod]
+	end
+	if v > 0 then
+		Logger:debug("side(%d) rewarded %d tickets; total: %d",
+			side, v, t.tickets + v)
+	elseif v < 0 then
+		Logger:debug("side(%d) lost %d tickets; total: %d",
+			side, -v, t.tickets + v)
 	end
 	t.tickets = t.tickets + v
 end
