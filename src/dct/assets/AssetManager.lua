@@ -258,7 +258,9 @@ local function handleCaptured(self, event)
 	end
 
 	-- Delete the old airbase
-	asset:despawn()
+	if asset:isSpawned() then
+		asset:despawn()
+	end
 	asset:setDead(true)
 	self:update()
 

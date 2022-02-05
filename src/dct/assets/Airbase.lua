@@ -310,13 +310,6 @@ function AirbaseAsset:_setup()
 		self:setDead(true)
 		return
 	end
-	local dcscoalition = dcsab:getCoalition()
-	if self.owner ~= dcscoalition then
-		self._logger:warn(
-			"airbase coalition does not match asset state; asset: %s, airbase: %s",
-			tostring(self.owner), tostring(dcscoalition))
-		self.owner = dcscoalition
-	end
 	self._abcategory = dcsab:getDesc().airbaseCategory
 	self._location = dcsab:getPoint()
 end
@@ -446,6 +439,16 @@ function AirbaseAsset:spawn(ignore)
 		self._logger:error("runtime bug - already spawned")
 		return
 	end
+
+	local dcsab = Airbase.getByName(self.name)
+	if self.capturable and self.owner ~= dcsab:getCoalition() then
+		self._logger:warn("airbase coalition does not match DCS state; fixing")
+		return dct.theater:notify({
+			id = world.event.S_EVENT_BASE_CAPTURED,
+			place = dcsab,
+		})
+	end
+
 	associate_slots(self)
 	self:spawn_despawn("spawn")
 	AssetBase.spawn(self)
