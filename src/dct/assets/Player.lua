@@ -62,6 +62,7 @@ local function on_birth(asset, event)
 	asset.groupId = id
 end
 
+-- returns assigned mission, if any
 local function reset_slot(asset)
 	-- update location so it's not nil when the player is despawned
 	asset:getLocation()
@@ -108,6 +109,7 @@ local function reset_slot(asset)
 			(utils.getkey(dctenum.missionType, recommended) or "None"), 20, false)
 	end
 	trigger.action.outTextForGroup(asset.groupId, notifymsg, 20, false)
+	return msn
 end
 
 local OccupiedState = class("OccupiedState", State)
@@ -173,8 +175,8 @@ end
 
 function OccupiedState:enter(asset)
 	asset:setDead(false)
-	reset_slot(asset)
-	asset.menu:create()
+	local msn = reset_slot(asset)
+	asset.menu:create(msn)
 end
 
 function OccupiedState:exit(asset)

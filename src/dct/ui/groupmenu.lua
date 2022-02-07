@@ -110,7 +110,7 @@ function GroupMenu:__init(asset)
 	asset:addObserver(self.onDCTEvent, self, self.__clsname..".onDCTEvent")
 end
 
-local function emptyMenu(asset, menu)
+local function clearMenu(asset, menu)
 	for _, item in ipairs(menu) do
 		missionCommands.removeItemForGroup(asset.groupId, item)
 	end
@@ -122,7 +122,7 @@ function GroupMenu:destroy()
 	end
 
 	Logger:debug("destroy() - removing menu for group: %s", self.asset.name)
-	emptyMenu(self.asset, self.menus)
+	clearMenu(self.asset, self.menus)
 	self.menus       = {}
 	self.msnList     = {}
 	self.msnMenu     = nil
@@ -159,16 +159,16 @@ function GroupMenu:update()
 		return
 	end
 
-	if not self.inMission then
+	if self.asset.missionid == enum.missionInvalidID then
 		if self.msnListMenu == nil then
 			Logger:error("update() - group(%s) msnListMenu is nil", self.asset.name)
 			return
 		end
 
-		Logger:debug("update() - updating mission list for group: %s",
+		Logger:debug("update() - updating active mission list for group: %s",
 			self.asset.name)
 
-		emptyMenu(self.asset, self.msnList)
+		clearMenu(self.asset, self.msnList)
 		self.msnList = {}
 
 		local cmdr = dct.theater:getCommander(self.asset.owner)
@@ -196,7 +196,6 @@ end
 function GroupMenu:onJoinMission(mission)
 	if next(self.menus) ~= nil then
 		self:destroy()
-		self.inMission = true
 		self:create(mission)
 	end
 end
@@ -204,7 +203,6 @@ end
 function GroupMenu:onLeaveMission()
 	if next(self.menus) ~= nil then
 		self:destroy()
-		self.inMission = false
 		self:create()
 	end
 end
