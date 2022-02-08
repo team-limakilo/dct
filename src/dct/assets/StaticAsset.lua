@@ -179,6 +179,9 @@ function StaticAsset:getTemplateData()
 end
 
 function StaticAsset:_refreshSmoke(time)
+	if self:isDead() then
+		return
+	end
 	for id, smoke in pairs(self._smoke) do
 		self._logger:debug("refreshing smoke; id: %d, color: %s", id, smoke.color)
 		trigger.action.smoke(smoke, trigger.smokeColor[smoke.color])
@@ -192,8 +195,8 @@ function StaticAsset:setTargeted(side, val)
 	if self._smoke ~= nil and dctutils.getenemy(self.owner) == side then
 		local targeted = self:isTargeted(side)
 		if targeted and self._smokeFunc == nil then
-			self._smokeFunc =
-				timer.scheduleFunction(self._refreshSmoke, self, timer.getTime() + 1)
+			self._smokeFunc = timer.scheduleFunction(
+				self._refreshSmoke, self, timer.getTime() + 30)
 		elseif not targeted and self._smokeFunc ~= nil then
 			timer.removeFunction(self._smokeFunc)
 			self._smokeFunc = nil
