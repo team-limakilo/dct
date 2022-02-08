@@ -253,7 +253,8 @@ end
 local function handleCaptured(self, event)
 	local airbase = event.place
 	local asset = self:getAsset(airbase:getName())
-	if asset == nil or asset.owner == airbase:getCoalition() then
+	if asset == nil or not asset.capturable or
+	   asset.owner == airbase:getCoalition() then
 		return
 	end
 
