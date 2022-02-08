@@ -279,6 +279,12 @@ local function checkmsntype(keydata, tbl)
 end
 
 local function check_payload_limits(keydata, tbl)
+	if tbl[keydata.name] == nil then
+		return true
+	end
+	if type(tbl[keydata.name]) ~= "table" then
+		return false, "value must be a table or nil"
+	end
 	local newlimits = {}
 	for wpncat, val in pairs(tbl[keydata.name]) do
 		local w = enum.weaponCategory[string.upper(wpncat)]
@@ -515,9 +521,7 @@ local function getkeys(objtype)
 
 		table.insert(keys, {
 			["name"]    = "payloadlimits",
-			["type"]    = "table",
 			["check"]   = check_payload_limits,
-			["default"] = dct.settings.payloadlimits,
 		})
 	end
 

@@ -74,13 +74,17 @@ local function reset_slot(asset)
 		if sqdn then
 			asset._logger:debug("squadron overriding ato and payload")
 			if sqdn:getATO() ~= nil then
+				asset._logger:debug("squadron overriding ato")
 				asset.ato = sqdn:getATO()
+				asset._logger:debug("ato: %s",
+					require("libs.json"):encode_pretty(asset.ato))
 			end
-			asset.payloadlimits = sqdn:getPayloadLimits()
-			asset._logger:debug("payloadlimits: %s",
-				require("libs.json"):encode_pretty(asset.payloadlimits))
-			asset._logger:debug("ato: %s",
-				require("libs.json"):encode_pretty(asset.ato))
+			if sqdn:getPayloadLimits() ~= nil then
+				asset._logger:debug("squadron overriding payload limits")
+				asset.payloadlimits = sqdn:getPayloadLimits()
+				asset._logger:debug("payloadlimits: %s",
+					require("libs.json"):encode_pretty(asset.payloadlimits))
+			end
 		else
 			asset._logger:warn("squadron does not exist, using default settings")
 		end
