@@ -9,6 +9,7 @@
 !.github
 
 # ignore test artifacts
+data/*.state*
 data/*.export.json
 data/*.orig
 data/*.new
