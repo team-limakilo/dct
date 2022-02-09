@@ -62,8 +62,7 @@ function UICmd:uicmd(time)
 	end, function(err)
 		self.asset.cmdpending = false
 		self:_print("F10 menu command failed to execute, please report a bug", true)
-		Logger:error(string.format("UICmd(%s): %s",
-			self.__clsname, debug.traceback(err, 2)))
+		Logger:error("UICmd(%s): %s", self.__clsname, debug.traceback(err, 2))
 	end)
 end
 
