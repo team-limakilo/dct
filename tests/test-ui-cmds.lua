@@ -75,6 +75,7 @@ local testcmds = {
 		["expected"]   = "Mission 5410 assigned, use F10 menu to "..
 			"see this briefing again\n"..
 			briefingtxt.."\n\n"..
+			"BDA: 0% complete\n\n"..
 			assignedPilots
 	}, {
 		["data"] = {
@@ -163,6 +164,7 @@ local testcmds = {
 		["expected"]   = "Mission 2120 assigned, use F10 menu to "..
 			"see this briefing again\n"..
 			capbriefingtxt.."\n\n"..
+			"BDA: 0% complete\n\n"..
 			assignedPilots
 	}, {
 		-- Allowed payload
