@@ -93,8 +93,8 @@ function loadout.check(player)
 	end
 end
 
-function loadout.addmenu(addcmd, asset, menu)
-	return addcmd(asset, "Check Payload", menu, dct.Theater.playerRequest, {
+function loadout.addMenu(addCmd, asset, menu)
+	return addCmd("Check Payload", menu, dct.Theater.playerRequest, {
 		["name"] = asset.name,
 		["type"] = enum.uiRequestType.CHECKPAYLOAD,
 	})

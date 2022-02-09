@@ -943,6 +943,54 @@ function Group:getController()
 end
 _G.Group = Group
 
+-- do not use any of the table keys created by these functions,
+-- they do not exist in DCS
+local groupMenus = {}
+local function addMenu(name, parent, isMenu)
+	assert(type(parent._children) == "table", string.format(
+		"path '%s' is not a menu", parent._path))
+	if name == "" then
+		name = "-"
+	end
+	local menu = { _parent = parent, _path = parent._path..name }
+	if isMenu then
+		menu._path = menu._path.."/"
+		menu._children = {}
+	end
+	table.insert(parent._children, menu)
+	return menu
+end
+local function addGroupMenu(groupId, name, parent, isMenu)
+	if groupMenus[groupId] == nil then
+		groupMenus[groupId] = { _path = "/", _children = {} }
+	end
+	parent = parent or groupMenus[groupId]
+	local menu = addMenu(name, parent, isMenu)
+	return menu
+end
+local function removeMenu(menu)
+	-- ensure we have removed children first befor removing the parent,
+	-- to avoid the in-game menu from getting wonky and selecting wrong things
+	if type(menu._children) == "table" and next(menu._children) ~= nil then
+		local children = {}
+		for _, child in pairs(menu._children) do
+			table.insert(children, string.format("'%s'", child._path))
+		end
+		error(string.format("menu '%s' is being removed but still "..
+			"has %d children: %s", menu._path, #menu._children,
+			table.concat(children, ", ")))
+	end
+	for idx, other in ipairs(menu._parent._children) do
+		if menu == other then
+			return table.remove(menu._parent._children, idx)
+		end
+	end
+	-- removing an item that has been removed prior is also a coding error,
+	-- even if it doesn't cause any bugs in the game (yet)
+	error(string.format("menu '%s' not found in parent, "..
+		"removeItem possibly called twice", menu._path))
+end
+
 local missionCommands = {}
 function missionCommands.addCommand(_, _, _, _)
 end
@@ -969,7 +1017,7 @@ function missionCommands.addCommandForGroup(groupId, name, path, fn, _)
 		check.table(path)
 	end
 	check.func(fn)
-	return {}
+	return addGroupMenu(groupId, name, path, false)
 end
 
 function missionCommands.addSubMenuForGroup(groupId, name, path)
@@ -978,14 +1026,16 @@ function missionCommands.addSubMenuForGroup(groupId, name, path)
 	if path ~= nil then
 		check.table(path)
 	end
-	return {}
+	return addGroupMenu(groupId, name, path, true)
 end
 
-function missionCommands.removeItemForGroup(groupId, path)
+function missionCommands.removeItemForGroup(groupId, item)
 	check.number(groupId)
-	if path ~= nil then
-		check.table(path)
+	if item ~= nil then
+		check.table(item)
 	end
+	item = item or groupMenus[groupId] or {}
+	return removeMenu(item)
 end
 _G.missionCommands = missionCommands
 

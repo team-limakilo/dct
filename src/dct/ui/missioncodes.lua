@@ -6,69 +6,76 @@
 --]]
 
 local enum    = require("dct.enum")
-local addmenu = missionCommands.addSubMenuForGroup
-local addcmd  = missionCommands.addCommandForGroup
+local check   = require("libs.check")
 
-local function empty() end
+local function doNothing() end
 
-local function addEmptyCommand(gid, path)
-	addcmd(gid, "", path, empty)
+local function addEmptyCommand(path, addCmd)
+	addCmd("", path, doNothing)
 end
 
-local validFirstDigit = {}
+local missionTypeDigits = {}
 for _, m1 in pairs(enum.squawkMissionType) do
-	validFirstDigit[m1] = true
+	missionTypeDigits[m1] = true
 end
 
 -- digits __3_ and ___4 (mission codes always end in zero)
-local function createJoinCmds(gid, name, parentMenu, halfCode)
+local function createJoinCmds(asset, parentMenu, firstTwoDigits, cmds)
+	check.table(parentMenu)
 	for digit3 = 1, 10 do
 		if digit3 % 10 < 8 then
-			local missionCode = string.format("%s%d0", halfCode, digit3 % 10)
-			addcmd(gid, string.format("Mission %s", missionCode), parentMenu,
+			local missionCode = string.format("%s%d0", firstTwoDigits, digit3 % 10)
+			cmds.addCmd(string.format("Mission %s", missionCode), parentMenu,
 				dct.Theater.playerRequest, {
-					["name"]  = name,
+					["name"]  = asset.name,
 					["type"]  = enum.uiRequestType.MISSIONJOIN,
 					["value"] = missionCode,
 				}
 			)
 		else
-			addEmptyCommand(gid, parentMenu)
+			addEmptyCommand(parentMenu, cmds.addCmd)
 		end
 	end
 end
 
 -- digit _2__
-local function createDigit2Menu(gid, name, parentMenu, quarterCode)
+local function createDigit2Menu(asset, parentMenu, firstDigit, cmds)
+	check.table(parentMenu)
 	for digit2 = 1, 10 do
 		if digit2 % 10 < 8 then
-			local halfCode = string.format("%s%d", quarterCode, digit2 % 10)
-			local menu = addmenu(gid,
-				string.format("Mission %s__", halfCode), parentMenu)
-			createJoinCmds(gid, name, menu, halfCode)
+			local firstTwoDigits = string.format("%s%d", firstDigit, digit2 % 10)
+			local menu = cmds.addMenu(string.format(
+				"Mission %s__", firstTwoDigits), parentMenu)
+			createJoinCmds(asset, menu, firstTwoDigits, cmds)
 		else
-			addEmptyCommand(gid, parentMenu)
+			addEmptyCommand(parentMenu, cmds.addCmd)
 		end
 	end
 end
 
 -- digit 1___
-local function createDigit1Menu(gid, name, parentMenu)
+local function createDigit1Menu(asset, parentMenu, cmds)
+	check.table(parentMenu)
 	for digit1 = 1, 10 do
-		if validFirstDigit[digit1] then
-			local quarterCode = tostring(digit1 % 10)
-			local menu = addmenu(gid,
-				string.format("Mission %s___", quarterCode), parentMenu)
-			createDigit2Menu(gid, name, menu, quarterCode)
+		if missionTypeDigits[digit1] then
+			local firstDigit = tostring(digit1 % 10)
+			local menu = cmds.addMenu(string.format(
+				"Mission %s___", firstDigit), parentMenu)
+			createDigit2Menu(asset, menu, firstDigit, cmds)
 		else
-			addEmptyCommand(gid, parentMenu)
+			addEmptyCommand(parentMenu, cmds.addCmd)
 		end
 	end
 end
 
 local missioncodes = {}
-function missioncodes.addMissionCodes(asset, parentMenu)
-	createDigit1Menu(asset.groupId, asset.name, parentMenu)
+function missioncodes.addMissionCodes(asset, parentMenu, cmds)
+	check.table(asset)
+	check.table(parentMenu)
+	check.table(cmds)
+	check.func(cmds.addCmd)
+	check.func(cmds.addMenu)
+	createDigit1Menu(asset, parentMenu, cmds)
 end
 
 return missioncodes

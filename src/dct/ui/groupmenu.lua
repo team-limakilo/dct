@@ -28,45 +28,42 @@ local msncodes = require("dct.ui.missioncodes")
 local Vector   = require("dct.libs.vector")
 local Logger   = dct.Logger.getByName("GroupMenu")
 
-local function addMenu(asset, name, path, list)
-	local menu = missionCommands.addSubMenuForGroup(asset.groupId, name, path)
-	if list ~= nil then
-		table.insert(list, menu)
-	end
+local function addMenu(groupMenu, name, path)
+	local groupId = groupMenu.asset.groupId
+	local menu = missionCommands.addSubMenuForGroup(groupId, name, path)
+	table.insert(groupMenu.menus, menu)
 	return menu
 end
 
-local function addCmd(asset, name, path, handler, data, list)
-	local cmd = missionCommands.addCommandForGroup(asset.groupId, name, path,
+local function addCmd(groupMenu, name, path, handler, data)
+	local groupId = groupMenu.asset.groupId
+	local cmd = missionCommands.addCommandForGroup(groupId, name, path,
 		handler, data)
-	if list ~= nil then
-		table.insert(list, cmd)
-	end
+	table.insert(groupMenu.menus, cmd)
 	return cmd
 end
 
-local function addRqstCmd(asset, name, path, request, val, args, list)
+local function addRqstCmd(groupMenu, name, path, request, val, args)
 	check.number(request)
 	if args == nil then
 		args = {}
 	end
-	args.name = asset.name
+	args.name = groupMenu.asset.name
 	args.type = request
 	args.value = val
-	return addCmd(asset, name, path, dct.Theater.playerRequest, args, list)
+	return addCmd(groupMenu, name, path, dct.Theater.playerRequest, args)
 end
 
-local function createMissionMenu(asset, mission, list)
+local function createMissionMenu(groupMenu, mission)
 	if mission ~= nil then
-		-- asset has a mission
-		local menu = addMenu(asset, string.format("Mission %d", mission.id))
-		table.insert(list, menu)
+		-- asset already has a mission
+		local menu = addMenu(groupMenu, string.format("Mission %d", mission.id))
 
-		addRqstCmd(asset, "Briefing", menu, enum.uiRequestType.MISSIONBRIEF)
-		addRqstCmd(asset, "Status", menu, enum.uiRequestType.MISSIONSTATUS)
-		addRqstCmd(asset, "Abort", menu,
+		addRqstCmd(groupMenu, "Briefing", menu, enum.uiRequestType.MISSIONBRIEF)
+		addRqstCmd(groupMenu, "Status", menu, enum.uiRequestType.MISSIONSTATUS)
+		addRqstCmd(groupMenu, "Abort", menu,
 			enum.uiRequestType.MISSIONABORT, enum.missionAbortType.ABORT)
-		addRqstCmd(asset, "Rolex +30", menu,
+		addRqstCmd(groupMenu, "Rolex +30", menu,
 			enum.uiRequestType.MISSIONROLEX, 30 * 60)
 
 		return {
@@ -74,25 +71,28 @@ local function createMissionMenu(asset, mission, list)
 		}
 	else
 		-- asset has no mission assigned
-		local menu = addMenu(asset, "Mission")
-		table.insert(list, menu)
+		local menu = addMenu(groupMenu, "Mission")
 
-		local typeMenu = addMenu(asset, "Request (Type)", menu)
-		for typename, msntype in utils.sortedpairs(asset.ato) do
-			addRqstCmd(asset, typename, typeMenu,
+		local requestTypeMenu = addMenu(groupMenu, "Request (Type)", menu)
+		for typename, msntype in utils.sortedpairs(groupMenu.asset.ato) do
+			addRqstCmd(groupMenu, typename, requestTypeMenu,
 				enum.uiRequestType.MISSIONREQUEST, msntype)
 		end
 
-		local listMenu = addMenu(asset, "Request (List)", menu)
+		local requestListMenu = addMenu(groupMenu, "Request (List)", menu)
 
-		addRqstCmd(asset, "Join (Scratchpad)", menu, enum.uiRequestType.MISSIONJOIN)
+		addRqstCmd(groupMenu, "Join (Scratchpad)", menu,
+			enum.uiRequestType.MISSIONJOIN)
 
-		local joinCodeMenu = addMenu(asset, "Join (Input Code)", menu)
-		msncodes.addMissionCodes(asset, joinCodeMenu)
+		local joinCodeMenu = addMenu(groupMenu, "Join (Input Code)", menu)
+		msncodes.addMissionCodes(groupMenu.asset, joinCodeMenu, {
+			addCmd = function(...) return addCmd(groupMenu, ...) end,
+			addMenu = function(...) return addMenu(groupMenu, ...) end,
+		})
 
 		return {
 			menu = menu,
-			listMenu = listMenu,
+			requestListMenu = requestListMenu,
 		}
 	end
 end
@@ -101,18 +101,21 @@ local GroupMenu = class("GroupMenu")
 function GroupMenu:__init(asset)
 	assert(asset:isa(require("dct.assets.Player")),
 		"GroupMenu can only be initialized with a Player asset")
-	self.asset       = asset
-	self.menus       = {}
-	self.msnList     = {}
-	self.msnMenu     = nil
-	self.msnListMenu = nil
-	self.inMission   = false
+	self.asset         = asset
+	self.menus         = {}
+	self.msnList       = {}
+	self.msnListFilter = {}
+	self.msnMenu       = nil
+	self.msnListMenu   = nil
+	self.inMission     = false
 	asset:addObserver(self.onDCTEvent, self, self.__clsname..".onDCTEvent")
 end
 
 local function clearMenu(asset, menu)
-	for _, item in ipairs(menu) do
-		missionCommands.removeItemForGroup(asset.groupId, item)
+	-- make sure we always remove child items first
+	for i = #menu, 1, -1 do
+		missionCommands.removeItemForGroup(asset.groupId, menu[i])
+		table.remove(menu, i)
 	end
 end
 
@@ -123,10 +126,11 @@ function GroupMenu:destroy()
 
 	Logger:debug("destroy() - removing menu for group: %s", self.asset.name)
 	clearMenu(self.asset, self.menus)
-	self.menus       = {}
-	self.msnList     = {}
-	self.msnMenu     = nil
-	self.msnListMenu = nil
+	self.menus         = {}
+	self.msnList       = {}
+	self.msnListFilter = {}
+	self.msnMenu       = nil
+	self.msnListMenu   = nil
 end
 
 function GroupMenu:create(mission)
@@ -138,17 +142,16 @@ function GroupMenu:create(mission)
 
 	Logger:debug("create() - adding menu for group: %s", self.asset.name)
 
-	local padmenu = addMenu(self.asset, "Scratch Pad", nil, self.menus)
-	addRqstCmd(self.asset, "DISPLAY", padmenu, enum.uiRequestType.SCRATCHPADGET)
-	addRqstCmd(self.asset, "SET", padmenu, enum.uiRequestType.SCRATCHPADSET)
+	local padmenu = addMenu(self, "Scratch Pad", nil)
+	addRqstCmd(self, "DISPLAY", padmenu, enum.uiRequestType.SCRATCHPADGET)
+	addRqstCmd(self, "SET", padmenu, enum.uiRequestType.SCRATCHPADSET)
 
-	addRqstCmd(self.asset, "Theater Update", nil,
-		enum.uiRequestType.THEATERSTATUS, nil, nil, self.menus)
+	addRqstCmd(self, "Theater Update", nil, enum.uiRequestType.THEATERSTATUS)
 
-	table.insert(self.menus, loadout.addmenu(addCmd, self.asset, nil))
+	loadout.addMenu(function(...) return addCmd(self, ...) end, self.asset, nil)
 
-	local missionMenu = createMissionMenu(self.asset, mission, self.menus)
-	self.msnListMenu = missionMenu.listMenu
+	local missionMenu = createMissionMenu(self, mission)
+	self.msnListMenu = missionMenu.requestListMenu
 	self.msnMenu = missionMenu.menu
 
 	self:update()
@@ -171,6 +174,14 @@ function GroupMenu:update()
 		clearMenu(self.asset, self.msnList)
 		self.msnList = {}
 
+		-- remove already deleted entries from the main menu list
+		for i = #self.menus, 1, -1 do
+			if self.msnListFilter[self.menus[i]] ~= nil then
+				table.remove(self.menus, i)
+			end
+		end
+		self.msnListFilter = {}
+
 		local cmdr = dct.theater:getCommander(self.asset.owner)
 		local targetList = cmdr:getTopTargets(self.asset.ato, 10)
 		local playerLocation = self.asset:getLocation()
@@ -185,9 +196,10 @@ function GroupMenu:update()
 			local name = string.format("%s(%s): %s - %s",
 				missionTypeName, assetTypeName, tgt.codename, distance)
 
-			local msnRqstCmd = addRqstCmd(self.asset, name, self.msnListMenu,
+			local msnRqstCmd = addRqstCmd(self, name, self.msnListMenu,
 				enum.uiRequestType.MISSIONREQUEST, missionTypeId, { target = tgt.name })
 
+			self.msnListFilter[msnRqstCmd] = true
 			table.insert(self.msnList, msnRqstCmd)
 		end
 	end
