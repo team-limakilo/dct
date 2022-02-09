@@ -201,6 +201,10 @@ local function main()
 	--]]
 
 	-- run several events
+	theater:onEvent({
+		["id"]        = world.event.S_EVENT_BIRTH,
+		["initiator"] = player1,
+	})
 	for _, eventdata in ipairs(events) do
 		theater:onEvent(createEvent(eventdata, player1))
 	end
@@ -264,6 +268,15 @@ local function main()
 		end
 	end
 	assert(playercnt == 20, "Player asset creation broken")
+
+	local playerasset = newtheater:getAssetMgr():getAsset(playergrp:getName())
+	assert(playerasset ~= nil, "player asset does not exist")
+	assert(playerasset.state.__clsname == "OccupiedState",
+		"player asset did not enter slot correctly")
+	playergrp:destroy()
+	playerasset:update()
+	assert(playerasset.state.__clsname == "EmptyState",
+		"player asset did not leave slot correctly")
 
 	os.remove(settings.statepath)
 	newtheater:export()
