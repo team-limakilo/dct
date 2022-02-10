@@ -253,8 +253,7 @@ end
 local function handleCaptured(self, event)
 	local airbase = event.place
 	local asset = self:getAsset(airbase:getName())
-	if asset == nil or not asset.capturable or
-	   asset.owner == airbase:getCoalition() then
+	if asset == nil or asset.owner == airbase:getCoalition() then
 		return
 	end
 
@@ -270,7 +269,12 @@ local function handleCaptured(self, event)
 	local region = regionmgr:getRegion(asset.rgnname)
 	local tpl = region:getTemplateByName(asset.tplname)
 	tpl = utils.shallowclone(tpl)
-	tpl.coalition = airbase:getCoalition()
+
+	if asset.capturable then
+		tpl.coalition = airbase:getCoalition()
+	else
+		tpl.coalition = coalition.side.NEUTRAL
+	end
 
 	local newasset = self:factory(tpl.objtype)(tpl, region)
 	self:add(newasset)
