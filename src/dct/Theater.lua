@@ -210,6 +210,8 @@ function Theater:loadOrGenerate()
 		self:unmarshal(statetbl.systems)
 	else
 		Logger:info("generating new theater")
+		os.rename(settings.statepath,
+			string.format("%s_%s", settings.statepath, os.time()))
 		self:_runsys("generate", self)
 	end
 end
@@ -309,9 +311,12 @@ function Theater:export(_)
 		return self.savestatefreq
 	end
 
+	local complete, winner = self:getTickets():isComplete()
+
 	local exporttbl = {
 		["version"]  = STATE_VERSION,
-		["complete"] = self:getTickets():isComplete(),
+		["complete"] = complete,
+		["winner"]   = winner,
 		["date"]     = os.date("*t", dctutils.zulutime(timer.getAbsTime())),
 		["theater"]  = env.mission.theatre,
 		["sortie"]   = env.getValueDictByKey(env.mission.sortie),

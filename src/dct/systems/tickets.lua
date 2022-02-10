@@ -106,11 +106,14 @@ function Tickets:__init(theater)
 		["period"] = 120,
 	}
 	self.complete = false
+	self.winner   = nil
 	self:readconfig()
 	self:_addMarshalNames({
 		"tickets",
 		"timeout",
-		"complete"})
+		"complete",
+		"winner",
+	})
 	if self.timeout.enabled then
 		theater:queueCommand(self.timeout.period, Command(
 			"Tickets.timer", self.timer, self))
@@ -209,10 +212,11 @@ function Tickets:reward(side, cost, mod)
 	self:_add(side, math.abs(cost), op)
 end
 
+-- defines who wins when each side runs out of tickets
 local winnermap = {
-	[coalition.side.RED] = coalition.side.BLUE,
-	[coalition.side.BLUE] = coalition.side.RED,
 	[coalition.side.NEUTRAL] = coalition.side.NEUTRAL,
+	[coalition.side.RED]     = coalition.side.BLUE,
+	[coalition.side.BLUE]    = coalition.side.RED,
 }
 
 function Tickets:loss(side, cost, mod)
@@ -227,9 +231,10 @@ function Tickets:loss(side, cost, mod)
 	end
 	self:_add(side, -math.abs(cost), op)
 	if not self:isComplete() and t.tickets <= 0 then
-		local flag = self.tickets[winnermap[side]].flag
+		local winner = winnermap[side]
+		local flag = self.tickets[winner].flag
 		trigger.action.setUserFlag(flag, true)
-		self:setComplete()
+		self:setComplete(winner)
 	end
 end
 
@@ -241,12 +246,13 @@ function Tickets:get(side)
 	return t.tickets, t.start
 end
 
-function Tickets:setComplete()
+function Tickets:setComplete(winner)
 	self.complete = true
+	self.winner   = winner
 end
 
 function Tickets:isComplete()
-	return self.complete
+	return self.complete, self.winner
 end
 
 function Tickets:timer()
@@ -263,15 +269,18 @@ function Tickets:timer()
 	local red  = self.tickets[coalition.side.RED]
 	local blue = self.tickets[coalition.side.BLUE]
 	local civ = self.tickets[coalition.side.NEUTRAL]
+	local winner = coalition.side.NEUTRAL
 	local flag = civ.flag
 
 	if red.tickets < blue.tickets then
+		winner = coalition.side.BLUE
 		flag = blue.flag
 	elseif blue.tickets < red.tickets then
+		winner = coalition.side.RED
 		flag = red.flag
 	end
 	trigger.action.setUserFlag(flag, true)
-	self:setComplete()
+	self:setComplete(winner)
 	return nil
 end
 
