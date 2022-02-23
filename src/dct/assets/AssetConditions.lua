@@ -330,7 +330,7 @@ function AssetConditions:_validateTemplateNames()
 					end
 				end
 				if not found then
-					error(string.format("'%s' conditions depends on template "..
+					error(string.format("'%s' conditions depend on template "..
 						"'%s', which does not exist", self.tplname, tplname))
 				end
 			end

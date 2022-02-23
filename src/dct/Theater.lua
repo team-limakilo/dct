@@ -224,8 +224,7 @@ function Theater:delayedInit()
 	-- eventually we will want to spawn only a set of assets
 	for _, asset in self:getAssetMgr():iterate() do
 		if asset.type ~= enum.assetType.PLAYERGROUP and
-		   not asset:isSpawned() and
-		   not asset.pending then
+		   not asset:isSpawned() then
 			asset:spawn()
 		end
 	end
