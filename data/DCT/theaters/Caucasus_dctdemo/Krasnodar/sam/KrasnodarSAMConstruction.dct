@@ -2,7 +2,7 @@ objtype = "logistics"
 intel = 2
 cost = 4
 conditions = {
-    spawn = {
+    create = {
         when = {
             {
                 ["KrasnodarEWR"] = "dead",

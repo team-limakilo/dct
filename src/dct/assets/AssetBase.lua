@@ -185,7 +185,6 @@ function AssetBase:_completeinit(template)
 	self.nocull     = template.nocull
 	self.ondemand   = template.ondemand
 	self.codename   = generateCodename(template)
-	self.conditions = Conditions.from(template, self.name)
 
 	if norenametype[self.type] == true then
 		self.name = self.tplname
@@ -216,6 +215,7 @@ function AssetBase:_completeinit(template)
 		}
 	end
 	self._intel[self.owner] = dctutils.INTELMAX
+	self.conditions = Conditions.from(template, self.name)
 end
 
 --[[

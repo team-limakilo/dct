@@ -112,20 +112,21 @@ function AssetManager:add(asset)
 		asset.name.."') already exists")
 
 	if asset:isDead() then
-		self._logger:debug("AssetManager:add - not adding dead asset: %s", asset.name)
+		self._logger:debug("AssetManager:add - not adding dead asset: '%s'", asset.name)
 		return
 	end
 
 	if asset.conditions ~= nil then
 		self._conditional[asset.name] = asset
-		if asset.conditions.spawn ~= nil then
-			self._logger:debug("Adding to pending list: %s", asset.name)
+		if asset.conditions:delayCreation() then
+			self._logger:debug(
+				"Adding as pending: '%s'", asset.name)
 			self._pending[asset.name] = asset
 			return
 		end
 	end
 
-	self._logger:debug("Adding asset: %s", asset.name)
+	self._logger:debug("Adding asset: '%s'", asset.name)
 
 	self._assetset[asset.name] = asset
 	asset:addObserver(self.onDCSEvent, self, "AssetManager.onDCSEvent")

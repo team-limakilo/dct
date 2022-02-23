@@ -102,7 +102,7 @@ local function main()
     trigger.action.setassert(true)
     trigger.action.setmsgbuffer(
         "Mission State: Active\n"..
-        "Package: 3010\n"..
+        "Package: 3520\n"..
         "Timeout: 2016-06-21 14:00z (in 180 mins)\n"..
         "BDA: 0% complete\n"..
         "\n"..

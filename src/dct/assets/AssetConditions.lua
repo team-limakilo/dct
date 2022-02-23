@@ -5,16 +5,19 @@
 -- ```
 -- conditions = {
 --   -- action
---   spawn = {
---     rules = {
---       -- rule group
+--   create = {
+--     when = {
+--       -- rule group (OR relation between groups)
 --       {
---         -- one rule
---         ["Asset"] = "dead"
+--         -- rules (AND relation between rules)
+--         ["Asset1"] = "dead",
+--         ["Asset2"] = "alive",
+--         ["Asset3"] = "route_finished",
 --       }
 --     },
---     -- option
---     delay = 120
+--     -- options
+--     delay = 120,
+--     after = 60 * 10,
 --   }
 -- }
 -- ```
@@ -28,27 +31,13 @@ local Command      = require("dct.Command")
 local Marshallable = require("dct.libs.Marshallable")
 local Logger       = dct.Logger.getByName("AssetConditions")
 
-local function json(obj)
-	return require("libs.json"):encode_pretty(obj)
-end
-
-local AssetConditions = class("AssetConditions", Marshallable)
-AssetConditions.actionType = {
-	["SPAWN"]   = "spawn",
-	["DESTROY"] = "destroy",
-}
-
-local actionFns = {
-	[AssetConditions.actionType.SPAWN] = function(_, assetmgr, asset)
-		Logger:debug("'spawn' called on '%s'", asset.name)
-		asset.conditions.spawn = nil
+local actionTypes = {
+	["create"] = function(_, assetmgr, asset)
 		assetmgr:remove(asset)
 		assetmgr:add(asset)
 		asset:spawn()
 	end,
-	[AssetConditions.actionType.DESTROY] = function(opts, _, asset)
-		Logger:debug("'destroy' called on '%s'", asset.name)
-		asset.conditions.destroy = nil
+	["destroy"] = function(opts, _, asset)
 		if opts.despawn then
 			asset:despawn()
 		end
@@ -59,12 +48,15 @@ local actionFns = {
 	end,
 }
 
-local assetRules = {
+local ruleTypes = {
 	["dead"] = function(asset)
 		return asset == nil or asset:isDead()
 	end,
 	["alive"] = function(asset)
 		return asset ~= nil and not asset:isDead()
+	end,
+	["route_finished"] = function(asset)
+		error("TODO")
 	end,
 }
 
@@ -81,25 +73,21 @@ local options = {
 		["name"]    = "despawn",
 		["type"]    = "boolean",
 		["default"] = false,
-		["only"]    = AssetConditions.actionType.DESTROY,
 	}, {
 		["name"]    = "losetickets",
 		["type"]    = "boolean",
 		["default"] = false,
-		["only"]    = AssetConditions.actionType.DESTROY,
 	},
 }
 
 local function checkConditions(action)
 	local function checkOptions(conditions)
 		for _, opt in pairs(options) do
-			if opt.only == nil or opt.only == action then
-				if conditions[opt.name] == nil then
-					conditions[opt.name] = opt.default
-				end
-				if type(conditions[opt.name]) ~= opt.type then
-					return false, string.format("'%s' must be a %s", opt.name, opt.type)
-				end
+			if conditions[opt.name] == nil then
+				conditions[opt.name] = opt.default
+			end
+			if type(conditions[opt.name]) ~= opt.type then
+				return false, string.format("'%s' must be a %s", opt.name, opt.type)
 			end
 		end
 	end
@@ -116,7 +104,7 @@ local function checkConditions(action)
 				return false, "empty rule groups are not allowed"
 			end
 			for asset, rule in pairs(group) do
-				if assetRules[rule] == nil then
+				if ruleTypes[rule] == nil then
 					return false, string.format(
 						"unknown asset rule '%s' for '%s'", rule, asset)
 				end
@@ -144,54 +132,52 @@ local function checkConditions(action)
 end
 
 local actionKeys = {}
-for _, action in pairs(AssetConditions.actionType) do
+for action, _ in pairs(actionTypes) do
 	table.insert(actionKeys, {
 		["name"]  = action,
 		["check"] = checkConditions(action),
 	})
 end
 
-function AssetConditions:__init(template, assetName)
+local AssetConditions = class("AssetConditions", Marshallable)
+function AssetConditions:__init(template, assetname)
 	Marshallable.__init(self)
 	if template ~= nil then
+		check.table(template)
+		check.string(assetname)
+		utils.checkkeys(actionKeys, template.conditions)
 		self.path = template.path
-		utils.mergetables(self, utils.deepcopy(template.conditions))
-		utils.checkkeys(actionKeys, self)
+		self.actions = utils.deepcopy(template.conditions)
 		self.tplname = template.name
-		self.assetName = assetName
+		self.assetname = assetname
 	end
 	self:_addMarshalNames({
+		"actions",
 		"tplname",
 		"assetname",
 	})
-	for _, action in pairs(actionKeys) do
-		self:_addMarshalNames({ action.name })
-	end
-	self.watchedTpls = {}
+	self.watchedtpls = {}
 end
 
 -- Creates, validates, and returns a condition list if it's not empty
 function AssetConditions.from(template, assetName)
 	if not AssetConditions.isEmpty(template.conditions) then
-		local cond = AssetConditions(template, assetName)
-		Logger:debug("'%s' spawn conditions: %s", cond.tplname,
-			json(cond[AssetConditions.actionType.SPAWN]))
-		Logger:debug("'%s' destroy conditions: %s", cond.tplname,
-			json(cond[AssetConditions.actionType.DESTROY]))
-		return cond
+		local conditions = AssetConditions(template, assetName)
+		for action, _ in pairs(actionTypes) do
+			Logger:debug("'%s' %s conditions: %s", conditions.tplname, action,
+				require("libs.json"):encode_pretty(conditions.actions[action]))
+		end
+		return conditions
 	end
 end
 
 -- Checks if the template conditions contain at least one asset rule group
 -- or a time rule
 function AssetConditions.isEmpty(conditions)
-	for _, action in pairs(actionKeys) do
-		local condition = conditions[action.name]
-		if condition ~= nil then
-			if condition.when ~= nil and condition.when[1] ~= nil or
-			   condition.after then
-				return false
-			end
+	for action, _ in pairs(actionTypes) do
+		local condition = conditions[action] or {}
+		if condition.when ~= nil and condition.when[1] ~= nil or condition.after then
+			return false
 		end
 	end
 	return true
@@ -203,16 +189,21 @@ function AssetConditions:setup(assetmgr)
 	self.assetmgr:addObserver(self.handleAssetEvent, self,
 		self.__clsname..".handleAssetEvent")
 	self.theater = dct.Theater.singleton()
-	self.setup = true
+	self._setup = true
 	self:checkExec(nil, true)
 end
 
--- Checks all the conditional rules and returns either true or false
--- If no decision is to be taken, returns nil
+-- Checks rules for a given action and returns a boolean indicating if
+-- it should be executed, and a copy of the matching rules.
+-- If no decision is to be taken, returns nil.
 function AssetConditions:check(action)
-	assert(self.setup, "setup() was not called by the asset manager")
+	assert(self._setup, "setup() must be called by the asset manager before "..
+		"conditions are used")
 
-	local condition = self[action]
+	Logger:debug("check called for action '%s': %s", tostring(action),
+		require("libs.json"):encode_pretty(self.actions))
+
+	local condition = self.actions[action]
 	if condition == nil then
 		return nil, nil
 	end
@@ -233,9 +224,8 @@ function AssetConditions:check(action)
 		for _, ruleGroup in pairs(condition.when) do
 			local groupResult = true
 			for tplname, ruleName in pairs(ruleGroup) do
-				self.watchedTpls[tplname:lower()] = true
 				local asset = self:_findAsset(tplname)
-				if assetRules[ruleName](asset) ~= true then
+				if ruleTypes[ruleName](asset) ~= true then
 					groupResult = false
 					break
 				end
@@ -249,25 +239,33 @@ function AssetConditions:check(action)
 	return actionResult, utils.shallowclone(condition)
 end
 
+-- Checks rules and immediately runs actions if they match.
 function AssetConditions:checkExec(action, nodelay)
 	if action == nil then
-		for _, act in pairs(actionKeys) do
+		for act, _ in pairs(actionTypes) do
 			self:checkExec(act, nodelay)
 		end
 		return
 	end
-	local result, opts = self:check(action.name)
+	Logger:debug("%s", debug.traceback("checkExec", 2))
+	local result, opts = self:check(action)
 	if result ~= nil then
-		-- Spawn/despawn the asset
+		-- Create/destroy the asset
 		opts.nodelay = nodelay
-		local asset = self.assetmgr._conditional[self.assetName]
+		local asset = self.assetmgr._conditional[self.assetname]
 		self:_runAction(action, opts, asset)
 	end
 end
 
+-- Returns whether the asset creation is conditional, so it should
+-- not be created with the rest of the theater.
+function AssetConditions:delayCreation()
+	return self.actions.create ~= nil
+end
+
 local function reschedule(self, delay, action, opts, asset)
 	local cmdname = string.format("%s.%s('%s')",
-		self.__clsname, action.name, asset.name)
+		self.__clsname, tostring(action), asset.name)
 	local cmd = Command(cmdname, self._runAction, self, action, opts, asset)
 	dct.Theater.singleton():queueCommand(delay, cmd)
 end
@@ -275,7 +273,7 @@ end
 function AssetConditions:_runAction(action, opts, asset)
 	if opts.delay > 0 and opts.nodelay ~= true then
 		Logger:debug("%s._runAction('%s', '%s') delayed for %ds",
-			self.__clsname, action.name, asset.name, opts.delay)
+			self.__clsname, tostring(action), asset.name, opts.delay)
 		-- Disable the delay so this doesn't loop infinitely
 		opts.nodelay = true
 		reschedule(self, opts.delay, action, opts, asset)
@@ -283,18 +281,18 @@ function AssetConditions:_runAction(action, opts, asset)
 	end
 	if opts.after > 0 and opts.after > timer.getTime() then
 		Logger:debug("%s._runAction('%s', '%s') too early; re-running after %ds",
-			self.__clsname, action.name, asset.name, opts.after)
-		-- Reschedule with an extra second in case the floating point math
-		-- gets weird
+			self.__clsname, tostring(action), asset.name, opts.after)
+		-- Reschedule with an extra second to account for possible rounding issues
 		local delay = (opts.after - timer.getTime()) + 1
 		reschedule(self, delay, action, opts, asset)
 		return
 	end
-	-- Re-check to make sure the conditions are still valid
-	if self:check(action.name) then
-		Logger:debug("%s._runAction('%s', '%s') conditions met",
-			self.__clsname, action.name, asset.name)
-		actionFns[action.name](opts, self.assetmgr, asset)
+	-- Re-check to make sure the conditions are still valid after any delays
+	if self:check(action) then
+		Logger:debug("%s._runAction('%s', '%s') condition met",
+			self.__clsname, tostring(action), asset.name)
+		self.actions[action] = nil
+		actionTypes[action](opts, self.assetmgr, asset)
 	end
 end
 
@@ -305,33 +303,35 @@ local assetEvents = {
 
 function AssetConditions:handleAssetEvent(event)
 	if assetEvents[event.id] ~= nil and event.initiator ~= nil then
-		Logger:debug("Asset event %s for %s, watched? %s",
-			tostring(utils.getkey(enum.event, event.id)), self.tplname,
-				tostring(self.watchedTpls[event.initiator.tplname:lower()] ~= nil))
-		if self.watchedTpls[event.initiator.tplname:lower()] then
+		Logger:debug("'%s' detected event '%s' from '%s', is initiator watched? %s",
+			tostring(self.tplname), utils.getkey(enum.event, event.id), tostring(event.initiator.tplname),
+				tostring(self.watchedtpls[event.initiator.tplname:lower()] ~= nil))
+		if self.watchedtpls[event.initiator.tplname:lower()] then
 			Logger:debug("handleAssetEvent('%s') triggered", self.tplname)
 			self:checkExec()
 		end
 	end
 end
 
--- Verify that all template names are valid within the theater
+-- Verify that all template names are valid in the theater
 function AssetConditions:_validateTemplateNames()
 	local regionmgr = dct.Theater.singleton():getRegionMgr()
-	for _, action in pairs(self.actionType) do
-		local condition = self[action] and self[action].when or {}
-		for _, rule in pairs(condition) do
+	for action, _ in pairs(actionTypes) do
+		local rules = self.actions[action] and self.actions[action].when or {}
+		for _, rule in pairs(rules) do
 			for tplname, _ in pairs(rule) do
 				local found = false
 				for _, region in pairs(regionmgr.regions) do
 					if region:getTemplateByName(tplname:lower()) ~= nil then
+						Logger:debug("'%s' watching template '%s'", self.tplname, tplname)
+						self.watchedtpls[tplname:lower()] = true
 						found = true
 						break
 					end
 				end
 				if not found then
-					error(string.format("'%s' has a condition on template '%s', "..
-						"which does not exist", self.tplname, tplname))
+					error(string.format("'%s' conditions depends on template "..
+						"'%s', which does not exist", self.tplname, tplname))
 				end
 			end
 		end
