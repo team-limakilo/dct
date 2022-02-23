@@ -4,9 +4,10 @@
 -- Implements a basic building persisntence system.
 --]]
 
-local class  = require("libs.namedclass")
+local class        = require("libs.namedclass")
+local utils        = require("dct.utils")
 local Marshallable = require("dct.libs.Marshallable")
-local Logger = require("dct.libs.Logger").getByName("System")
+local Logger       = require("dct.libs.Logger").getByName("System")
 
 local SceneryTracker = class("SceneryTracker", Marshallable)
 function SceneryTracker:__init()
@@ -25,7 +26,10 @@ end
 function SceneryTracker:_unmarshalpost()
 	for bldg, _ in pairs(self.destroyed) do
 		local pt = Object.getPoint({id_ = tonumber(bldg)})
-		trigger.action.explosion(pt, 1000)
+		-- don't persist destroyed objects near airbases (assume they are maintained)
+		if utils.nearestAirbase(pt, 7000) == nil then
+			trigger.action.explosion(pt, 1000)
+		end
 	end
 end
 
