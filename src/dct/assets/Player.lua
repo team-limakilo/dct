@@ -113,6 +113,12 @@ local function reset_slot(asset)
 			(utils.getkey(dctenum.missionType, recommended) or "None"), 20, false)
 	end
 	trigger.action.outTextForGroup(asset.groupId, notifymsg, 20, false)
+
+	if not asset:isEnabled() then
+		trigger.action.outTextForGroup(asset.groupId, "Warning: you have spawned "..
+			"in a disabled slot, slot blocker potentially broken.", 20, false)
+	end
+
 	return msn
 end
 
