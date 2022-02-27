@@ -78,7 +78,7 @@ for abid, name in pairs(airbase_table[env.mission.theatre] or {}) do
 	end
 end
 
-local function processCategory(tbl, coa)
+local function processCategory(tbl, coa, cat)
 	if tbl == nil or tbl.group == nil then
 		return
 	end
@@ -91,7 +91,7 @@ local function processCategory(tbl, coa)
 					["exists"] = true,
 					["coalition"] = coalition.side[string.upper(coa)],
 				}
-				Airbase(newab)
+				Airbase(newab, cat)
 			end
 		end
 	end
@@ -104,7 +104,7 @@ local catmap = {
 for coa, coatbl in pairs(env.mission.coalition) do
 	for _, cntrytbl in ipairs(coatbl.country) do
 		for _, cat in pairs(catmap) do
-			processCategory(cntrytbl[cat], coa)
+			processCategory(cntrytbl[cat], coa, Airbase.Category.SHIP)
 		end
 	end
 end

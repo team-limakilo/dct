@@ -731,15 +731,13 @@ _G.Coalition = Coalition
 
 
 local Airbase = class(Coalition)
-function Airbase:__init(objdata)
+function Airbase:__init(objdata, airbaseCategory)
 	objdata.category = Object.Category.BASE
 	Coalition.__init(self, objdata)
 	self.group = nil
 	self.callsign = objdata.callsign
 	self.parking = objdata.parking
-	if self.desc.airbaseCategory == nil then
-		self.desc.airbaseCategory = Airbase.Category.AIRDROME
-	end
+	self.desc.category = airbaseCategory or Airbase.Category.AIRDROME
 end
 Airbase.Category = {
 	["AIRDROME"] = 0,

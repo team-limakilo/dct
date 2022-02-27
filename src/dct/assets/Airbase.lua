@@ -310,7 +310,7 @@ function AirbaseAsset:_setup()
 		self:setDead(true)
 		return
 	end
-	self._abcategory = dcsab:getDesc().airbaseCategory
+	self._abcategory = dcsab:getDesc().category
 	self._location = dcsab:getPoint()
 end
 

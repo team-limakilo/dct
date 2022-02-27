@@ -393,14 +393,15 @@ end
 
 local function airbaseId(grp)
 	assert(grp, "value error: grp cannot be nil")
-	local id = nil
-	for _, name in ipairs({"airdromeId", "helipadId", "linkUnit"}) do
-		id = grp.data.route.points[1][name]
-		if id ~= nil then
-			return id
-		end
+	local start = grp.data.route.points[1]
+	-- helipadId can be either a ship (carrier, destroyer, etc) or a FARP
+	if start["helipadId"] ~= nil then
+		return start["helipadId"], false
 	end
-	return id
+	-- airdromeId is an airfield
+	if start["airdromeId"] ~= nil then
+		return start["airdromeId"], true
+	end
 end
 
 local function airbaseParkingId(grp)
@@ -414,9 +415,10 @@ local function airbaseParkingId(grp)
 end
 
 local function findAirbase(grp)
-	local id = airbaseId(grp)
+	-- try to find the airbase based on the template data
+	local id, isAirdrome = airbaseId(grp)
 	if id ~= nil then
-		return dctutils.airbaseId2Name(id)
+		return dctutils.airbaseId2Name(id, isAirdrome)
 	end
 
 	-- in case of a ground start, use the closest airbase or FARP

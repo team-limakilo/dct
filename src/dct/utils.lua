@@ -44,17 +44,22 @@ function utils.assettype2mission(assettype)
 end
 
 local airbase_id2name_map = nil
-function utils.airbaseId2Name(id)
+function utils.airbaseId2Name(id, isAirdrome)
 	if id == nil then
 		return nil
 	end
 	if airbase_id2name_map == nil then
 		airbase_id2name_map = {}
 		for _, ab in pairs(world.getAirbases()) do
-			airbase_id2name_map[tonumber(ab:getID())] = ab:getName()
+			-- note: airdromes (pre-defined airbases) use a different ID namespace
+			-- to user-placed airbases (ships and FARPs), so we need to distinguish
+			-- them before making an ID lookup to avoid mixing them up
+			local airdrome = ab:getDesc().category == Airbase.Category.AIRDROME
+			airbase_id2name_map[airdrome] = airbase_id2name_map[airdrome] or {}
+			airbase_id2name_map[airdrome][tonumber(ab:getID())] = ab:getName()
 		end
 	end
-	return airbase_id2name_map[id]
+	return airbase_id2name_map[isAirdrome][id]
 end
 
 function utils.nearestAirbase(point, radius, filter, data)
