@@ -10,7 +10,6 @@ require("lfs")
 local class       = require("libs.namedclass")
 local containers  = require("libs.containers")
 local json        = require("libs.json")
-local enum        = require("dct.enum")
 local dctutils    = require("dct.utils")
 local Observable  = require("dct.libs.Observable")
 local uicmds      = require("dct.ui.cmds")
@@ -223,8 +222,7 @@ function Theater:delayedInit()
 	-- TODO: temporary, spawn all generated assets
 	-- eventually we will want to spawn only a set of assets
 	for _, asset in self:getAssetMgr():iterate() do
-		if asset.type ~= enum.assetType.PLAYERGROUP and
-		   not asset:isSpawned() then
+		if not asset:isSpawned() then
 			asset:spawn()
 		end
 	end
@@ -235,9 +233,10 @@ local airbase_cats = {
 	[Airbase.Category.SHIP]    = true,
 }
 
-local function filterfarps(airbase)
+local function filterfarps(airbase, assetmgr)
 	if airbase:getCategory() == Object.Category.BASE and
-	   airbase_cats[airbase:getDesc().category] ~= nil then
+	   airbase_cats[airbase:getDesc().category] ~= nil and
+	   assetmgr:getAsset(airbase:getName()) ~= nil then
 		return true
 	end
 end
@@ -251,12 +250,12 @@ local airbase_events = {
 -- do not trigger takeoff and land events, this function figured out
 -- if there is a FARP near the event and if so uses that FARP as the
 -- place for the event.
-local function fixup_airbase(event)
+local function fixup_airbase(event, assetmgr)
 	if airbase_events[event.id] and
 	   event.place == nil and
 	   event.initiator:isExist() then
 		event.place = dctutils.nearestAirbase(
-			event.initiator:getPoint(), 700, filterfarps)
+			event.initiator:getPoint(), 2500, filterfarps, assetmgr)
 	end
 end
 
@@ -282,7 +281,7 @@ function Theater:onEvent(event)
 	if irrelevants[event.id] ~= nil then
 		return
 	end
-	fixup_airbase(event)
+	fixup_airbase(event, self:getAssetMgr())
 	xpcall(function() self:notify(event) end, function(err)
 		Logger:error("protected call - %s", debug.traceback(err, 2))
 	end)

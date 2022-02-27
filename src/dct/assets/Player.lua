@@ -414,16 +414,20 @@ local function airbaseParkingId(grp)
 	return nil
 end
 
-local function findAirbase(grp)
+local function isDCTAirbase(airbase, assetmgr)
+	return assetmgr:getAsset(airbase:getName()) ~= nil
+end
+
+local function findAirbase(grp, assetmgr)
 	-- try to find the airbase based on the template data
 	local id, isAirdrome = airbaseId(grp)
 	if id ~= nil then
 		return dctutils.airbaseId2Name(id, isAirdrome)
 	end
 
-	-- in case of a ground start, use the closest airbase or FARP
-	local point = { x = grp.data.x, z = grp.data.y, y = land.getHeight(grp.data) }
-	local nearest = dctutils.nearestAirbase(point, 5000)
+	-- if the slot is a ground spawn, search for the closest DCT airbase or FARP
+	local point = { x = grp.data.x, y = land.getHeight(grp.data), z = grp.data.y }
+	local nearest = dctutils.nearestAirbase(point, 7500, isDCTAirbase, assetmgr)
 	if nearest ~= nil then
 		return nearest:getName()
 	end
@@ -438,8 +442,6 @@ function Player:_completeinit(template)
 	self.firstspawn = true
 	self.groupId    = self._tpldata.data.groupId
 	self.squadron   = self.name:match("(%w+)(.+)")
-	self.airbase    = findAirbase(self._tpldata)
-	self.parking    = airbaseParkingId(self._tpldata)
 	if settings.players.costs[self.unittype] ~= nil then
 		self.cost = template.cost * settings.players.costs[self.unittype]
 	end
@@ -454,7 +456,6 @@ function Player:_completeinit(template)
 
 	if self._logger:isDebugEnabled() then
 		self._logger:debug("unittype: %s", tostring(self.unittype))
-		self._logger:debug("airbase: %s", tostring(self.airbase))
 		self._logger:debug("ato: %s",
 			require("libs.json"):encode_pretty(self.ato))
 		self._logger:debug("cost: %g", self.cost, type(self.cost))
@@ -547,12 +548,23 @@ end
 
 function Player:spawn()
 	AssetBase.spawn(self)
-	self:doEnable()
 	if self.firstspawn then
+		local assetmgr = dct.theater:getAssetMgr()
+		self.airbase = findAirbase(self._tpldata, assetmgr)
+		self.parking = airbaseParkingId(self._tpldata)
+		self._logger:debug("airbase: %s", tostring(self.airbase))
+		self._logger:debug("parking: %s", tostring(self.parking))
 		self:registerObservable(dct.theater:getAssetMgr())
 		self:registerObservable(dct.theater:getCommander(self.owner))
+		local airbaseAsset = assetmgr:getAsset(self.airbase)
+		if airbaseAsset then
+			self._operstate = airbaseAsset:isOperational() and
+				airbaseAsset.owner == self.owner
+			self._logger:debug("setting operstate: %s", tostring(self._operstate))
+		end
 		self.firstspawn = false
 	end
+	self:doEnable()
 end
 
 function Player:despawn()
