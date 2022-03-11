@@ -36,6 +36,10 @@ local function countPlayers()
     return num
 end
 
+local function isoDate(dcsDate)
+    return string.format("%d-%d-%d", dcsDate.Year, dcsDate.Month, dcsDate.Day)
+end
+
 local function makeData(export)
     return {
         coalitions = {},
@@ -43,7 +47,10 @@ local function makeData(export)
         theater = env.mission.theatre,
         sortie  = env.getValueDictByKey(env.mission.sortie),
         startdate = os.date("%F %TZ", os.time(export.theater.startdate)),
-        date    = os.date("!%F %TZ"),
+        date      = os.date("!%F %TZ"),
+        modeldate = isoDate(env.mission.date),
+        modeltime = timer.getTime(),
+        abstime   = timer.getAbsTime(),
         players = {
             current = countPlayers(),
             max = export.maxPlayers,
@@ -155,6 +162,7 @@ local function getMissions(commander, assetmgr)
             iffmode1 = mission:getIFFCodes().m1,
             type = MISSION_TYPE[mission.type],
             state = mission:getStateName(),
+            timeout = mission:getTimeout(),
             target = {
                 name = mission.target,
                 region = tgt.region,
