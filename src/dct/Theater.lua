@@ -290,9 +290,10 @@ function Theater:onEvent(event)
 		-- and tickets are complete, otherwise when a server is
 		-- shutdown gracefully the state will be deleted.
 		if self:getTickets():isComplete() then
-			local ok, err = os.remove(settings.statepath)
+			local ok, err = os.rename(settings.statepath,
+				string.format("%s_%s", settings.statepath, os.time()))
 			if not ok then
-				Logger:error("unable to remove statefile; "..err)
+				Logger:error("unable to archive statefile; "..err)
 			end
 		end
 	end
