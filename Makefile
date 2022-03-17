@@ -9,6 +9,7 @@ LUALIBSDIR := lua-libs-$(LUALIBSVER)
 
 .PHONY: check build
 check:
+	luacheck -q .
 	rm -f $(SRCPATH)/data/*.state
 	@$(MAKE) -C tests
 
