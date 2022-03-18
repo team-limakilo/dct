@@ -19,6 +19,7 @@ return {
         ["A-10A"]         = utils.posfmt.MGRS,
         ["A-10C"]         = utils.posfmt.MGRS,
         ["A-10C_2"]       = utils.posfmt.MGRS,
+        ["AH-64D_BLK_II"] = utils.posfmt.MGRS,
         ["F-5E-3"]        = utils.posfmt.DDM,
         ["F-16C_50"]      = utils.posfmt.DDM,
         ["FA-18C_hornet"] = utils.posfmt.DDM,
