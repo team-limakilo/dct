@@ -184,6 +184,13 @@ local function getMissions(commander, assetmgr)
     return missions
 end
 
+-- List assorted information from the commander
+local function getCommanderInfo(commander)
+    return {
+        availablemissions = commander:getAvailableMissions(dctenum.missionType),
+    }
+end
+
 -- Save the data to a file
 local function saveToDisk(data)
     local path = settings.statepath..".export.json"
@@ -218,6 +225,7 @@ function DataExport:update()
         coalitions[key].tickets = getTickets(tickets, coalition)
         coalitions[key].missions = getMissions(cmdr, assetmgr)
         coalitions[key].assets = getAssets(regionmgr, assetmgr, coalition)
+        coalitions[key].commander = getCommanderInfo(cmdr)
     end
 
     if self.saveToDisk then
