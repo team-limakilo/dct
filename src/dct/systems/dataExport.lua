@@ -19,6 +19,7 @@ local settings = _G.dct.settings.server
 -- Reverse maps for asset and mission type names
 local ASSET_TYPE = {}
 local MISSION_TYPE = {}
+local ASSET_MISSION_TYPE = {}
 
 for name, id in pairs(dctenum.assetType) do
     ASSET_TYPE[id] = name
@@ -26,6 +27,12 @@ end
 
 for name, id in pairs(dctenum.missionType) do
     MISSION_TYPE[id] = name
+end
+
+for msnTypeId, assetTypes in pairs(dctenum.missionTypeMap) do
+    for assetTypeId, _ in pairs(assetTypes) do
+        ASSET_MISSION_TYPE[assetTypeId] = MISSION_TYPE[msnTypeId]
+    end
 end
 
 local function countPlayers()
@@ -140,6 +147,7 @@ local function getAssets(regionmgr, assetmgr, coalition)
                 spawned = asset:isSpawned(),
                 location = getLocation(asset:getLocation()),
                 strategic = dctenum.assetClass["STRATEGIC"][asset.type] ~= nil,
+                missiontype = ASSET_MISSION_TYPE[asset.type],
                 status = asset:getStatus(),
                 type = ASSET_TYPE[asset.type],
                 sitetype = asset.sitetype,
