@@ -58,6 +58,7 @@ local function makeData(export)
         modeldate = isoDate(env.mission.date),
         modeltime = timer.getTime(),
         abstime   = timer.getAbsTime(),
+        dcs_version = _G._APP_VERSION,
         players = {
             current = countPlayers(),
             max = export.maxPlayers,

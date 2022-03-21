@@ -27,6 +27,8 @@ dctcheck.spawnunits   = 0
 dctcheck.spawnstatics = 0
 _G.dctcheck = dctcheck
 
+_G._APP_VERSION = string.format("0.0.0.00000")
+
 -- DCS Singletons
 --
 
