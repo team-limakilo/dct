@@ -304,6 +304,9 @@ local function main()
 	assert(theater:getTickets():isComplete() == true,
 		"theater was not completed")
 
+	-- allow a chance to save a backup of the state
+	theater:onEvent({ id = world.event.S_EVENT_MISSION_END })
+
 	theater = dct.Theater()
 	_G.dct.theater = theater
 	theater:exec(50)
