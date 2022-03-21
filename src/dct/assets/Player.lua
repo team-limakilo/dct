@@ -102,13 +102,16 @@ local function reset_slot(asset)
 		local missions = cmdr:getAvailableMissions(asset.ato)
 		local missionsfmt = {}
 		for type, count in utils.sortedpairs(missions) do
-			table.insert(missionsfmt, string.format("  %s:  %d", type, count))
+			table.insert(missionsfmt, string.format("%s:  %d", type, count))
+		end
+		if next(missionsfmt) == nil then
+			table.insert(missionsfmt, "None")
 		end
 		local recommended = cmdr:recommendMissionType(asset.ato)
 		trigger.action.outTextForGroup(asset.groupId,
 			"Welcome. Use the F10 Menu to get a theater update and "..
-			"request a mission.\n\nAvailable missions:\n"..
-			table.concat(missionsfmt, "\n")..
+			"request a mission.\n\nAvailable missions:\n  "..
+			table.concat(missionsfmt, "  \n")..
 			"\n\nRecommended Mission Type: "..
 			(utils.getkey(dctenum.missionType, recommended) or "None"), 20, false)
 	end
