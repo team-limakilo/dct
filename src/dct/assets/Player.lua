@@ -111,7 +111,7 @@ local function reset_slot(asset)
 		trigger.action.outTextForGroup(asset.groupId,
 			"Welcome. Use the F10 Menu to get a theater update and "..
 			"request a mission.\n\nAvailable missions:\n  "..
-			table.concat(missionsfmt, "  \n")..
+			table.concat(missionsfmt, "\n  ")..
 			"\n\nRecommended Mission Type: "..
 			(utils.getkey(dctenum.missionType, recommended) or "None"), 20, false)
 	end
