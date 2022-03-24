@@ -54,7 +54,7 @@ local function makeData(export)
         theater = env.mission.theatre,
         sortie  = env.getValueDictByKey(env.mission.sortie),
         period  = dct.settings.server.period,
-        startdate = os.date("%F %TZ", os.time(export.theater.startdate)),
+        startdate = os.date("!%F %TZ", os.time(export.theater.startdate)),
         date      = os.date("!%F %TZ"),
         modeldate = isoDate(env.mission.date),
         modeltime = timer.getTime(),
