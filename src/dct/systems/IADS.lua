@@ -111,19 +111,19 @@ function IADS:__init(cmdr)
 
 	-- Periodic
 	theater:queueCommand(10, Command(prefix..".timeoutTracks",
-		self.timeoutTracks, self))
+		self.timeoutTracks, self), true)
 	theater:queueCommand(10, Command(prefix..".EWRtrkFileBuild",
-		self.EWRtrkFileBuild, self))
+		self.EWRtrkFileBuild, self), true)
 	theater:queueCommand(10, Command(prefix..".SAMtrkFileBuild",
-		self.SAMtrkFileBuild, self))
+		self.SAMtrkFileBuild, self), true)
 	theater:queueCommand(10, Command(prefix..".AWACStrkFileBuild",
-		self.AWACStrkFileBuild, self))
+		self.AWACStrkFileBuild, self), true)
 	theater:queueCommand(10, Command(prefix..".SAMCheckHidden",
-		self.SAMCheckHidden, self))
+		self.SAMCheckHidden, self), true)
 	theater:queueCommand(10, Command(prefix..".BlinkSAM",
-		self.BlinkSAM, self))
+		self.BlinkSAM, self), true)
 	theater:queueCommand(10, Command("iads.EWRSAMOnRequest",
-		self.EWRSAMOnRequest, self))
+		self.EWRSAMOnRequest, self), true)
 end
 
 function IADS:getSamByName(name)

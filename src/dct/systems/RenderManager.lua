@@ -220,7 +220,7 @@ function RenderManager:__init(theater)
 
 	-- Run update function continuously
 	theater:queueCommand(30, CoroutineCmd("RenderManager.update",
-		self.update, self, theater))
+		self.update, self, theater), true)
 end
 
 function RenderManager:onDCSEvent(event)

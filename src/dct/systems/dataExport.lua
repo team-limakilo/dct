@@ -79,7 +79,7 @@ function DataExport:__init(theater)
         Logger:debug("running data export every %d seconds",
             settings.exportperiod)
         theater:queueCommand(settings.exportperiod,
-            Command("DataExport.update", self.update, self))
+            Command("DataExport.update", self.update, self), true)
     else
         Logger:debug("data export disabled")
     end
