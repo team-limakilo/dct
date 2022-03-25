@@ -110,7 +110,8 @@ function DamageGoal:getStatus()
 	-- some scenery objects can return bugged life values before they're damaged,
 	-- so we're fixing them now...
 	if health > self._maxlife then
-		Logger:warn("getStatus() - object '%s' health is greater than maxlife; fixed")
+		Logger:warn("getStatus() - object '%s' health is greater than maxlife; fixed",
+			self.name)
 		self._maxlife = health
 	end
 
