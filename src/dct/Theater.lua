@@ -6,7 +6,7 @@
 
 require("os")
 require("io")
-require("lfs")
+local lfs         = require("lfs")
 local class       = require("libs.namedclass")
 local containers  = require("libs.containers")
 local json        = require("libs.json")
@@ -98,7 +98,15 @@ function Systems:addSystem(path)
 	self._systemscnt = self._systemscnt + 1
 end
 
+local resetFile = lfs.writedir().."/reset.txt"
+
 local function isStateValid(state)
+	if io.open(resetFile) ~= nil then
+		Logger:info("isStateValid(); state reset requested by reset.txt")
+		os.remove(resetFile)
+		return false
+	end
+
 	if state == nil then
 		Logger:info("isStateValid(); state object nil")
 		return false
