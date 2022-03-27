@@ -145,6 +145,7 @@ function Theater:__init()
 	self:setTimings(settings.schedfreq, settings.tgtfps,
 		settings.percentTimeAllowed)
 	self.statef    = false
+	self.initdone  = false
 	self.qtimer    = require("dct.libs.Timer")(self.quanta, os.clock)
 	self.cmdq      = containers.PriorityQueue()
 	self.cmdrs     = {}
@@ -215,6 +216,8 @@ function Theater:loadOrGenerate()
 		Logger:info("generating new theater")
 		self:_runsys("generate", self)
 	end
+
+	self.initdone = true
 end
 
 function Theater:delayedInit()
@@ -298,7 +301,7 @@ function Theater:onEvent(event)
 			if not ok then
 				Logger:error("unable to remove statefile; "..err)
 			end
-		else
+		elseif self.initdone then
 			-- Save the state for reloading after a server restart
 			self:export()
 		end
