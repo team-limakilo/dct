@@ -166,6 +166,7 @@ enum.missionTypeMap = {
 		[enum.assetType.BUNKER]     = true,
 		[enum.assetType.CHECKPOINT] = true,
 		[enum.assetType.FACTORY]    = true,
+		[enum.assetType.SHORAD]     = true,
 	},
 	[enum.missionType.SEAD] = {
 		[enum.assetType.EWR]        = true,

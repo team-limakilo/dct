@@ -105,6 +105,7 @@ function AirDefenseSite:_modifyTemplate(template)
 	shorad.regenerate = self.regenerate
 	shorad.objtype = enum.assetType.SHORAD
 	shorad.name = template.name.."-SHORAD"
+	shorad.ignore = true
 	shorad.desc = nil
 	shorad.cost = 0
 	for gid = #template.tpldata, 1, -1 do
