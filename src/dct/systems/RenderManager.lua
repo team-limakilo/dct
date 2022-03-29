@@ -35,9 +35,9 @@ local RangeType = {
 }
 
 local RadarDistanceFactor = {
-	[RangeType.Aircraft]   = 2.5,
+	[RangeType.Aircraft]   = 2.25,
 	[RangeType.CruiseMsl]  = nil,
-	[RangeType.AntiRadMsl] = 0.5,
+	[RangeType.AntiRadMsl] = 0.50,
 	[RangeType.GuidedBomb] = nil,
 }
 
@@ -62,13 +62,13 @@ local AttributeRanges = {
 		["Ships"]               = 100000,
 	},
 	[RangeType.CruiseMsl] = {
-		["Ships"]               = 50000,
+		["Ships"]               = 20000,
 	},
 	[RangeType.AntiRadMsl]      = {},
 	[RangeType.GuidedBomb]      = {},
 }
 local DefaultRanges = {
-	[RangeType.Aircraft]        = 30000,
+	[RangeType.Aircraft]        = 25000,
 	[RangeType.CruiseMsl]       = 10000,
 	[RangeType.AntiRadMsl]      = 0,
 	[RangeType.GuidedBomb]      = 0,
