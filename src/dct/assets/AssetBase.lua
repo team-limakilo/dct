@@ -195,7 +195,7 @@ function AssetBase:_completeinit(template)
 	end
 
 	if isMissionTarget(template.objtype) then
-		if template.desc == nil then
+		if not template.ignore and template.desc == nil then
 			error(string.format(
 				"Template(%s) is a mission target but has no 'desc' field", template.name))
 		end
