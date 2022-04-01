@@ -98,12 +98,17 @@ function Systems:addSystem(path)
 	self._systemscnt = self._systemscnt + 1
 end
 
-local resetFile = lfs.writedir().."/reset.txt"
+local resetFilePath = lfs.writedir().."/reset.txt"
 
 local function isStateValid(state)
-	if io.open(resetFile) ~= nil then
+	local resetFile = io.open(resetFilePath)
+	if resetFile ~= nil then
 		Logger:info("isStateValid(); state reset requested by reset.txt")
-		os.remove(resetFile)
+		resetFile:close()
+		local removed, err = os.remove(resetFilePath)
+		if not removed then
+			Logger:error("Failed to remove reset.txt: %s", err)
+		end
 		return false
 	end
 
