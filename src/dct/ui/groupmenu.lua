@@ -158,6 +158,7 @@ function GroupMenu:create(mission)
 end
 
 function GroupMenu:update()
+	-- do not update if no root menus exist yet
 	if next(self.menus) == nil then
 		return
 	end
@@ -188,12 +189,15 @@ function GroupMenu:update()
 
 		for _, tgt in pairs(targetList) do
 			local assetTypeName = utils.getkey(enum.assetType, tgt.type)
+			if tgt.sitetype ~= nil and tgt.sitetype ~= assetTypeName then
+				assetTypeName = assetTypeName.."/"..tgt.sitetype
+			end
 			local missionTypeId = dctutils.assettype2mission(tgt.type)
 			local missionTypeName = utils.getkey(enum.missionType, missionTypeId)
 			local distance = Vector.distance(playerLocation, tgt:getLocation())
 			distance = dctutils.fmtdistance(distance, self.asset.units)
 
-			local name = string.format("%s(%s): %s - %s",
+			local name = string.format("%s (%s): %s - %s",
 				missionTypeName, assetTypeName, tgt.codename, distance)
 
 			local msnRqstCmd = addRqstCmd(self, name, self.msnListMenu,
