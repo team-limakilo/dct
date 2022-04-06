@@ -145,6 +145,7 @@ local function getAssets(regionmgr, assetmgr, coalition)
             export[region][name] = {
                 dead = asset:isDead(),
                 intel = asset.intel,
+                ignore = asset.ignore,
                 codename = asset.codename,
                 spawned = asset:isSpawned(),
                 location = getLocation(asset:getLocation()),
