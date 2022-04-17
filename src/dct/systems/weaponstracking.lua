@@ -64,7 +64,7 @@ function DCTWeapon:getWarheadPower()
 	local types = {
 		[Weapon.WarheadType.AP] = "mass",
 		[Weapon.WarheadType.HE] = "explosiveMass",
-		[Weapon.WarheadType.SHAPED_CHARGE] = "shapedExplosiveMass",
+		[Weapon.WarheadType.SHAPED_EXPLOSIVE] = "shapedExplosiveMass",
 	}
 	return self.desc.warhead[types[self.desc.warhead.type]]
 end
