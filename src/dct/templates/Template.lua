@@ -11,6 +11,7 @@ local enum  = require("dct.enum")
 local vector= require("dct.libs.vector")
 local Goal  = require("dct.Goal")
 local STM   = require("dct.templates.STM")
+local Miz   = require("dct.templates.Miz")
 
 --[[
 -- represents the amount of damage that can be taken before
@@ -663,7 +664,7 @@ function Template:copyData()
 	return copy
 end
 
-function Template.fromFile(region, dctfile, stmfile)
+function Template.fromFile(region, dctfile, stmfile, mizfile)
 	assert(region ~= nil, "region is required")
 	assert(dctfile ~= nil, "dctfile is required")
 
@@ -678,6 +679,9 @@ function Template.fromFile(region, dctfile, stmfile)
 		template = utils.mergetables(
 			STM.transform(utils.readlua(stmfile, "staticTemplate")),
 			template)
+	end
+	if mizfile ~= nil then
+		template = utils.mergetables(Miz.read(mizfile).mission, template)
 	end
 	return Template(template)
 end
