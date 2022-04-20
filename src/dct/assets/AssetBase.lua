@@ -33,25 +33,31 @@ local norenametype = {
 	[dctenum.assetType.AIRBASE]        = true,
 }
 
-local codenames = utils.deepcopy(settings.codenamedb)
-local function getCodenames(type)
-	if codenames[type] == nil then
+local codenames = {
+	[coalition.side.NEUTRAL] = utils.deepcopy(settings.codenamedb),
+	[coalition.side.RED]     = utils.deepcopy(settings.codenamedb),
+	[coalition.side.BLUE]    = utils.deepcopy(settings.codenamedb),
+}
+
+local function getCodenameList(type, side)
+	if codenames[side][type] == nil then
 		type = "default"
 	end
-	-- Refresh the codename list if it's empty
-	if next(codenames[type]) == nil then
-		codenames[type] = utils.deepcopy(settings.codenamedb[type])
+	if next(codenames[side][type]) == nil then
+		-- Refresh the codename list for the coalition if it's empty
+		codenames[side][type] = utils.deepcopy(settings.codenamedb[type])
 	end
-	return codenames[type]
+	return codenames[side][type]
 end
 
 local function generateCodename(template)
-	if template.codename ~= "default codename" then
+	if template.codename ~= nil and
+	   template.codename ~= "default codename" then
 		return template.codename
 	end
-	local typeCodenames = getCodenames(template.objtype)
-	local idx = math.random(1, #typeCodenames)
-	return table.remove(typeCodenames, idx)
+	local list = getCodenameList(template.objtype, template.coalition)
+	local idx = math.random(1, #list)
+	return table.remove(list, idx)
 end
 
 local function isMissionTarget(assetType)
