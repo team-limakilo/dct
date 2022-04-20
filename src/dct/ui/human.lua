@@ -25,10 +25,10 @@ local lineColor = {
 }
 
 local fillColor = {
-	[dctutils.COALITION_CONTESTED] = { 0.8, 0.2,  0.8, 0.1 },
-	[coalition.side.NEUTRAL]       = { 0,   0,    0,   0.1 },
-	[coalition.side.BLUE]          = { 0,   0.25, 1,   0.1 },
-	[coalition.side.RED]           = { 1,   0.25, 0,   0.1 },
+	[dctutils.COALITION_CONTESTED] = { 0.8, 0.4,  0.8, 0.075 },
+	[coalition.side.NEUTRAL]       = { 0,   0,    0,   0.075 },
+	[coalition.side.BLUE]          = { 0,   0.25, 1,   0.075 },
+	[coalition.side.RED]           = { 1,   0.25, 0,   0.075 },
 }
 
 local textColor = {
