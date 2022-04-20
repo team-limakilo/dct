@@ -31,6 +31,11 @@ local function isAirborne(category)
 		or category == Unit.Category.HELICOPTER
 end
 
+local function isStatic(category)
+	return category == Unit.Category.STRUCTURE or
+	       category == enum.UNIT_CAT_SCENERY
+end
+
 local StaticAsset = require("libs.namedclass")("StaticAsset", AssetBase)
 function StaticAsset:__init(template)
 	self._maxdeathgoals = 0
@@ -148,9 +153,7 @@ function StaticAsset:_setupDeathGoal(grpdata, category, country)
 	elseif country ~= nil and
 	       coalition.getCountryCoalition(country) == self.owner then
 		self:_addDeathGoal(grpdata.name,
-			AssetBase.defaultgoal(
-				category == Unit.Category.STRUCTURE or
-				category == enum.UNIT_CAT_SCENERY))
+			AssetBase.defaultgoal(isStatic(category)))
 	end
 end
 
@@ -230,6 +233,24 @@ function StaticAsset:getCurrentLocation()
 		end
 	end
 	return self:getLocation()
+end
+
+function StaticAsset:getStaticTargetLocations()
+	local locations = {}
+	for name, grp in pairs(self._assets) do
+		if isStatic(grp.category) then
+			local goal = self._deathgoals[name]
+			if goal ~= nil and goal.priority == Goal.priority.PRIMARY then
+				table.insert(locations, {
+					desc = grp.data.desc,
+					x = grp.data.x,
+					y = land.getHeight(grp.data),
+					z = grp.data.y,
+				})
+			end
+		end
+	end
+	return locations
 end
 
 function StaticAsset:getStatus()

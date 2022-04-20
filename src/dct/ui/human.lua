@@ -190,8 +190,20 @@ end
 
 function human.drawTargetIntel(mission, groupId, readonly)
 	local tgtInfo = mission:getTargetInfo()
-	local degpos = dctutils.degrade_position(tgtInfo.location, tgtInfo.intellvl)
-	markToGroup("TGT: "..tgtInfo.callsign, degpos, mission.id, groupId, readonly)
+	if tgtInfo.intellvl >= 4 and #tgtInfo.locations > 1 then
+		-- Mission has multiple static locations
+		for _, location in pairs(tgtInfo.locations) do
+			local degpos = dctutils.degrade_position(location, tgtInfo.intellvl)
+			markToGroup(string.format(
+				"TGT: %s (%s)", tgtInfo.callsign, tostring(location.desc)),
+				degpos, mission.id, groupId, readonly)
+		end
+	else
+		-- Mission only has a single location
+		local degpos = dctutils.degrade_position(tgtInfo.location, tgtInfo.intellvl)
+		markToGroup("TGT: "..tgtInfo.callsign, degpos, mission.id, groupId, readonly)
+	end
+	-- Designer-authored marks
 	for _, mark in pairs(tgtInfo.extramarks) do
 		mark.y = mark.y or 0
 		mark.label = dctutils.interp(mark.label, { ["TARGET"] = tgtInfo.callsign })

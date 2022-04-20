@@ -187,6 +187,7 @@ local function checkbldgdata(keydata, tpl)
 			["dct_deathgoal"] = goalFromName(bldg.goal,
 				Goal.objtype.SCENERY),
 			["name"] = tostring(bldg.id),
+			["desc"] = bldg.name or bldg.desc,
 		}
 		local sceneryobject = { id_ = tonumber(bldgdata.data.name), }
 		utils.mergetables(bldgdata.data,

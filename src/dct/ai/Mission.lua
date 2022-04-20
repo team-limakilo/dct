@@ -215,6 +215,11 @@ function Mission:__init(cmdr, missiontype, tgt, plan)
 	self.tgtinfo.region   = tgt.rgnname
 	self.tgtinfo.extramarks = tgt.extramarks
 	self.tgtinfo.coalition  = tgt.owner
+	self.tgtinfo.locations  = {}
+
+	if tgt.getStaticTargetLocations then
+		self.tgtinfo.locations = tgt:getStaticTargetLocations()
+	end
 end
 
 function Mission:getStateName()
@@ -403,6 +408,21 @@ function Mission:getIFFCodes(asset)
 	return { ["m1"] = m1, ["m3"] = m3 }
 end
 
+local function getTargetDetails(tgt, cmdr, fmt)
+	local intel = tgt:getIntel(cmdr.owner)
+	if intel >= 4 and tgt.getStaticTargetLocations then
+		local details = {}
+		for _, location in pairs(tgt:getStaticTargetLocations()) do
+			table.insert(details, string.format("  %s: %s", tostring(location.desc),
+				dctutils.fmtposition(location, intel, fmt)))
+		end
+		if next(details) ~= nil then
+			return table.concat(details, "\n")
+		end
+	end
+	return "Precise locations are currently unavailable."
+end
+
 function Mission:getDescription(fmt)
 	local tgt = self.cmdr:getAsset(self.target)
 	if tgt == nil then
@@ -413,6 +433,7 @@ function Mission:getDescription(fmt)
 			tgt:getLocation(),
 			tgt:getIntel(self.cmdr.owner),
 			fmt),
+		["TARGETS"] = getTargetDetails(tgt, self.cmdr, fmt),
 		["MINAGENTS"] = tostring(self.minagents),
 	}
 	return dctutils.interp(self.briefing, interptbl)
