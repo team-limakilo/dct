@@ -75,6 +75,7 @@ function StaticAsset.assettypes()
 		enum.assetType.LOGISTICS,
 		enum.assetType.FRONTLINE,
 		enum.assetType.CONVOY,
+		enum.assetType.ARTILLERY,
 	}
 end
 

@@ -30,6 +30,7 @@ enum.assetType = {
 	["SEA"]         = 14,
 	["FRONTLINE"]   = 25,
 	["CONVOY"]      = 26,
+	["ARTILLERY"]   = 1027,
 
 	-- extended type set
 	["BUNKER"]      = 15,
@@ -56,6 +57,7 @@ enum.assetTypePriority = {
 	[enum.assetType.C2]          = 30,
 	[enum.assetType.AMMODUMP]    = 40,
 	[enum.assetType.FUELDUMP]    = 40,
+	[enum.assetType.ARTILLERY]   = 40,
 	[enum.assetType.CONVOY]      = 50,
 	[enum.assetType.MISSILE]     = 50,
 	[enum.assetType.SEA]         = 50,
@@ -130,6 +132,7 @@ enum.assetClass = {
 		[enum.assetType.LOGISTICS]   = true,
 		[enum.assetType.FRONTLINE]   = true,
 		[enum.assetType.CONVOY]      = true,
+		[enum.assetType.ARTILLERY]   = true,
 	},
 	-- strategic list is used in calculating ownership of a region
 	-- among other things
@@ -178,6 +181,7 @@ enum.missionTypeMap = {
 	},
 	[enum.missionType.BAI] = {
 		[enum.assetType.LOGISTICS]  = true,
+		[enum.assetType.ARTILLERY]  = true,
 		[enum.assetType.CONVOY]     = true,
 	},
 	[enum.missionType.CAS] = {
