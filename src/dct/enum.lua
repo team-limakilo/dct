@@ -178,6 +178,7 @@ enum.missionTypeMap = {
 	},
 	[enum.missionType.BAI] = {
 		[enum.assetType.LOGISTICS]  = true,
+		[enum.assetType.CONVOY]     = true,
 	},
 	[enum.missionType.CAS] = {
 		[enum.assetType.JTAC]       = true,
