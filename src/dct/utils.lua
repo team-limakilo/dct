@@ -258,6 +258,11 @@ function utils.MGRStostring(mgrs, precision)
 		return str
 	end
 
+	if precision == 1 then
+		return str..string.format(fmtstr, (mgrs.Easting/divisor))..
+			string.format(fmtstr, (mgrs.Northing/divisor))
+	end
+
 	return str .. " " .. string.format(fmtstr, (mgrs.Easting/divisor)) .. " " ..
 		string.format(fmtstr, (mgrs.Northing/divisor))
 end
@@ -275,8 +280,13 @@ function utils.fmtposition(position, precision, fmt)
 	local lat, long = coord.LOtoLL(position)
 
 	if fmt == utils.posfmt.MGRS then
-		return utils.MGRStostring(coord.LLtoMGRS(lat, long),
-			precision)
+		return utils.MGRStostring(coord.LLtoMGRS(lat, long), precision)
+	end
+
+	if precision <= 1 then
+		local mgrs = utils.MGRStostring(coord.LLtoMGRS(lat, long), precision)
+		local latlong = utils.LLtostring(lat, long, precision, fmt)
+		return string.format("%s (Approximately %s)", mgrs, latlong)
 	end
 
 	return utils.LLtostring(lat, long, precision, fmt)
