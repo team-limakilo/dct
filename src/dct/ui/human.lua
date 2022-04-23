@@ -188,26 +188,28 @@ local function markToGroup(label, pos, missionId, groupId, readonly)
 	table.insert(marks[groupId][missionId], markId)
 end
 
-function human.drawTargetIntel(mission, groupId, readonly)
+function human.drawTargetIntel(mission, groupId, fmt)
+	assert(fmt == nil or type(fmt) == "number", "fmt must be a number")
 	local tgtInfo = mission:getTargetInfo()
-	if tgtInfo.intellvl >= 4 and #tgtInfo.locations > 1 then
+	local intel = tgtInfo.intellvl
+	if intel >= 4 and #tgtInfo.locations > 1 then
 		-- Mission has multiple static locations
 		for _, location in pairs(tgtInfo.locations) do
-			local degpos = dctutils.degrade_position(location, tgtInfo.intellvl)
+			local degpos = dctutils.degrade_position(location, intel, fmt)
 			markToGroup(string.format(
 				"TGT: %s (%s)", tgtInfo.callsign, tostring(location.desc)),
-				degpos, mission.id, groupId, readonly)
+				degpos, mission.id, groupId, false)
 		end
 	else
 		-- Mission only has a single location
-		local degpos = dctutils.degrade_position(tgtInfo.location, tgtInfo.intellvl)
-		markToGroup("TGT: "..tgtInfo.callsign, degpos, mission.id, groupId, readonly)
+		local degpos = dctutils.degrade_position(tgtInfo.location, intel, fmt)
+		markToGroup("TGT: "..tgtInfo.callsign, degpos, mission.id, groupId, false)
 	end
 	-- Designer-authored marks
 	for _, mark in pairs(tgtInfo.extramarks) do
 		mark.y = mark.y or 0
 		mark.label = dctutils.interp(mark.label, { ["TARGET"] = tgtInfo.callsign })
-		markToGroup(mark.label, mark, mission.id, groupId, readonly)
+		markToGroup(mark.label, mark, mission.id, groupId, false)
 	end
 end
 

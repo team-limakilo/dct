@@ -304,7 +304,7 @@ function MissionJoinCmd:_execute(_, cmdr)
 		msg = msg..briefingmsg(msn, self.asset).."\n\n"
 		msg = msg..string.format("BDA: %d%% complete\n\n", tgtinfo.status)
 		msg = msg.."Assigned Pilots:\n"..assignedPilots(msn, self.assetmgr)
-		human.drawTargetIntel(msn, self.asset.groupId, false)
+		human.drawTargetIntel(msn, self.asset.groupId, self.asset.gridfmt)
 	end
 	return msg
 end
@@ -346,7 +346,7 @@ function MissionRqstCmd:_execute(_, cmdr)
 	msg = msg..briefingmsg(msn, self.asset).."\n\n"
 	msg = msg..string.format("BDA: %d%% complete\n\n", tgtinfo.status)
 	msg = msg.."Assigned Pilots:\n"..assignedPilots(msn, self.assetmgr)
-	human.drawTargetIntel(msn, self.asset.groupId, false)
+	human.drawTargetIntel(msn, self.asset.groupId, self.asset.gridfmt)
 	return msg
 end
 

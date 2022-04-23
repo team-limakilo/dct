@@ -1060,6 +1060,10 @@ function coord.LLtoMGRS(_, _)
 		["Northing"] = 56789,
 	}
 end
+
+function coord.MGRStoLL(_)
+	return 88.123, -63.456, land.getHeight({ x = 0, y = 0 })
+end
 _G.coord = coord
 
 local gblflagtbl = {}

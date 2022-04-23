@@ -163,6 +163,22 @@ function utils.degradeLL(lat, long, precision)
 	return lat, long
 end
 
+-- reduce the accuracy of the position to the precision specified
+function utils.degradeMGRS(mgrs, precision, center)
+	local multiplier = math.pow(10, 5 - precision)
+	local degraded = {
+		UTMZone     = mgrs.UTMZone,
+		MGRSDigraph = mgrs.MGRSDigraph,
+		Easting     = math.floor(mgrs.Easting  / multiplier) * multiplier,
+		Northing    = math.floor(mgrs.Northing / multiplier) * multiplier,
+	}
+	if center then
+		degraded.Easting  = degraded.Easting  + multiplier * 0.5
+		degraded.Northing = degraded.Northing + multiplier * 0.5
+	end
+	return degraded
+end
+
 -- set up formatting args for the LL string
 local function getLLformatstr(precision, fmt)
 	local decimals = precision
@@ -267,29 +283,38 @@ function utils.MGRStostring(mgrs, precision)
 		string.format(fmtstr, (mgrs.Northing/divisor))
 end
 
-function utils.degrade_position(position, precision)
-	local lat, long = coord.LOtoLL(position)
-	lat, long = utils.degradeLL(lat, long, precision)
-	return coord.LLtoLO(lat, long, 0)
+function utils.degrade_position(position, precision, fmt)
+	if precision <= 1 or fmt == utils.posfmt.MGRS then
+		local mgrs = coord.LLtoMGRS(coord.LOtoLL(position))
+		mgrs = utils.degradeMGRS(mgrs, precision, precision <= 1)
+		return coord.LLtoLO(coord.MGRStoLL(mgrs))
+	else
+		local lat, long = coord.LOtoLL(position)
+		lat, long = utils.degradeLL(lat, long, precision)
+		return coord.LLtoLO(lat, long, 0)
+	end
 end
 
 function utils.fmtposition(position, precision, fmt)
 	precision = math.floor(precision)
 	assert(precision >= 0 and precision <= 5,
 		"value error: precision range [0,5]")
+
 	local lat, long = coord.LOtoLL(position)
 
-	if fmt == utils.posfmt.MGRS then
+	-- Use MGRS grid as reference with DMS/DDM at low precision
+	if fmt ~= utils.posfmt.MGRS and precision <= 1 then
+		local mgrs = coord.LLtoMGRS(lat, long)
+		position = utils.degrade_position(position, precision, utils.posfmt.MGRS)
+		lat, long = coord.LOtoLL(position)
+		return string.format("%s (Approximately %s)",
+			utils.MGRStostring(mgrs, precision),
+			utils.LLtostring(lat, long, precision, fmt))
+	elseif fmt == utils.posfmt.MGRS then
 		return utils.MGRStostring(coord.LLtoMGRS(lat, long), precision)
+	else
+		return utils.LLtostring(lat, long, precision, fmt)
 	end
-
-	if precision <= 1 then
-		local mgrs = utils.MGRStostring(coord.LLtoMGRS(lat, long), precision)
-		local latlong = utils.LLtostring(lat, long, precision, fmt)
-		return string.format("%s (Approximately %s)", mgrs, latlong)
-	end
-
-	return utils.LLtostring(lat, long, precision, fmt)
 end
 
 function utils.fmtdistance(meters, unitSystem)
