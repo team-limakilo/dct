@@ -45,7 +45,7 @@ function DCTWeapon:__init(wpn, initiator)
 	self.shootername = initiator:getName()
 	self.desc        = wpn:getDesc()
 	self.impactpt    = nil
-	self:update(self.start_time, .5)
+	self:update(self.start_time, 0, 0.5)
 end
 
 function DCTWeapon:exist()
@@ -73,26 +73,33 @@ function DCTWeapon:getImpactPoint()
 	return self.impactpt
 end
 
-function DCTWeapon:update(time, lookahead)
+function DCTWeapon:update(time, updatefreq, lookahead)
 	assert(time, "value error: time must be a non-nil value")
-	if not self:exist() then
+	if self:hasImpacted() then
 		return
 	end
 
-	local pos = self.weapon:getPosition()
+	if self:exist() then
+		local pos = self.weapon:getPosition()
 
-	if time - self.start_time > self.lifetime then
-		self.timeout = true
+		if time - self.start_time > self.lifetime then
+			self.timeout = true
+		end
+
+		self.pos  = vector.Vector3D(pos.p)
+		self.dir  = vector.Vector3D(pos.x)
+		self.vel  = vector.Vector3D(self.weapon:getVelocity())
+	else
+		-- search up to `lookahead` seconds into the future
+		self.impactpt = land.getIP(self.pos:raw(),
+								self.dir:raw(),
+								self.vel:magnitude() * lookahead)
+
+		-- as a fallback, predict the impact point
+		if self.impactpt == nil then
+			self.impactpt = self.pos + (updatefreq * self.vel)
+		end
 	end
-
-	self.pos  = vector.Vector3D(pos.p)
-	self.dir  = vector.Vector3D(pos.x)
-	self.vel  = vector.Vector3D(self.weapon:getVelocity())
-
-	-- search lookahead seconds into the future
-	self.impactpt = land.getIP(self.pos:raw(),
-	                           self.dir:raw(),
-	                           self.vel:magnitude() * lookahead)
 end
 
 local LOOKAHEAD = 2
@@ -111,7 +118,7 @@ function WeaponsTracker:_update(time)
 	local tstart = os.clock()
 	local impacts = {}
 	for id, wpn in pairs(self.trackedwpns) do
-		wpn:update(time, self.lookahead)
+		wpn:update(time, self.updatefreq, self.lookahead)
 		if wpn:hasImpacted() then
 			table.insert(impacts, wpn)
 			self.trackedwpns[id] = nil
