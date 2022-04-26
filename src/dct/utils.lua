@@ -133,14 +133,6 @@ function utils.centroid2D(point, pcentroid, n)
 	return vector.Vector2D(c), n1
 end
 
-function utils.round(num)
-	if num >= 0 then
-		return math.floor(num + 0.5)
-	else
-		return math.ceil(num - 0.5)
-	end
-end
-
 -- returns a value guaranteed to be between min and max, inclusive.
 function utils.clamp(x, min, max)
     return math.min(math.max(x, min), max)
@@ -237,10 +229,14 @@ function utils.LLtostring(lat, long, precision, fmt)
 			string.format(fmtstr..degsym, long)..easting
 	end
 
-	local latdeg   = utils.round(lat)
-	local latmind  = math.abs(lat - latdeg)*60
-	local longdeg  = utils.round(long)
-	local longmind = math.abs(long - longdeg)*60
+	-- we give the minutes and seconds a little push in case the division from the
+	-- truncation with this multiplication gives us a value ending in .99999...
+	local tolerance = 1e-8
+
+	local latdeg   = math.floor(lat)
+	local latmind  = (lat - latdeg)*60 + tolerance
+	local longdeg  = math.floor(long)
+	local longmind = (long - longdeg)*60 + tolerance
 
 	if fmt == utils.posfmt.DDM then
 		return string.format("%02d"..degsym..fmtstr.."'", latdeg, latmind)..
@@ -250,10 +246,10 @@ function utils.LLtostring(lat, long, precision, fmt)
 			easting
 	end
 
-	local latmin   = utils.round(latmind)
-	local latsecd  = math.abs(latmind - latmin)*60
-	local longmin  = utils.round(longmind)
-	local longsecd = math.abs(longmind - longmin)*60
+	local latmin   = math.floor(latmind)
+	local latsecd  = (latmind - latmin)*60 + tolerance
+	local longmin  = math.floor(longmind)
+	local longsecd = (longmind - longmin)*60 + tolerance
 
 	return string.format("%02d"..degsym.."%02d'"..fmtstr.."\"",
 			latdeg, latmin, latsecd)..
@@ -308,10 +304,11 @@ function utils.fmtposition(position, precision, fmt)
 
 	-- Use MGRS grid as reference with DMS/DDM at low precision
 	if fmt ~= utils.posfmt.MGRS and precision <= 1 then
+		local mgrs = coord.LLtoMGRS(lat, long)
 		position = utils.degrade_position(position, precision, utils.posfmt.MGRS)
 		lat, long = coord.LOtoLL(position)
 		return string.format("%s (Approximately %s)",
-			utils.MGRStostring(coord.LLtoMGRS(lat, long), precision),
+			utils.MGRStostring(mgrs, precision),
 			utils.LLtostring(lat, long, precision, fmt))
 	elseif fmt == utils.posfmt.MGRS then
 		return utils.MGRStostring(coord.LLtoMGRS(lat, long), precision)
