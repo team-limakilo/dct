@@ -229,13 +229,6 @@ function AssetManager:update()
 	return self.updaterate
 end
 
-local function cleanupAsset(asset, logger)
-	if asset ~= nil and asset:isDead() and asset:isSpawned() then
-		logger:debug("cleanup: '%s'", asset.name)
-		asset:despawn()
-	end
-end
-
 local function handleDead(self, event)
 	self._object2asset[tostring(event.initiator:getName())] = nil
 end
@@ -245,9 +238,6 @@ local function handleAssetDeath(self, event)
 	local asset = event.initiator
 	self._logger:debug("'%s' dead; cost = %g", asset.name, asset.cost)
 	self.theater:getTickets():loss(asset.owner, asset.cost, true)
-	self.theater:queueCommand(self.cleanupdelay,
-		Command("cleanupAsset('"..asset.name.."')",
-		cleanupAsset, asset, self._logger))
 end
 
 local function handleCaptured(self, event)
