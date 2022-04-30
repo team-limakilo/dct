@@ -405,9 +405,11 @@ function RenderManager:checkRegion(region, time)
 						end
 						if seen then
 							self.lastSeen[asset.name] = time
-							spawns = spawns + 1
-							asset:spawn()
-							yield()
+							if not asset:isDead() then
+								spawns = spawns + 1
+								asset:spawn()
+								yield()
+							end
 							break
 						end
 					end
@@ -417,7 +419,7 @@ function RenderManager:checkRegion(region, time)
 					asset:despawn()
 				elseif forcedVis == true then
 					self.lastSeen[asset.name] = time
-					if not asset:isSpawned() then
+					if not asset:isSpawned() and not asset:isDead() then
 						spawns = spawns + 1
 						asset:spawn()
 						yield()
