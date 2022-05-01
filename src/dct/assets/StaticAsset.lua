@@ -278,18 +278,50 @@ function StaticAsset:getObjectNames()
 	return keyset
 end
 
-function StaticAsset:update()
-	if not self:isSpawned() then
-		return
+-- Clean up units which didn't have death events (2.7.12 bug)
+function StaticAsset:cleanup()
+	if not self:isSpawned() then return end
+
+	for grpname, group in pairs(self._assets) do
+		local units = group.data.units or {}
+		for i = #units, 1, -1 do
+			local name = units[i].name
+			local unit = Unit.getByName(name)
+			-- Life of 1 or less is considered "dead" by DCS
+			if unit ~= nil and unit:getLife() <= 1 then
+				self._logger:debug(
+					"cleanup() - unit '%s' is dead; calling handleDead()", name)
+				self:handleDead({
+					id = world.event.S_EVENT_DEAD,
+					time = timer.getTime(),
+					initiator = unit,
+				})
+			elseif unit == nil then
+				self._logger:debug(
+					"cleanup() - unit '%s' does not exist; removing", name)
+				self:_removeDeathGoal(name)
+				table.remove(units, i)
+				if next(units) == nil then
+					self:_removeDeathGoal(grpname)
+					self._assets[grpname] = nil
+					break
+				end
+			end
+		end
 	end
+end
+
+function StaticAsset:update()
+	if not self:isSpawned() then return end
 
 	local cnt = 0
 	for name, goal in pairs(self._deathgoals) do
 		cnt = cnt + 1
 		if goal:checkComplete() then
-			self:_removeDeathGoal(name, goal)
+			self:_removeDeathGoal(name)
 		end
 	end
+	self:cleanup()
 	self._logger:debug("update() - max goals: %d; cur goals: %d; checked: %d",
 		self._maxdeathgoals, self._curdeathgoals, cnt)
 end
@@ -303,7 +335,7 @@ function StaticAsset:handleDead(event)
 		local grpname = obj:getGroup():getName()
 		local grp = self._assets[grpname]
 		local units = grp.data.units
-		for i = 1, #units do
+		for i = #units, 1, -1 do
 			if units[i].name == unitname then
 				self:_removeDeathGoal(unitname)
 				table.remove(units, i)
@@ -428,6 +460,8 @@ function StaticAsset:spawn(ignore)
 end
 
 function StaticAsset:despawn()
+	self:update()
+
 	for name, obj in pairs(self._assets) do
 		if obj.category == Unit.Category.STRUCTURE then
 			local structure = StaticObject.getByName(name)
