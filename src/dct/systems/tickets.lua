@@ -191,14 +191,14 @@ function Tickets:_add(side, cost, mod)
 	if mod ~= nil then
 		v = v * t[mod]
 	end
-	if v > 0 then
-		Logger:debug("side(%d) rewarded %d tickets; total: %d",
-			side, v, t.tickets + v)
-	elseif v < 0 then
-		Logger:debug("side(%d) lost %d tickets; total: %d",
-			side, -v, t.tickets + v)
-	end
 	t.tickets = t.tickets + v
+	if v > 0 then
+		Logger:debug("side(%d) rewarded %g tickets; total: %g",
+			side, v, t.tickets)
+	elseif v < 0 then
+		Logger:debug("side(%d) lost %g tickets; total: %g",
+			side, -v, t.tickets)
+	end
 end
 
 function Tickets:reward(side, cost, mod)
