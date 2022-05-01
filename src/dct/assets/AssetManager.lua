@@ -243,7 +243,9 @@ end
 local function handleCaptured(self, event)
 	local airbase = event.place
 	local asset = self:getAsset(airbase:getName())
-	if asset == nil or asset.owner == airbase:getCoalition() then
+	if asset == nil or
+	   asset.owner == airbase:getCoalition() or
+	   not asset.capturable and asset.owner == coalition.side.NEUTRAL then
 		return
 	end
 
@@ -262,6 +264,10 @@ local function handleCaptured(self, event)
 
 	if asset.capturable then
 		tpl.coalition = airbase:getCoalition()
+		-- Award tickets according to the owner's *loss* modifier.
+		-- This is because, when a coalition loses and re-captures a base,
+		-- we need to make sure the ticket count returns to the initial value.
+		self.theater:getTickets():reward(airbase:getCoalition(), tpl.cost, "loss")
 	else
 		tpl.coalition = coalition.side.NEUTRAL
 	end
@@ -270,11 +276,6 @@ local function handleCaptured(self, event)
 	self:add(newasset)
 	newasset:generate(self, region)
 	newasset:spawn()
-
-	-- Award tickets according to the owner's *loss* modifier.
-	-- This is because, if a coalition repeatedly captures and loses a
-	-- base, we need to ensure it doesn't cause the ticket count to drift.
-	self.theater:getTickets():reward(newasset.owner, newasset.cost, "loss")
 
 	newasset._logger:debug("captured by %s coalition",
 		utils.getkey(coalition.side, newasset.owner))
