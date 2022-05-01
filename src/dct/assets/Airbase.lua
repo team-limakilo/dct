@@ -433,12 +433,28 @@ function AirbaseAsset:generate(assetmgr, region)
 	end
 end
 
+function AirbaseAsset:setDead(val)
+	local assetmgr = dct.theater:getAssetMgr()
+	for name, _ in pairs(self._subordinates) do
+		local asset = assetmgr:getAsset(name)
+		-- Setting player assets to dead causes ticket loss, which is undesirable
+		if asset and asset.type ~= dctenum.assetType.PLAYERGROUP then
+			asset:setDead(val)
+		end
+	end
+	AssetBase.setDead(self, val)
+end
+
 function AirbaseAsset:spawn(ignore)
 	self._logger:debug("spawn called")
 	if not ignore and self:isSpawned() then
 		self._logger:error("runtime bug - already spawned")
 		return
 	end
+
+	associate_slots(self)
+	self:spawn_despawn("spawn")
+	AssetBase.spawn(self)
 
 	local dcsab = Airbase.getByName(self.name)
 	if self.capturable and self.owner ~= dcsab:getCoalition() then
@@ -448,10 +464,6 @@ function AirbaseAsset:spawn(ignore)
 			place = dcsab,
 		})
 	end
-
-	associate_slots(self)
-	self:spawn_despawn("spawn")
-	AssetBase.spawn(self)
 
 	if self:isOperational() then
 		self:notify(dctutils.buildevent.operational(self, true))

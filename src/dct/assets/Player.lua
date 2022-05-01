@@ -525,10 +525,18 @@ function Player:update()
 	end
 end
 
+function Player:updateOperationalState()
+	local assetmgr = dct.theater:getAssetMgr()
+	local airbase = assetmgr:getAsset(self.airbase)
+	if airbase then
+		self._operstate = airbase:isOperational() and airbase.owner == self.owner
+		self._logger:debug("setting operstate: %s", tostring(self._operstate))
+	end
+end
+
 function Player:handleBaseState(event)
 	if event.initiator.name == self.airbase then
-		self._operstate = event.state
-		self._logger:debug("setting operstate: %s", tostring(event.state))
+		self:updateOperationalState()
 		self:doEnable()
 	else
 		self._logger:warn("received unknown event %s(%d) from initiator(%s)",
@@ -559,19 +567,20 @@ function Player:spawn()
 		self._logger:debug("parking: %s", tostring(self.parking))
 		self:registerObservable(dct.theater:getAssetMgr())
 		self:registerObservable(dct.theater:getCommander(self.owner))
-		local airbaseAsset = assetmgr:getAsset(self.airbase)
-		if airbaseAsset then
-			self._operstate = airbaseAsset:isOperational() and
-				airbaseAsset.owner == self.owner
-			self._logger:debug("setting operstate: %s", tostring(self._operstate))
+		local ab = assetmgr:getAsset(self.airbase)
+		if ab ~= nil and ab.owner == self.owner then
+			ab:addSubordinate(self)
 		end
 		self.firstspawn = false
 	end
+	self:updateOperationalState()
 	self:doEnable()
 end
 
 function Player:despawn()
 	AssetBase.despawn(self)
+	self._logger:debug("setting operstate: false")
+	self._operstate = false
 	self:doEnable()
 end
 
