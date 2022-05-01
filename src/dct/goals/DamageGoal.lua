@@ -56,6 +56,8 @@ function DamageGoal:__init(data)
 end
 
 function DamageGoal:_afterspawn()
+	if self._maxlife ~= nil then return end
+
 	local obj, getlife = getobject(self.objtype, self.name)
 	if obj == nil or not Object.isExist(obj) and not Group.isExist(obj) then
 		Logger:error("_afterspawn() - object '%s' doesn't exist, presumed dead",
