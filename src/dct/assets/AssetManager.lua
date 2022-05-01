@@ -66,7 +66,7 @@ function AssetManager:__init(theater)
 
 	theater:addObserver(self.onDCSEvent, self, "AssetManager.onDCSEvent")
 	theater:queueCommand(self.updaterate,
-		Command(self.__clsname..".update", self.update, self), true)
+		Command(self.__clsname..".update", self.update, self, false), true)
 end
 
 function AssetManager:factory(assettype)
@@ -213,10 +213,10 @@ function AssetManager:getTargets(requestingside, assettypelist)
 	return tgtlist
 end
 
-function AssetManager:update()
+function AssetManager:update(deleteOnly)
 	local deletionq = {}
 	for _, asset in pairs(self._assetset) do
-		if type(asset.update) == "function" then
+		if type(asset.update) == "function" and not deleteOnly then
 			asset:update()
 		end
 		if asset:isDead() and not asset:isSpawned() then
@@ -254,7 +254,7 @@ local function handleCaptured(self, event)
 		asset:despawn()
 	end
 	asset:setDead(true)
-	self:update()
+	self:update(true)
 
 	-- Create a new airbase asset under the new owner
 	local regionmgr = self.theater:getRegionMgr()
