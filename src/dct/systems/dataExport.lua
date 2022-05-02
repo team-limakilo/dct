@@ -43,8 +43,14 @@ local function countPlayers()
     return num
 end
 
-local function isoDate(dcsDate)
+local function isoDateDCS(dcsDate)
     return string.format("%d-%d-%d", dcsDate.Year, dcsDate.Month, dcsDate.Day)
+end
+
+local function isoDateLua(luaDate)
+    return string.format("%d-%02d-%02d %02d:%02d:%02dZ",
+        luaDate.year, luaDate.month, luaDate.day,
+        luaDate.hour, luaDate.min, luaDate.sec)
 end
 
 local function makeData(export)
@@ -54,9 +60,9 @@ local function makeData(export)
         theater = env.mission.theatre,
         sortie  = env.getValueDictByKey(env.mission.sortie),
         period  = dct.settings.server.period,
-        startdate = os.date("%F %TZ", os.time(export.theater.startdate)),
+        startdate = isoDateLua(export.theater.startdate),
         date      = os.date("!%F %TZ"),
-        modeldate = isoDate(env.mission.date),
+        modeldate = isoDateDCS(env.mission.date),
         modeltime = timer.getTime(),
         abstime   = timer.getAbsTime(),
         dcs_version = _G._APP_VERSION,
