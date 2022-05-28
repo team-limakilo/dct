@@ -381,7 +381,12 @@ end
 
 function AssetManager:postinit()
 	for assetname, _ in pairs(self._spawnq) do
-		self:getAsset(assetname):spawn(true)
+		local asset = self:getAsset(assetname)
+		if asset ~= nil then
+			asset:spawn(true)
+		else
+			self._logger:warn("'%s' was queued for spawn but is missing", assetname)
+		end
 	end
 	self._spawnq = {}
 end
