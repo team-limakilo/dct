@@ -30,7 +30,7 @@ function AirDefenseSite:__init(template)
     Subordinates.__init(self)
     if template ~= nil then
         self._logger = Logger("AirDefenseSite - "..template.name.."")
-        self:_modifyTemplate(template)
+        template = self:_modifyTemplate(template)
     end
 	StaticAsset.__init(self, template)
 	self:_addMarshalNames({
@@ -48,6 +48,8 @@ end
 
 function AirDefenseSite:_completeinit(template)
 	StaticAsset._completeinit(self, template)
+
+	-- try to infer the site type
 	for _, grp in pairs(template.tpldata) do
 		for _, unit in pairs(grp.data.units) do
 			if siteTypes[unit.type] ~= nil then
@@ -58,16 +60,20 @@ function AirDefenseSite:_completeinit(template)
 	end
 end
 
-function AirDefenseSite:_splitUnits(template, shorad, gid)
+function AirDefenseSite:_splitUnits(sam, shorad, gid)
+
 	-- ignore non-ground unit groups
-	if template.tpldata[gid].category ~= Unit.Category.GROUND_UNIT then
+	if sam.tpldata[gid].category ~= Unit.Category.GROUND_UNIT then
 		return
 	end
-	local originalGroup = template.tpldata[gid].data
+
+	local originalGroup = sam.tpldata[gid].data
 	local shoradGroup = shorad.tpldata[gid].data
 	self._logger:debug("processing group '%s' (%d)", originalGroup.name, gid)
+
 	-- rename SHORAD group to avoid spawn conflicts
 	shoradGroup.name = originalGroup.name.."-SHORAD"
+
 	-- iterate through units in reverse order to avoid issues when removing items
 	for uid = #originalGroup.units, 1, -1  do
 		local unit = originalGroup.units[uid]
@@ -76,21 +82,21 @@ function AirDefenseSite:_splitUnits(template, shorad, gid)
 		if desc.attributes["AAA"] or
 		   desc.attributes["SR SAM"] or
 		   desc.attributes["MANPADS"] then
-			-- delete from original template, keep in SHORAD template
-			self._logger:debug("ORIGINAL unit removed")
+			self._logger:debug("SAM unit removed")
 			table.remove(originalGroup.units, uid)
 		else
-			-- delete from SHORAD template, keep in original template
 			self._logger:debug("SHORAD unit removed")
 			table.remove(shoradGroup.units, uid)
 		end
 	end
+
 	-- prune empty groups
 	if next(originalGroup.units) == nil then
-		self._logger:debug("ORIGINAL group '%s' removed (%s)",
+		self._logger:debug("SAM group '%s' removed (%s)",
 			originalGroup.name, gid)
-		table.remove(template.tpldata, gid)
+		table.remove(sam.tpldata, gid)
 	end
+
 	if next(shoradGroup.units) == nil then
 		self._logger:debug("SHORAD group '%s' removed (%s)",
 			shoradGroup.name, gid)
@@ -101,6 +107,7 @@ end
 -- splits SHORAD out of the template and spawns it as a separate asset
 function AirDefenseSite:_modifyTemplate(template)
     local shorad = utils.deepcopy(template)
+	local sam = utils.deepcopy(template)
 	shorad.hasDeathGoals = false
 	shorad.regenerate = self.regenerate
 	shorad.objtype = enum.assetType.SHORAD
@@ -108,26 +115,40 @@ function AirDefenseSite:_modifyTemplate(template)
 	shorad.desc = "SHORAD Target"
 	shorad.ignore = true
 	shorad.cost = 0
+
+	-- split everything between the two templates
+	-- (in reverse order so that the group pruning does not cause issues)
 	for gid = #template.tpldata, 1, -1 do
-		self:_splitUnits(template, shorad, gid)
+		self:_splitUnits(sam, shorad, gid)
 	end
-	-- remove any waypoints present in the SHORAD template to
-	-- avoid unit pathing errors
-	for g = 1, #shorad.tpldata do
-		shorad.tpldata[g].data.route = {
+
+	-- remove any waypoints in the SHORAD template to avoid unit pathing errors
+	for _, group in ipairs(shorad.tpldata) do
+		group.data.route = {
 			points = {},
 			spans  = {},
 		}
 	end
-	-- spawn the new shorad asset as a subordinate, if it contains any units
+
+	-- abort if the SAM group is empty (ie. this is a pure SHORAD SAM)
+	if next(sam.tpldata) == nil then
+		self._logger:debug(
+			"SHORAD template not created (only shorad units present)", shorad.name)
+		return template
+	end
+
+	-- spawn the new shorad asset as a subordinate if it contains any units
 	if next(shorad.tpldata) ~= nil then
         local assetmgr = _G.dct.Theater.singleton():getAssetMgr()
 		local shoradAsset = assetmgr:factory(shorad.objtype)(shorad)
         assetmgr:add(shoradAsset)
         self:addSubordinate(shoradAsset)
 	else
-		self._logger:debug("SHORAD template not created (no units)", shorad.name)
+		self._logger:debug(
+			"SHORAD template not created (no shorad units)", shorad.name)
 	end
+
+	return sam
 end
 
 return AirDefenseSite
