@@ -61,15 +61,13 @@ function geometry.meanCenter2D(points)
 	local count = #points
 	local center = vec.Vector2D.create(0, 0)
 	local signedArea = 0.0
-	
 	for i = 1, count, 1 do
 		--Get the current x and y coordinates
 		local x0 = points[i].x
 		local y0 = points[i].y
-		local x1 = 0.0
-		local y1 = 0.0
-		
-		--Get the next x and y coordinates, if it's the end of the array, get the first entries coordinates
+		local x1
+		local y1
+		--Get the next x and y coordinates, if end of the array, get the first entries coordinates
 		if (i + 1) % count == 0 then
 			x1 = points[1].x
 			y1 = points[1].y
@@ -77,21 +75,17 @@ function geometry.meanCenter2D(points)
 			x1 = points[(i + 1) % count].x
 			y1 = points[(i + 1) % count].y
 		end
-
 		--calculate the partially signed area
 		local a = x0*y1 - x1*y0
 		signedArea = signedArea + a
-
 		--Update the Vector2D coordinates
 		center.x = center.x + (x0 + x1)*a
 		center.y = center.y + (y0 + y1)*a
 	end
-
 	--Calculate the centroid
 	signedArea = signedArea * 0.5
 	center.x = center.x / (6.0*signedArea)
 	center.y = center.y / (6.0*signedArea)
-
 	-- return the Vector2d
 	return center
 end
