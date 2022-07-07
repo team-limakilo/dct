@@ -67,7 +67,7 @@ function geometry.meanCenter2D(points)
 		local y0 = points[i].y
 		local x1
 		local y1
-		--Get the next x and y coordinates, if end of the array, get the first entries coordinates
+		--Get the next x and y coordinates, when end of the array, get the first entries coordinates
 		if (i + 1) % count == 0 then
 			x1 = points[1].x
 			y1 = points[1].y
