@@ -463,11 +463,11 @@ function Player:_completeinit(template)
 			require("libs.json"):encode_pretty(self.ato))
 		self._logger:debug("cost: %g", self.cost, type(self.cost))
 		self._logger:debug("gridfmt: %s",
-			utils.getkey(dctutils.posfmt, self.gridfmt))
+			tostring(utils.getkey(dctutils.posfmt, self.gridfmt)))
 		self._logger:debug("payloadlimits: %s",
 			require("libs.json"):encode_pretty(self.payloadlimits))
 		self._logger:debug("units: %s",
-			utils.getkey(dctutils.units, self.units))
+			tostring(utils.getkey(dctutils.units, self.units)))
 	end
 
 	self.menu = GroupMenu(self)
