@@ -115,6 +115,32 @@ function human.locationhdr(msntype)
 	return hdr
 end
 
+function human.formatAltitude(location, unitSystem)
+	local _, pressure = atmosphere.getTemperatureAndPressure(location)
+	if unitSystem == dctutils.units.METRIC_HPA then
+		return string.format("%.0f m (%.02f hPa)",
+			location.y, pressure * 0.01)
+	elseif unitSystem == dctutils.units.METRIC_MMHG then
+		return string.format("%.0f m (%.02f mmHg)",
+			location.y, pressure * 0.007501)
+	elseif unitSystem == dctutils.units.IMPERIAL_HPA then
+		return string.format("%.0f ft (%.02f mbar)",
+			location.y * 3.28084, pressure * 0.01)
+	else -- Imperial inHg
+		return string.format("%.0f ft (%.02f inHg)",
+			location.y * 3.28084, pressure * 0.000295)
+	end
+end
+
+function human.formatDistance(meters, unitSystem)
+	if dctutils.metricSystems[unitSystem] or
+	   unitSystem == dctutils.units.APACHE_MIXED then
+		return string.format("%.0f km", meters * 0.00100)
+	else
+		return string.format("%.0f nm", meters * 0.00054)
+	end
+end
+
 local function point3D(point)
 	return {
 		x = point.x,
