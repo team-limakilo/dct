@@ -115,26 +115,30 @@ function human.locationhdr(msntype)
 	return hdr
 end
 
-function human.formatAltitude(location, unitSystem)
+function human.formatAltitude(location, unitSystems)
 	local _, pressure = atmosphere.getTemperatureAndPressure(location)
-	if unitSystem == dctutils.units.METRIC_HPA then
-		return string.format("%.0f m (%.02f hPa)",
-			location.y, pressure * 0.01)
-	elseif unitSystem == dctutils.units.METRIC_MMHG then
-		return string.format("%.0f m (%.02f mmHg)",
-			location.y, pressure * 0.007501)
-	elseif unitSystem == dctutils.units.IMPERIAL_HPA then
-		return string.format("%.0f ft (%.02f mbar)",
-			location.y * 3.28084, pressure * 0.01)
-	else -- Imperial inHg
-		return string.format("%.0f ft (%.02f inHg)",
-			location.y * 3.28084, pressure * 0.000295)
+
+	local alt
+	if unitSystems ~= nil and unitSystems[dctutils.units.METRIC] then
+		alt = string.format("%.0f m", location.y)
+	else -- Imperial
+		alt = string.format("%.0f ft", location.y * 3.28084)
+	end
+
+	if unitSystems ~= nil and unitSystems[dctutils.units.MMHG] then
+		return string.format("%s (%.01f mmHg)", alt, pressure * 0.007501)
+	elseif unitSystems ~= nil and unitSystems[dctutils.units.HPA] then
+		return string.format("%s (%.01f hPa)", alt, pressure * 0.01)
+	elseif unitSystems ~= nil and unitSystems[dctutils.units.MBAR] then
+		return string.format("%s (%.01f mbar)", alt, pressure * 0.01)
+	else -- inHg
+		return string.format("%s (%.02f inHg)", alt, pressure * 0.000295)
 	end
 end
 
-function human.formatDistance(meters, unitSystem)
-	if dctutils.metricSystems[unitSystem] or
-	   unitSystem == dctutils.units.APACHE_MIXED then
+function human.formatDistance(meters, unitSystems)
+	if unitSystems ~= nil and unitSystems[dctutils.units.METRIC] or
+	   unitSystems ~= nil and unitSystems[dctutils.units.US_ARMY] then
 		return string.format("%.0f km", meters * 0.00100)
 	else
 		return string.format("%.0f nm", meters * 0.00054)

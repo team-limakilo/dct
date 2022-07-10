@@ -27,26 +27,90 @@ return {
     },
     ["payloadlimits"] = {},
     ["units"] = {
-        -- default units are imperial inHg
-        ["AH-64D_BLK_II"] = utils.units.APACHE_MIXED,
-        ["AJS37"]         = utils.units.METRIC_HPA,
-        ["Bf-109K-4"]     = utils.units.METRIC_HPA,
-        ["FW-190A8"]      = utils.units.METRIC_HPA,
-        ["FW-190D9"]      = utils.units.METRIC_HPA,
-        ["I-16"]          = utils.units.METRIC_MMHG,
-        ["Ka-50"]         = utils.units.METRIC_MMHG,
-        ["Mi-8MT"]        = utils.units.METRIC_MMHG,
-        ["Mi-24P"]        = utils.units.METRIC_MMHG,
-        ["MiG-15bis"]     = utils.units.METRIC_MMHG,
-        ["MiG-19P"]       = utils.units.METRIC_MMHG,
-        ["MiG-21Bis"]     = utils.units.METRIC_MMHG,
-        ["MiG-29A"]       = utils.units.METRIC_MMHG,
-        ["MiG-29S"]       = utils.units.METRIC_MMHG,
-        ["Su-25"]         = utils.units.METRIC_MMHG,
-        ["Su-25T"]        = utils.units.METRIC_MMHG,
-        ["Su-27"]         = utils.units.METRIC_MMHG,
-        ["Su-33"]         = utils.units.METRIC_HPA,
-        ["Yak-52"]        = utils.units.METRIC_MMHG,
-        ["M-2000C"]       = utils.units.IMPERIAL_HPA,
+        -- default units are imperial and inHg
+        ["AH-64D_BLK_II"] = {
+            [utils.units.US_ARMY] = true,
+            [utils.units.INHG] = true
+        },
+        ["AJS37"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.HPA] = true
+        },
+        ["Bf-109K-4"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.HPA] = true
+        },
+        ["FW-190A8"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.HPA] = true
+        },
+        ["FW-190D9"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.HPA] = true
+        },
+        ["I-16"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["Ka-50"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["Mi-8MT"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["Mi-24P"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["MiG-15bis"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["MiG-19P"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["MiG-21Bis"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["MiG-29A"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["MiG-29S"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["MiG-29G"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.INHG] = true
+        },
+        ["Su-25"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["Su-25T"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["Su-27"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["Su-33"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.HPA] = true
+        },
+        ["Yak-52"] = {
+            [utils.units.METRIC] = true,
+            [utils.units.MMHG] = true
+        },
+        ["M-2000C"] = {
+            [utils.units.IMPERIAL] = true,
+            [utils.units.MBAR] = true
+        },
     },
 }

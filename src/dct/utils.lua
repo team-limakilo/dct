@@ -151,17 +151,13 @@ utils.posfmt = {
 }
 
 utils.units = {
-	["IMPERIAL_HPA"]  = 1,
-	["IMPERIAL_INHG"] = 2,
-	["METRIC_HPA"]    = 3,
-	["METRIC_MMHG"]   = 4,
-	["APACHE_MIXED"]  = 5,
-}
-utils.units["METRIC"]   = utils.units["METRIC_HPA"]
-utils.units["IMPERIAL"] = utils.units["IMPERIAL_INHG"]
-utils.metricSystems = {
-	[utils.units.METRIC_HPA]  = true,
-	[utils.units.METRIC_MMHG] = true,
+	["IMPERIAL"] = 1,
+	["METRIC"]   = 2,
+	["US_ARMY"]  = 3,
+	["INHG"]     = 4,
+	["MMHG"]     = 5,
+	["HPA"]      = 6,
+	["MBAR"]     = 7,
 }
 
 -- reduce the accuracy of the position to the precision specified
