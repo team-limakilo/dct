@@ -98,7 +98,7 @@ function StaticAsset:_completeinit(template)
 end
 
 --[[
--- Ensure only primary death goals are added
+-- Adds a death goal to the asset if it's a primary goal
 --]]
 function StaticAsset:_addDeathGoal(name, goalspec)
 	assert(name ~= nil and type(name) == "string",
@@ -158,12 +158,42 @@ function StaticAsset:_setupDeathGoal(grpdata, category, country)
 end
 
 --[[
+-- Removes unit goals if all units have a goal, as well as the group,
+-- leaving only the group's goal. This avoids automatic mission editor
+-- unit naming from creating unecessary goals, which affects how the mission
+-- status is displayed.
+--]]
+function StaticAsset:_removeDuplicateGoals(grpdata)
+	if grpdata.units == nil or next(grpdata.units) == nil or
+	   self._deathgoals[grpdata.name] == nil then
+		-- No point in removing unit goals
+		return
+	end
+	for _, unit in ipairs(grpdata.units) do
+		if self._deathgoals[unit.name] == nil then
+			-- Abort if at least one unit has no goals, meaning the mission
+			-- creator has only set specific units as "VIPs" alongside a
+			-- group destruction goal.
+			return
+		end
+	end
+	-- At this point we know both that there is a group goal, and that all units
+	-- also have goals, so we prune unit goals.
+	self._logger:warn("group '%s' and all of its units have goals; "..
+		"removing unit goals and keeping group goal", grpdata.name)
+	for _, unit in ipairs(grpdata.units) do
+		self:_removeDeathGoal(unit.name)
+	end
+end
+
+--[[
 -- Adds an object (group or static) to the monitored list for this
 -- asset. This list will be needed later to save state.
 --]]
 function StaticAsset:_setup()
 	for _, grp in ipairs(self._tpldata) do
 		self:_setupDeathGoal(grp.data, grp.category, grp.countryid)
+		self:_removeDuplicateGoals(grp.data)
 		self._assets[grp.data.name] = utils.deepcopy(grp)
 
 		local route = grp.data.route
@@ -171,6 +201,12 @@ function StaticAsset:_setup()
 			self.isMobile = true
 		end
 	end
+
+	local goals = 0
+	for _ in pairs(self._deathgoals) do
+		goals = goals + 1
+	end
+	self._logger:debug("total death goals: %d", goals)
 
 	if next(self._deathgoals) == nil then
 		self._logger:error("runtime error: must have a deathgoal, deleting")
