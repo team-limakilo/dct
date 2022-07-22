@@ -148,6 +148,13 @@ local function getAssets(regionmgr, assetmgr, coalition)
         local region = asset.rgnname
         if asset.owner == coalition and
            dctenum.assetClass["INITIALIZE"][asset.type] then
+            -- Because `regionmgr.regions` is based on the filesystem structure,
+            -- and assets are loaded from the state file, there is a chance that
+            -- a region was deleted from the theater while there are still
+            -- valid assets in said region, so we need to handle that edge case
+            if export[region] == nil then
+                export[region] = {}
+            end
             export[region][name] = {
                 dead = asset:isDead(),
                 intel = asset.intel,
