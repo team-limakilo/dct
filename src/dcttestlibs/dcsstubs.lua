@@ -1066,6 +1066,13 @@ function coord.MGRStoLL(_)
 end
 _G.coord = coord
 
+local atmosphere = {}
+function atmosphere.getTemperatureAndPressure(_ --[[pos: vec3]])
+	-- Kelvin, Pascals
+	return 293.15, 101325
+end
+_G.atmosphere = atmosphere
+
 local gblflagtbl = {}
 local trigger = {}
 trigger.smokeColor = {

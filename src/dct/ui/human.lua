@@ -115,6 +115,36 @@ function human.locationhdr(msntype)
 	return hdr
 end
 
+function human.formatAltitude(location, unitSystems)
+	local _, pressure = atmosphere.getTemperatureAndPressure(location)
+
+	local alt
+	if unitSystems ~= nil and unitSystems[dctutils.units.METRIC] then
+		alt = string.format("%.0f m", location.y)
+	else -- Imperial
+		alt = string.format("%.0f ft", location.y * 3.28084)
+	end
+
+	if unitSystems ~= nil and unitSystems[dctutils.units.MMHG] then
+		return string.format("%s (%.01f mmHg)", alt, pressure * 0.007501)
+	elseif unitSystems ~= nil and unitSystems[dctutils.units.HPA] then
+		return string.format("%s (%.01f hPa)", alt, pressure * 0.01)
+	elseif unitSystems ~= nil and unitSystems[dctutils.units.MBAR] then
+		return string.format("%s (%.01f mbar)", alt, pressure * 0.01)
+	else -- inHg
+		return string.format("%s (%.02f inHg)", alt, pressure * 0.000295)
+	end
+end
+
+function human.formatDistance(meters, unitSystems)
+	if unitSystems ~= nil and unitSystems[dctutils.units.METRIC] or
+	   unitSystems ~= nil and unitSystems[dctutils.units.US_ARMY] then
+		return string.format("%.0f km", meters * 0.00100)
+	else
+		return string.format("%.0f nm", meters * 0.00054)
+	end
+end
+
 local function point3D(point)
 	return {
 		x = point.x,

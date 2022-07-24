@@ -24,6 +24,7 @@ read_globals = {
 	"missionCommands",
 	"coord",
 	"land",
+	"atmosphere",
 	"SceneryObject",
 	"AI",
 	"Controller",

@@ -28,6 +28,7 @@ local unit1 = Unit({
 local briefingtxt = "Package: #5410\n"..
 			"IFF Codes: M1(50), M3(5410)\n"..
 			"Target AO: 88°07.38'N 063°27.36'W (ATLANTA)\n"..
+			"Target Altitude/QFE: 33 ft (29.89 inHg)\n"..
 			"Briefing:\n"..
 			"A recon flight earlier today discovered"..
 			" a fuel storage facility at 88°07.38'N 063°27.36'W,"..

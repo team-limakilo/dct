@@ -246,6 +246,11 @@ end
 local function briefingmsg(msn, asset)
 	local tgtinfo = msn:getTargetInfo()
 	local iff = msn:getIFFCodes(asset)
+	local altitude = ""
+	if tgtinfo.intellvl >= 3 then
+		altitude = string.format("Target Altitude/QFE: %s\n",
+			human.formatAltitude(tgtinfo.location, asset.units))
+	end
 	local msg = string.format("Package: #%s\n", msn:getID())..
 		string.format("IFF Codes: M1(%s), M3(%s)\n", iff.m1, iff.m3)..
 		string.format("%s: %s (%s)\n",
@@ -255,6 +260,7 @@ local function briefingmsg(msn, asset)
 				tgtinfo.intellvl,
 				asset.gridfmt),
 			tgtinfo.callsign)..
+		altitude..
 		"Briefing:\n"..msn:getDescription(asset.gridfmt)
 	return msg
 end

@@ -454,8 +454,7 @@ function Player:_completeinit(template)
 		or dctenum.missionType
 	self.gridfmt = settings.players.gridfmt[self.unittype]
 		or dctutils.posfmt.DMS
-	self.units = settings.players.units[self.unittype]
-		or dctutils.units.IMPERIAL
+	self.units = settings.players.units[self.unittype] or {}
 
 	if self._logger:isDebugEnabled() then
 		self._logger:debug("unittype: %s", tostring(self.unittype))
@@ -463,11 +462,15 @@ function Player:_completeinit(template)
 			require("libs.json"):encode_pretty(self.ato))
 		self._logger:debug("cost: %g", self.cost, type(self.cost))
 		self._logger:debug("gridfmt: %s",
-			utils.getkey(dctutils.posfmt, self.gridfmt))
+			tostring(utils.getkey(dctutils.posfmt, self.gridfmt)))
 		self._logger:debug("payloadlimits: %s",
 			require("libs.json"):encode_pretty(self.payloadlimits))
-		self._logger:debug("units: %s",
-			utils.getkey(dctutils.units, self.units))
+
+		local units = {}
+		for key, _ in pairs(self.units) do
+			table.insert(units, tostring(utils.getkey(dctutils.units, key)))
+		end
+		self._logger:debug("units: [ %s ]", table.concat(units, ", "))
 	end
 
 	self.menu = GroupMenu(self)

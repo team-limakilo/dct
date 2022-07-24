@@ -153,6 +153,11 @@ utils.posfmt = {
 utils.units = {
 	["IMPERIAL"] = 1,
 	["METRIC"]   = 2,
+	["US_ARMY"]  = 3, -- Mix of metric distances and imperial altitude
+	["INHG"]     = 4,
+	["MMHG"]     = 5,
+	["HPA"]      = 6,
+	["MBAR"]     = 7,
 }
 
 -- reduce the accuracy of the position to the precision specified
@@ -314,14 +319,6 @@ function utils.fmtposition(position, precision, fmt)
 		return utils.MGRStostring(coord.LLtoMGRS(lat, long), precision)
 	else
 		return utils.LLtostring(lat, long, precision, fmt)
-	end
-end
-
-function utils.fmtdistance(meters, unitSystem)
-	if unitSystem == utils.units.METRIC then
-		return string.format("%dkm", meters * 0.00100)
-	else
-		return string.format("%dnm", meters * 0.00054)
 	end
 end
 

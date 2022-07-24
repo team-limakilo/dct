@@ -26,6 +26,7 @@ local check    = require("libs.check")
 local class    = require("libs.namedclass")
 local msncodes = require("dct.ui.missioncodes")
 local Vector   = require("dct.libs.vector")
+local human    = require("dct.ui.human")
 local Logger   = dct.Logger.getByName("GroupMenu")
 
 local function addMenu(groupMenu, name, path)
@@ -195,7 +196,7 @@ function GroupMenu:update()
 			local missionTypeId = dctutils.assettype2mission(tgt.type)
 			local missionTypeName = utils.getkey(enum.missionType, missionTypeId)
 			local distance = Vector.distance(playerLocation, tgt:getLocation())
-			distance = dctutils.fmtdistance(distance, self.asset.units)
+			distance = human.formatDistance(distance, self.asset.units)
 
 			local name = string.format("%s (%s): %s - %s",
 				missionTypeName, assetTypeName, tgt.codename, distance)
