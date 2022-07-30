@@ -16,6 +16,7 @@ local tntrel = {
 	["CompB"]     = 1.33,
 	["Pentolite"] = 1.33,
 	["H6"]        = 1.356,
+	["TGA12"]     = 1.33,  -- Source: "History of Aviation Weapons". RE factor assumed based on similarity to TGAF-5 and H6.
 	["TGAF5"]     = 1.3    -- Source: https://www.gichd.org/fileadmin/GICHD-resources/rec-documents/Explosive_weapon_effects_web.pdf
 }
 
@@ -25,7 +26,7 @@ local function tnt_equiv_mass(exmass, tntfactor)
 	return exmass * tntfactor
 end
 
--- Due to lack of information, modern Soviet/Russian weapons are assumed to use TGAF-5 unless specified otherwise
+-- Due to lack of information, modern Soviet/Russian weapons are assumed to use TGA-12 (for earlier weapons) or TGAF-5 (for later weapons) unless specified otherwise
 -- This lines up with TNT equivalent yield numbers from sources such as Rosoboronexport
 -- Other known Soviet/Russian compositions such as TG-40 have similar yields
 -- HEAT weapons omitted except in specific circumstances
@@ -49,12 +50,17 @@ local wpnmass = {
 	["BLU_109"]      = tnt_equiv_mass(240, tntrel.PBXN109), -- Source: Jane's Air-Launched Weapons
 	-- Soviet/Russian weapons
 	-- Source: Jane's Air-Launched Weapons
+	["FAB_100SV"]        = tnt_equiv_mass( 53, tntrel.TNT), -- Extrapolated from FAB-50SV: http://vvs.hobbyvista.com/Research/Ordnance/FAB50/
+	-- M43 series
+	-- Source: "History of Aviation Weapons"
+	-- These bombs were filled with different filler mixtures including TNT, Ammatol, TGA-12 and others. Given here with TNT for consistency with US bombs.
+	["FAB_50"]           = tnt_equiv_mass( 24, tntrel.TNT), -- Source: http://vvs.hobbyvista.com/Research/Ordnance/FAB50/
+	["FAB_100M"]         = tnt_equiv_mass( 48, tntrel.TNT), -- Extrapolated from above
 	-- M54 series
-	["FAB_50"]           = tnt_equiv_mass( 24, tntrel.TGAF5), -- Source: http://vvs.hobbyvista.com/Research/Ordnance/FAB50/
-	["FAB_100"]          = tnt_equiv_mass( 45, tntrel.TGAF5), -- This value is for M62 but I don't have anything better.
-	["FAB_250"]          = tnt_equiv_mass( 94, tntrel.TGAF5),
-	["FAB-500M54"]       = tnt_equiv_mass(201, tntrel.TGAF5),
-	["FAB_1500"]         = tnt_equiv_mass(667, tntrel.TGAF5),
+	["FAB_100"]          = tnt_equiv_mass( 45, tntrel.TGA12), -- This value is for M62 but I don't have anything better.
+	["FAB_250"]          = tnt_equiv_mass( 94, tntrel.TGA12),
+	["FAB-500M54"]       = tnt_equiv_mass(201, tntrel.TGA12),
+	["FAB_1500"]         = tnt_equiv_mass(667, tntrel.TGA12),
 	-- M62 series
 	["FAB-250-M62"]      = tnt_equiv_mass(113, tntrel.TGAF5),
 	["FAB_500"]          = tnt_equiv_mass(214, tntrel.TGAF5),
@@ -108,9 +114,9 @@ local wpnmass = {
 	["HYDRA_70_M229"]    = tnt_equiv_mass(  8, tntrel.CompB), -- Composition B4
 	["Zuni_127"]         = tnt_equiv_mass( 23, tntrel.CompB), -- Source: Jane's Air-Launched Weapons
 	-- Soviet/Russian weapons
-	["S-5M"]             = tnt_equiv_mass(  1, tntrel.TGAF5),
-	["S5M1_HEFRAG_FFAR"] = tnt_equiv_mass(  1, tntrel.TGAF5),
-	["S5MO_HEFRAG_FFAR"] = tnt_equiv_mass(  2, tntrel.TGAF5),
+	["S-5M"]             = tnt_equiv_mass(  1, tntrel.TGA12),
+	["S5M1_HEFRAG_FFAR"] = tnt_equiv_mass(  1, tntrel.TGA12),
+	["S5MO_HEFRAG_FFAR"] = tnt_equiv_mass(  2, tntrel.TGA12),
 	["C_8OFP2"]          = tnt_equiv_mass( 10, tntrel.TGAF5), -- Source: DCS Mi-8 manual
 	["C_13"]             = tnt_equiv_mass( 33, tntrel.TGAF5), -- S-13OF. Source: "Russia's Arms and Technologies: The XXI Century Encyclopaedia"
 	["C_24"]             = tnt_equiv_mass(125, tntrel.TGAF5), -- Source: "Russia's Arms and Technologies: The XXI Century Encyclopaedia"
@@ -163,6 +169,7 @@ local wpnmass = {
 -- weapons that use the same warheads
 wpnmass["MK_82AIR"]                           = wpnmass["Mk_82"]
 wpnmass["MK_82SNAKEYE"]                       = wpnmass["Mk_82"]
+wpnmass["Mk_82Y"]                             = wpnmass["Mk_82"]
 wpnmass["GBU_12"]                             = wpnmass["Mk_82"]
 wpnmass["GBU_38"]                             = wpnmass["Mk_82"]
 wpnmass["GBU_16"]                             = wpnmass["Mk_83"]
@@ -194,6 +201,7 @@ wpnmass["SNEB_TYPE257_H1"]                    = wpnmass["SNEB_TYPE257_F1B"]
 wpnmass["AGM_84A"]                            = wpnmass["AGM_84D"]
 wpnmass["AGM_84E"]                            = wpnmass["AGM_84D"]
 wpnmass["S_25L"]                              = wpnmass["C_25"] -- this is inconsistent with other missiles but the in-game damage value is already high so it doesn't matter
+wpnmass["Kh25MP_PRGS1VP"]                     = wpnmass["X_25ML"]
 wpnmass["X_25MP"]                             = wpnmass["X_25ML"]
 wpnmass["X_29T"]                              = wpnmass["X_29L"]
 wpnmass["X_29TE"]                             = wpnmass["X_29L"]
