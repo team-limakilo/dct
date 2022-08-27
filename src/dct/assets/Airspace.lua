@@ -14,7 +14,8 @@ local AssetBase = require("dct.assets.AssetBase")
 local BRIEFING =
 	"Coordinate with friendly forces and provide cover in %NAME% airspace.\n\n"..
 	"The mission status shows how many ground missions have been completed "..
-	"in the region, however, you can RTB at any time."
+	"in the region, however, you can RTB at any time.\n\n"..
+	"Recommended Pilots: %MINAGENTS%"
 
 local Airspace = require("libs.namedclass")("Airspace", AssetBase)
 function Airspace:__init(template)

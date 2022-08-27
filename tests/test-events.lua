@@ -10,7 +10,7 @@ local testcases = {
 			["object"] = {
 				["name"] = "Novorossiysk_NovoShipsinPort 1 SHIP 1-1",
 				["objtype"] = Object.Category.UNIT,
-				["life"] = 1,
+				["life"] = 10,
 			},
 		},
 	},

@@ -56,6 +56,8 @@ function DamageGoal:__init(data)
 end
 
 function DamageGoal:_afterspawn()
+	if self._maxlife ~= nil then return end
+
 	local obj, getlife = getobject(self.objtype, self.name)
 	if obj == nil or not Object.isExist(obj) and not Group.isExist(obj) then
 		Logger:error("_afterspawn() - object '%s' doesn't exist, presumed dead",
@@ -66,7 +68,7 @@ function DamageGoal:_afterspawn()
 
 	local life = getlife(obj)
 	if life == nil or life < 1 then
-		Logger:error("_afterspawn() - object '%s' initial life value is nil or "..
+		Logger:warn("_afterspawn() - object '%s' initial life value is nil or "..
 			"below 1: %s", tostring(self.name), tostring(life))
 		self._maxlife = 1
 	else
@@ -94,6 +96,9 @@ end
 function DamageGoal:getStatus()
 	if self:isComplete() then return 100 end
 
+	-- assume assets that were never spawned are intact
+	if self._maxlife == nil then return 0 end
+
 	local health = 0
 	local obj, getlife = getobject(self.objtype, self.name)
 	if obj ~= nil then
@@ -102,6 +107,14 @@ function DamageGoal:getStatus()
 			Logger:warn("getStatus() - object '%s' health value is nil", self.name)
 			health = 0
 		end
+	end
+
+	-- some scenery objects can return bugged life values before they're damaged,
+	-- so we're fixing them now...
+	if health > self._maxlife then
+		Logger:warn("getStatus() - object '%s' health is greater than maxlife; fixed",
+			self.name)
+		self._maxlife = health
 	end
 
 	Logger:debug("getStatus() - name: '%s'; health: %.2f; maxlife: %.2f",

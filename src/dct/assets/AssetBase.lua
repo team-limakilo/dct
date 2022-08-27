@@ -33,25 +33,31 @@ local norenametype = {
 	[dctenum.assetType.AIRBASE]        = true,
 }
 
-local codenames = utils.deepcopy(settings.codenamedb)
-local function getCodenames(type)
-	if codenames[type] == nil then
+local codenames = {
+	[coalition.side.NEUTRAL] = utils.deepcopy(settings.codenamedb),
+	[coalition.side.RED]     = utils.deepcopy(settings.codenamedb),
+	[coalition.side.BLUE]    = utils.deepcopy(settings.codenamedb),
+}
+
+local function getCodenameList(type, side)
+	if codenames[side][type] == nil then
 		type = "default"
 	end
-	-- Refresh the codename list if it's empty
-	if next(codenames[type]) == nil then
-		codenames[type] = utils.deepcopy(settings.codenamedb[type])
+	if next(codenames[side][type]) == nil then
+		-- Refresh the codename list for the coalition if it's empty
+		codenames[side][type] = utils.deepcopy(settings.codenamedb[type])
 	end
-	return codenames[type]
+	return codenames[side][type]
 end
 
 local function generateCodename(template)
-	if template.codename ~= "default codename" then
+	if template.codename ~= nil and
+	   template.codename ~= "default codename" then
 		return template.codename
 	end
-	local typeCodenames = getCodenames(template.objtype)
-	local idx = math.random(1, #typeCodenames)
-	return table.remove(typeCodenames, idx)
+	local list = getCodenameList(template.objtype, template.coalition)
+	local idx = math.random(1, #list)
+	return table.remove(list, idx)
 end
 
 local function isMissionTarget(assetType)
@@ -69,10 +75,12 @@ local function genLocationMethod()
 		"A recon flight earlier today discovered",
 		"We have reason to believe there is",
 		"Aerial photography shows that there is",
-		"Satellite imaging has found",
 		"Ground units operating in the area have informed us of",
 	}
-	local idx = math.random(1,#txt)
+	if env.mission.date.Year >= 1960 then
+		table.insert(txt, "Satellite imaging has found")
+	end
+	local idx = math.random(1, #txt)
 	return txt[idx]
 end
 
@@ -168,15 +176,6 @@ function AssetBase:__init(template)
 end
 
 function AssetBase:_completeinit(template)
-	if isMissionTarget(template.objtype) then
-		if template.desc == nil then
-			error(string.format(
-				"Template(%s) is a mission target but has no 'desc' field", template.name))
-		end
-		self.briefing = dctutils.interp(template.desc, {
-			["LOCATIONMETHOD"] = genLocationMethod(),
-		})
-	end
 	self.type     = template.objtype
 	self.ignore   = template.ignore
 	self.owner    = template.coalition
@@ -189,6 +188,8 @@ function AssetBase:_completeinit(template)
 	self.extramarks = template.extramarks
 	self.nocull     = template.nocull
 	self.ondemand   = template.ondemand
+	self.codename   = generateCodename(template)
+
 	if norenametype[self.type] == true then
 		self.name = self.tplname
 	else
@@ -198,7 +199,17 @@ function AssetBase:_completeinit(template)
 				dct.Theater.singleton():getcntr()
 		end
 	end
-	self.codename = generateCodename(template)
+
+	if isMissionTarget(template.objtype) then
+		if not template.ignore and template.desc == nil then
+			error(string.format(
+				"Template(%s) is a mission target but has no 'desc' field", template.name))
+		end
+		self.briefing = dctutils.interp(template.desc, {
+			["CODENAME"]       = self.codename,
+			["LOCATIONMETHOD"] = genLocationMethod(),
+		})
+	end
 
 	for _, side in pairs(coalition.side) do
 		self._intel[side] = template.intel or 0

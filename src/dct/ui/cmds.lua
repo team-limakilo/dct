@@ -54,19 +54,16 @@ function UICmd:uicmd(time)
 		return nil
 	end
 
-	local ok, result = pcall(function()
+	xpcall(function()
 		local cmdr = self.theater:getCommander(self.asset.owner)
 		local msg  = self:_execute(time, cmdr)
 		self.asset.cmdpending = false
 		self:_print(msg)
-	end)
-
-	if not ok then
+	end, function(err)
 		self.asset.cmdpending = false
 		self:_print("F10 menu command failed to execute, please report a bug", true)
-		error(string.format(
-			"\nui command failed: %s - %s", self.__clsname, tostring(result)))
-	end
+		Logger:error("UICmd(%s): %s", self.__clsname, debug.traceback(err, 2))
+	end)
 end
 
 local ScratchPadDisplay = class("ScratchPadDisplay", UICmd)
@@ -107,6 +104,16 @@ function TheaterUpdateCmd:__init(theater, data)
 	self.name = "TheaterUpdateCmd:"..data.name
 end
 
+local function addAirbases(allAirbases, outList, side, ownerFilter)
+	for _, airbase in utils.sortedpairs(allAirbases) do
+		if airbase.owner == ownerFilter then
+			table.insert(outList, string.format("%s: %s",
+				human.relationship(side, airbase.owner),
+				airbase.name))
+		end
+	end
+end
+
 function TheaterUpdateCmd:_execute(_, cmdr)
 	local update = cmdr:getTheaterUpdate()
 	local available = cmdr:getAvailableMissions(self.asset.ato)
@@ -115,10 +122,11 @@ function TheaterUpdateCmd:_execute(_, cmdr)
 		function(asset) return asset.type == enum.assetType.AIRBASE end)
 
 	local airbaseList = {}
-	for _, airbase in utils.sortedpairs(airbases) do
-		table.insert(airbaseList, string.format("%s: %s", airbase.name,
-			human.relationship(cmdr.owner, airbase.owner)))
+	if cmdr.owner ~= coalition.side.NEUTRAL then
+		addAirbases(airbases, airbaseList, cmdr.owner, cmdr.owner)
 	end
+	addAirbases(airbases, airbaseList, cmdr.owner, coalition.side.NEUTRAL)
+	addAirbases(airbases, airbaseList, cmdr.owner, dctutils.getenemy(cmdr.owner))
 
 	local activeMsnList = {}
 	if next(update.missions) ~= nil then
@@ -150,7 +158,7 @@ function TheaterUpdateCmd:_execute(_, cmdr)
 		string.format("\nAvailable missions:\n  %s\n",
 			table.concat(availableMsnList, "\n  "))..
 		string.format("\nRecommended Mission Type: %s",
-			utils.getkey(enum.missionType, recommended or "None"))
+			utils.getkey(enum.missionType, recommended) or "None")
 
 	return msg
 end
@@ -238,6 +246,11 @@ end
 local function briefingmsg(msn, asset)
 	local tgtinfo = msn:getTargetInfo()
 	local iff = msn:getIFFCodes(asset)
+	local altitude = ""
+	if tgtinfo.intellvl >= 3 then
+		altitude = string.format("Target Altitude/QFE: %s\n",
+			human.formatAltitude(tgtinfo.location, asset.units))
+	end
 	local msg = string.format("Package: #%s\n", msn:getID())..
 		string.format("IFF Codes: M1(%s), M3(%s)\n", iff.m1, iff.m3)..
 		string.format("%s: %s (%s)\n",
@@ -247,6 +260,7 @@ local function briefingmsg(msn, asset)
 				tgtinfo.intellvl,
 				asset.gridfmt),
 			tgtinfo.callsign)..
+		altitude..
 		"Briefing:\n"..msn:getDescription(asset.gridfmt)
 	return msg
 end
@@ -289,12 +303,14 @@ function MissionJoinCmd:_execute(_, cmdr)
 	if msn == nil then
 		msg = string.format("No mission of ID(%s) available", tostring(missioncode))
 	else
+		local tgtinfo = msn:getTargetInfo()
 		msn:addAssigned(self.asset)
 		msg = string.format("Mission %s assigned, use F10 menu "..
 			"to see this briefing again\n", msn:getID())
-		msg = msg..briefingmsg(msn, self.asset)
-		msg = msg.."\n\nAssigned Pilots:\n"..assignedPilots(msn, self.assetmgr)
-		human.drawTargetIntel(msn, self.asset.groupId, false)
+		msg = msg..briefingmsg(msn, self.asset).."\n\n"
+		msg = msg..string.format("BDA: %d%% complete\n\n", tgtinfo.status)
+		msg = msg.."Assigned Pilots:\n"..assignedPilots(msn, self.assetmgr)
+		human.drawTargetIntel(msn, self.asset.groupId, self.asset.gridfmt)
 	end
 	return msg
 end
@@ -304,31 +320,39 @@ function MissionRqstCmd:__init(theater, data)
 	MissionCmd.__init(self, theater, data)
 	self.name = "MissionRqstCmd:"..data.name
 	self.missiontype = data.value
+	self.missiontgt  = data.target
 	self.displaytime = 120
 	self.assetmgr = theater:getAssetMgr()
 end
 
 function MissionRqstCmd:_execute(_, cmdr)
 	local msn = cmdr:getAssigned(self.asset)
-	local msg
-
-	if msn then
-		msg = string.format("You have mission %s already assigned, "..
+	if msn ~= nil then
+		return string.format("You have mission %s already assigned, "..
 			"use the F10 Menu to abort first.", msn:getID())
-		return msg
 	end
 
-	msn = cmdr:requestMission(self.asset.name, self.missiontype)
-	if msn == nil then
-		msg = string.format("No %s missions available.",
-			human.missiontype(self.missiontype))
+	if self.missiontgt ~= nil then
+		local tgt = self.assetmgr:getAsset(self.missiontgt)
+		msn = tgt and cmdr:createMission(self.asset.name, self.missiontype, tgt)
+		if msn == nil then
+			return "Mission target is no longer valid, please choose another"
+		end
 	else
-		msg = string.format("Mission %s assigned, use F10 menu "..
-			"to see this briefing again\n", msn:getID())
-		msg = msg..briefingmsg(msn, self.asset)
-		msg = msg.."\n\nAssigned Pilots:\n"..assignedPilots(msn, self.assetmgr)
-		human.drawTargetIntel(msn, self.asset.groupId, false)
+		msn = cmdr:requestMission(self.asset.name, self.missiontype)
+		if msn == nil then
+			return string.format("No %s missions available.",
+				human.missiontype(self.missiontype))
+		end
 	end
+
+	local tgtinfo = msn:getTargetInfo()
+	local msg = string.format("Mission %s assigned, use F10 menu "..
+		"to see this briefing again\n", msn:getID())
+	msg = msg..briefingmsg(msn, self.asset).."\n\n"
+	msg = msg..string.format("BDA: %d%% complete\n\n", tgtinfo.status)
+	msg = msg.."Assigned Pilots:\n"..assignedPilots(msn, self.assetmgr)
+	human.drawTargetIntel(msn, self.asset.groupId, self.asset.gridfmt)
 	return msg
 end
 
@@ -398,8 +422,7 @@ function MissionAbortCmd:_mission(_ --[[time]], _, msn)
 	end
 	human.removeIntel(msn, self.asset.groupId)
 	return string.format("Mission %s %s",
-		msn:abort(self.asset),
-		msg)
+		msn:abort(self.asset, self.reason), msg)
 end
 
 

@@ -57,6 +57,10 @@ function mt2d.__eq(vec, rhs)
 	return vec.x == rhs.x and vec.y == rhs.y
 end
 
+function mt2d.__tostring(vec)
+	return string.format("(%g, %g)", vec.x, vec.y)
+end
+
 function Vector2D:__init(obj)
 	self.x = obj.x or 0
 	if obj.z then
@@ -128,6 +132,10 @@ function mt3d.__eq(vec, rhs)
 	return vec.x == rhs.x and vec.y == rhs.y and vec.z == rhs.z
 end
 
+function mt3d.__tostring(vec)
+	return string.format("(%f, %f, %f)", vec.x, vec.y, vec.z)
+end
+
 function Vector3D:__init(obj, height)
 	self.x = obj.x or 0
 
@@ -181,6 +189,23 @@ function vmath.dot(U, V)
 		end
 	end
 	return sum
+end
+
+function vmath.angle(U, V)
+	return math.acos(vmath.dot(vmath.unitvec(U), vmath.unitvec(V)))
+end
+
+function vmath.cross(U, V)
+	if U:isa(Vector3D) or V:isa(Vector3D) then
+		assert(V:isa(Vector2D) and V:isa(Vector2D),
+			"cross product is only implemented for Vector2D")
+	end
+	U = Vector3D(U)
+	V = Vector3D(V)
+	local up = Vector3D { x = 0, y = 1, z = 0 }
+	return (U.y * V.z - V.y * U.z) * up.x
+	     - (U.x * V.z - V.x * U.z) * up.y
+		 + (U.x * V.y - V.x * U.y) * up.z
 end
 
 return vmath

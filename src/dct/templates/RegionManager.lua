@@ -4,25 +4,72 @@
 -- Creates a container for managing region objects.
 --]]
 
-local utils = require("libs.utils")
-local dctenum = require("dct.enum")
-local vector = require("dct.libs.vector")
+local lfs          = require("lfs")
+local utils        = require("libs.utils")
+local dctenum      = require("dct.enum")
+local geometry     = require("dct.libs.geometry")
+local human        = require("dct.ui.human")
+local vector       = require("dct.libs.vector")
 local Marshallable = require("dct.libs.Marshallable")
-local Region = require("dct.templates.Region")
-local settings = dct.settings.server
+local Region       = require("dct.templates.Region")
+local STM          = require("dct.templates.STM")
+local Logger       = dct.Logger.getByName("RegionManager")
+local settings     = dct.settings.server
 
 local RegionManager = require("libs.namedclass")("RegionManager",
 	Marshallable)
 function RegionManager:__init(theater)
 	self.regions = {}
-
+	self.borders = {}
 	self:loadRegions()
+	self:loadBorders()
 	theater:getAssetMgr():addObserver(self.onDCTEvent, self,
 		self.__clsname..".onDCTEvent")
 end
 
 function RegionManager:getRegion(name)
 	return self.regions[name]
+end
+
+-- Create a polygon from a group's waypoint route.
+local function createPolygon(grpdata)
+	local polygon = {}
+	if grpdata.route ~= nil and grpdata.route.points ~= nil then
+		for _, point in ipairs(grpdata.route.points) do
+			table.insert(polygon, {
+				x = point.x,
+				y = point.y,
+			})
+		end
+	end
+	return polygon, geometry.triangulate(polygon)
+end
+
+function RegionManager:loadBorders()
+	local fpath = settings.theaterpath..utils.sep.."borders.stm"
+	local file, err = io.open(fpath)
+	if err ~= nil then
+		Logger:warn("could not open borders file: %s", tostring(err))
+		return
+	end
+	file:close()
+	local data = utils.readlua(fpath, "staticTemplate")
+	local tpl = STM.transform(data)
+	for _, grp in ipairs(tpl.tpldata) do
+		for rgnname, _ in pairs(self.regions) do
+			if grp.data.name:match(rgnname) then
+				local polygon, triangles = createPolygon(grp.data)
+				if polygon ~= nil then
+					table.insert(self.borders[rgnname], {
+						center = geometry.meanCenter2D(polygon),
+						title = grp.data.name,
+						triangles = triangles,
+						polygon = polygon,
+					})
+				end
+			end
+		end
+	end
 end
 
 function RegionManager:loadRegions()
@@ -36,6 +83,7 @@ function RegionManager:loadRegions()
 				assert(self.regions[r.name] == nil, "duplicate regions " ..
 					"defined for theater: " .. settings.theaterpath)
 				self.regions[r.name] = r
+				self.borders[r.name] = {}
 			end
 		end
 	end
@@ -72,6 +120,12 @@ function RegionManager:generate()
 	self:validateEdges()
 end
 
+function RegionManager:postinit()
+	for rgnname, borders in pairs(self.borders) do
+		human.updateBorders(self.regions[rgnname], borders)
+	end
+end
+
 function RegionManager:marshal()
 	local tbl = {}
 	tbl.regions = {}
@@ -102,8 +156,12 @@ function RegionManager:onDCTEvent(event)
 	end
 
 	local region = self.regions[event.initiator.rgnname]
+
 	if region then
 		region:onDCTEvent(event)
+		if self.borders[region.name] ~= nil then
+			human.updateBorders(region, self.borders[region.name])
+		end
 	end
 end
 

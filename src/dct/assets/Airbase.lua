@@ -62,7 +62,6 @@
 --   determine if those events render the slot non-operational.
 --]]
 
-local utils         = require("libs.utils")
 local class         = require("libs.namedclass")
 local PriorityQueue = require("libs.containers.pqueue")
 local dctenum       = require("dct.enum")
@@ -167,9 +166,42 @@ end
 function OperationalState:update(asset)
 	-- TODO: create departures
 	asset._logger:debug("operational state: update called")
+	local carrier = Airbase.getByName(asset.name)
+	if carrier and Object.getCategory(carrier) == Object.Category.UNIT then
+		if asset.tacan ~= nil then
+			asset._logger:debug("refreshing tacan: %d%s; callsign: '%s'; freq: %d",
+				asset.tacan.number, asset.tacan.mode, tostring(asset.tacan.callsign),
+				asset.tacan.frequency)
+			Unit.getController(carrier):setCommand({
+				id = "ActivateBeacon",
+				params = {
+					type = 4, -- TACAN
+					system = 3, -- Land-based TACAN
+					AA = false,
+					bearing = true,
+					unitId = carrier:getID(),
+					callsign = asset.tacan.callsign or carrier:getName(),
+					channel = asset.tacan.number,
+					modeChannel = asset.tacan.mode,
+					frequency = asset.tacan.frequency,
+				}
+			})
+		end
+		if asset.icls ~= nil then
+			asset._logger:debug("refreshing icls: %d", asset.icls)
+			Unit.getController(carrier):setCommand({
+				id = "ActivateICLS",
+				params = {
+					type = 131584, -- ICLS Glideslope
+					unitId = carrier:getID(),
+					channel = asset.icls,
+				}
+			})
+		end
+	end
 end
 
-function OperationalState:onDCTEvent(asset, event)
+function OperationalState:onDCTEvent(_, _ --[[ asset, event ]])
 	--[[
 	-- TODO: write this event handler
 	-- events to handle:
@@ -182,16 +214,7 @@ function OperationalState:onDCTEvent(asset, event)
 	--  * S_EVENT_LAND - no need to handle
 	--  * S_EVENT_HIT - no need to handle at this time
 	--  * S_EVENT_DEAD - no need to handle at this time
-	--
-	-- For now, we'll only handle capture by ground units
 	--]]
-	if event.id == world.event.S_EVENT_BASE_CAPTURED and
-	   event.place:getName() == asset.name and
-	   event.place:getCoalition() ~= self.owner then
-		asset.owner = event.place:getCoalition()
-		asset._logger:debug("Captured by %s coalition",
-			utils.getkey(coalition.side, asset.owner))
-	end
 	return nil
 end
 
@@ -252,8 +275,16 @@ function AirbaseAsset:__init(template)
 		"_subordinates",
 		"takeofftype",
 		"recoverytype",
+		"capturable",
+		"tacan",
+		"icls",
 	})
 	self._eventhandlers = nil
+	if template ~= nil then
+		self.capturable = template.capturable
+		self.tacan = template.tacan
+		self.icls = template.icls
+	end
 end
 
 function AirbaseAsset.assettypes()
@@ -279,7 +310,7 @@ function AirbaseAsset:_setup()
 		self:setDead(true)
 		return
 	end
-	self._abcategory = dcsab:getDesc().airbaseCategory
+	self._abcategory = dcsab:getDesc().category
 	self._location = dcsab:getPoint()
 end
 
@@ -402,15 +433,37 @@ function AirbaseAsset:generate(assetmgr, region)
 	end
 end
 
+function AirbaseAsset:setDead(val)
+	local assetmgr = dct.theater:getAssetMgr()
+	for name, _ in pairs(self._subordinates) do
+		local asset = assetmgr:getAsset(name)
+		-- Setting player assets to dead causes ticket loss, which is undesirable
+		if asset and asset.type ~= dctenum.assetType.PLAYERGROUP then
+			asset:setDead(val)
+		end
+	end
+	AssetBase.setDead(self, val)
+end
+
 function AirbaseAsset:spawn(ignore)
 	self._logger:debug("spawn called")
 	if not ignore and self:isSpawned() then
 		self._logger:error("runtime bug - already spawned")
 		return
 	end
+
 	associate_slots(self)
 	self:spawn_despawn("spawn")
 	AssetBase.spawn(self)
+
+	local dcsab = Airbase.getByName(self.name)
+	if self.capturable and self.owner ~= dcsab:getCoalition() then
+		self._logger:warn("airbase coalition does not match DCS state; fixing")
+		return dct.theater:notify({
+			id = world.event.S_EVENT_BASE_CAPTURED,
+			place = dcsab,
+		})
+	end
 
 	if self:isOperational() then
 		self:notify(dctutils.buildevent.operational(self, true))
@@ -418,7 +471,7 @@ function AirbaseAsset:spawn(ignore)
 end
 
 function AirbaseAsset:despawn()
-	self:spawn_despawn(self, "despawn")
+	self:spawn_despawn("despawn")
 	AssetBase.despawn(self)
 end
 

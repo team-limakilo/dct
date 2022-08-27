@@ -10,17 +10,30 @@
 
 require("math")
 local utils    = require("libs.utils")
+local check    = require("libs.check")
 local enum     = require("dct.enum")
 local dctutils = require("dct.utils")
 local vector   = require("dct.libs.vector")
 local Goal     = require("dct.Goal")
 local AssetBase= require("dct.assets.AssetBase")
 
+local SMOKE_INTERVAL = 5 * 60
+
 local function isUnitGroup(category)
 	return category == Unit.Category.AIRPLANE
 		or category == Unit.Category.HELICOPTER
 		or category == Unit.Category.GROUND_UNIT
 		or category == Unit.Category.SHIP
+end
+
+local function isAirborne(category)
+	return category == Unit.Category.AIRPLANE
+		or category == Unit.Category.HELICOPTER
+end
+
+local function isStatic(category)
+	return category == Unit.Category.STRUCTURE or
+	       category == enum.UNIT_CAT_SCENERY
 end
 
 local StaticAsset = require("libs.namedclass")("StaticAsset", AssetBase)
@@ -30,6 +43,11 @@ function StaticAsset:__init(template)
 	self._status        = 0
 	self._deathgoals    = {}
 	self._assets        = {}
+	self._groups        = {}
+	self._units         = {}
+	self._tplGroupNames = {}
+	self._tplUnitNames  = {}
+	self._initialized   = {}
 	self._eventhandlers = {
 		[world.event.S_EVENT_DEAD] = self.handleDead,
 	}
@@ -37,6 +55,8 @@ function StaticAsset:__init(template)
 	self:_addMarshalNames({
 		"_hasDeathGoals",
 		"_maxdeathgoals",
+		"_tplGroupNames",
+		"_tplUnitNames",
 	})
 end
 
@@ -60,17 +80,25 @@ function StaticAsset.assettypes()
 		enum.assetType.LOGISTICS,
 		enum.assetType.FRONTLINE,
 		enum.assetType.CONVOY,
+		enum.assetType.ARTILLERY,
 	}
 end
 
 function StaticAsset:_completeinit(template)
 	AssetBase._completeinit(self, template)
 	self._hasDeathGoals = template.hasDeathGoals
+	self._tplGroupNames = template.groupNames
+	self._tplUnitNames  = template.unitNames
 	self._tpldata       = template:copyData()
+
+	if next(template.smoke) ~= nil then
+		self._smoke = template.smoke
+		self:_addMarshalNames({ "_smoke" })
+	end
 end
 
 --[[
--- Ensure only primary death goals are added
+-- Adds a death goal to the asset if it's a primary goal
 --]]
 function StaticAsset:_addDeathGoal(name, goalspec)
 	assert(name ~= nil and type(name) == "string",
@@ -98,13 +126,10 @@ function StaticAsset:_removeDeathGoal(name)
 	end
 
 	self._logger:debug("_removeDeathGoal() - obj name: %s", name)
-	if self:isDead() then
-		self._logger:error("_removeDeathGoal() called '%s' marked as dead", self.name)
-		return
-	end
 
 	self._deathgoals[name] = nil
 	self._curdeathgoals = self._curdeathgoals - 1
+
 	if next(self._deathgoals) == nil then
 		self:setDead(true)
 	end
@@ -128,9 +153,36 @@ function StaticAsset:_setupDeathGoal(grpdata, category, country)
 	elseif country ~= nil and
 	       coalition.getCountryCoalition(country) == self.owner then
 		self:_addDeathGoal(grpdata.name,
-			AssetBase.defaultgoal(
-				category == Unit.Category.STRUCTURE or
-				category == enum.UNIT_CAT_SCENERY))
+			AssetBase.defaultgoal(isStatic(category)))
+	end
+end
+
+--[[
+-- Removes unit goals if all units have a goal, as well as the group,
+-- leaving only the group's goal. This avoids automatic mission editor
+-- unit naming from creating unecessary goals, which affects how the mission
+-- status is displayed.
+--]]
+function StaticAsset:_removeDuplicateGoals(grpdata)
+	if grpdata.units == nil or next(grpdata.units) == nil or
+	   self._deathgoals[grpdata.name] == nil then
+		-- No point in removing unit goals
+		return
+	end
+	for _, unit in ipairs(grpdata.units) do
+		if self._deathgoals[unit.name] == nil then
+			-- Abort if at least one unit has no goals, meaning the mission
+			-- creator has only set specific units as "VIPs" alongside a
+			-- group destruction goal.
+			return
+		end
+	end
+	-- At this point we know both that there is a group goal, and that all units
+	-- also have goals, so we prune unit goals.
+	self._logger:warn("group '%s' and all of its units have goals; "..
+		"removing unit goals and keeping group goal", grpdata.name)
+	for _, unit in ipairs(grpdata.units) do
+		self:_removeDeathGoal(unit.name)
 	end
 end
 
@@ -141,6 +193,7 @@ end
 function StaticAsset:_setup()
 	for _, grp in ipairs(self._tpldata) do
 		self:_setupDeathGoal(grp.data, grp.category, grp.countryid)
+		self:_removeDuplicateGoals(grp.data)
 		self._assets[grp.data.name] = utils.deepcopy(grp)
 
 		local route = grp.data.route
@@ -148,6 +201,12 @@ function StaticAsset:_setup()
 			self.isMobile = true
 		end
 	end
+
+	local goals = 0
+	for _ in pairs(self._deathgoals) do
+		goals = goals + 1
+	end
+	self._logger:debug("total death goals: %d", goals)
 
 	if next(self._deathgoals) == nil then
 		self._logger:error("runtime error: must have a deathgoal, deleting")
@@ -157,6 +216,32 @@ end
 
 function StaticAsset:getTemplateData()
 	return self._tpldata
+end
+
+function StaticAsset:_refreshSmoke(time)
+	if self:isDead() then
+		return
+	end
+	for id, smoke in pairs(self._smoke) do
+		self._logger:debug("refreshing smoke; id: %d, color: %s", id, smoke.color)
+		trigger.action.smoke(smoke, trigger.smokeColor[smoke.color])
+	end
+	return time + SMOKE_INTERVAL
+end
+
+function StaticAsset:setTargeted(side, val)
+	AssetBase.setTargeted(self, side, val)
+
+	if self._smoke ~= nil and dctutils.getenemy(self.owner) == side then
+		local targeted = self:isTargeted(side)
+		if targeted and self._smokeFunc == nil then
+			self._smokeFunc = timer.scheduleFunction(
+				self._refreshSmoke, self, timer.getTime() + 30)
+		elseif not targeted and self._smokeFunc ~= nil then
+			timer.removeFunction(self._smokeFunc)
+			self._smokeFunc = nil
+		end
+	end
 end
 
 function StaticAsset:getLocation()
@@ -173,13 +258,35 @@ end
 
 function StaticAsset:getCurrentLocation()
 	if self:isSpawned() and self.isMobile then
-		for name, group in pairs(self._assets) do
-			if isUnitGroup(group.category) then
-				return Group.getByName(name):getUnit(1):getPoint()
+		for name, _ in pairs(self._assets) do
+			local grp = Group.getByName(name)
+			if grp ~= nil then
+				local unit = grp:getUnit(1)
+				if unit ~= nil then
+					return vector.Vector3D(unit:getPoint())
+				end
 			end
 		end
 	end
 	return self:getLocation()
+end
+
+function StaticAsset:getStaticTargetLocations()
+	local locations = {}
+	for name, grp in pairs(self._assets) do
+		if isStatic(grp.category) then
+			local goal = self._deathgoals[name]
+			if goal ~= nil and goal.priority == Goal.priority.PRIMARY then
+				table.insert(locations, {
+					desc = grp.data.desc,
+					x = grp.data.x,
+					y = land.getHeight(grp.data),
+					z = grp.data.y,
+				})
+			end
+		end
+	end
+	return locations
 end
 
 function StaticAsset:getStatus()
@@ -207,18 +314,50 @@ function StaticAsset:getObjectNames()
 	return keyset
 end
 
-function StaticAsset:update()
-	if not self:isSpawned() then
-		return
+-- Clean up units which didn't have death events (2.7.12 bug)
+function StaticAsset:cleanup()
+	if not self:isSpawned() then return end
+
+	for grpname, group in pairs(self._assets) do
+		local units = group.data.units or {}
+		for i = #units, 1, -1 do
+			local name = units[i].name
+			local unit = Unit.getByName(name)
+			-- Life of 1 or less is considered "dead" by DCS
+			if unit ~= nil and unit:getLife() <= 1 then
+				self._logger:debug(
+					"cleanup() - unit '%s' is dead; calling handleDead()", name)
+				self:handleDead({
+					id = world.event.S_EVENT_DEAD,
+					time = timer.getTime(),
+					initiator = unit,
+				})
+			elseif unit == nil then
+				self._logger:debug(
+					"cleanup() - unit '%s' does not exist; removing", name)
+				self:_removeDeathGoal(name)
+				table.remove(units, i)
+				if next(units) == nil then
+					self:_removeDeathGoal(grpname)
+					self._assets[grpname] = nil
+					break
+				end
+			end
+		end
 	end
+end
+
+function StaticAsset:update()
+	if not self:isSpawned() then return end
 
 	local cnt = 0
 	for name, goal in pairs(self._deathgoals) do
 		cnt = cnt + 1
 		if goal:checkComplete() then
-			self:_removeDeathGoal(name, goal)
+			self:_removeDeathGoal(name)
 		end
 	end
+	self:cleanup()
 	self._logger:debug("update() - max goals: %d; cur goals: %d; checked: %d",
 		self._maxdeathgoals, self._curdeathgoals, cnt)
 end
@@ -232,7 +371,7 @@ function StaticAsset:handleDead(event)
 		local grpname = obj:getGroup():getName()
 		local grp = self._assets[grpname]
 		local units = grp.data.units
-		for i = 1, #units do
+		for i = #units, 1, -1 do
 			if units[i].name == unitname then
 				self:_removeDeathGoal(unitname)
 				table.remove(units, i)
@@ -244,13 +383,76 @@ function StaticAsset:handleDead(event)
 			self._assets[grpname] = nil
 		end
 	else
-		if self._assets[unitname].category == enum.UNIT_CAT_SCENERY then
-			dct.Theater.singleton():getSystem(
-				"dct.systems.bldgPersist"):addObject(unitname)
-		end
 		self:_removeDeathGoal(unitname)
 		self._assets[unitname] = nil
 	end
+end
+
+local function remapID(idmap, objmap, tbl, tblkey)
+	check.table(idmap)
+	check.table(tbl)
+	check.string(tblkey)
+	local oldid = tbl[tblkey]
+	local name = idmap[oldid]
+	local obj = objmap[name]
+	local newid
+	if obj ~= nil then
+		newid = obj:getID()
+		tbl[tblkey] = newid
+	end
+	return oldid, newid
+end
+
+function StaticAsset:_transformTask(task)
+	if task.id == "ComboTask" then
+		for _, subtask in pairs(task.params.tasks) do
+			self:_transformTask(subtask)
+		end
+	end
+
+	-- remap target IDs in the template to the spawned IDs
+	if task.params.groupId ~= nil then
+		local old, new =
+			remapID(self._tplGroupNames, self._groups, task.params, "groupId")
+		self._logger:debug("remapped task groupId: %d -> %s", old, tostring(new))
+	end
+
+	if task.params.unitId ~= nil then
+		local old, new =
+			remapID(self._tplUnitNames, self._units, task.params, "unitId")
+		self._logger:debug("remapped task unitId: %d -> %s", old, tostring(new))
+	end
+
+	-- the "action" sub-key has the same structure as "task"
+	if task.params.action ~= nil then
+		self:_transformTask(task.params.action)
+	end
+end
+
+function StaticAsset:_transformPoints(points)
+	for _, point in pairs(points) do
+		if point.task ~= nil then
+			self:_transformTask(point.task)
+		end
+	end
+end
+
+function StaticAsset:_afterspawn(group, obj)
+	local points = obj.data.route and obj.data.route.points
+	if points ~= nil then
+		if not self._initialized[obj.data.name] then
+			self:_transformPoints(points)
+		end
+		-- reapply transformed waypoints
+		group:getController():setTask({
+			id = "Mission",
+			route = {
+				airborne = isAirborne(obj.category),
+				points = points,
+			}
+		})
+	end
+	self._initialized[obj.data.name] = true
 end
 
 function StaticAsset:spawn(ignore)
@@ -259,12 +461,26 @@ function StaticAsset:spawn(ignore)
 		return
 	end
 
+	local spawnedObjects = {}
+
 	for _, obj in pairs(self._assets) do
 		if obj.category == Unit.Category.STRUCTURE then
-			coalition.addStaticObject(obj.countryid, obj.data)
+			local static = coalition.addStaticObject(obj.countryid, obj.data)
+			table.insert(spawnedObjects, { static, obj })
 		elseif isUnitGroup(obj.category) then
-			coalition.addGroup(obj.countryid, obj.category, obj.data)
+			local group = coalition.addGroup(obj.countryid, obj.category, obj.data)
+			table.insert(spawnedObjects, { group, obj })
+
+			-- record spawned groups and units for later lookups
+			self._groups[group:getName()] = group
+			for _, unit in pairs(group:getUnits()) do
+				self._units[unit:getName()] = unit
+			end
 		end
+	end
+
+	for _, spawned in pairs(spawnedObjects) do
+		self:_afterspawn(unpack(spawned))
 	end
 
 	AssetBase.spawn(self)
@@ -280,6 +496,8 @@ function StaticAsset:spawn(ignore)
 end
 
 function StaticAsset:despawn()
+	self:update()
+
 	for name, obj in pairs(self._assets) do
 		if obj.category == Unit.Category.STRUCTURE then
 			local structure = StaticObject.getByName(name)
@@ -294,6 +512,8 @@ function StaticAsset:despawn()
 		end
 	end
 
+	self._groups = {}
+	self._units  = {}
 	AssetBase.despawn(self)
 end
 
@@ -302,9 +522,14 @@ end
 local function filterTemplateData(template, aliveGroups)
 	local out = {}
 	for _, grp in ipairs(template) do
-		table.insert(out, utils.deepcopy(aliveGroups[grp.data.name]))
+		local alivegrp = utils.deepcopy(aliveGroups[grp.data.name])
+		if alivegrp ~= nil then
+			alivegrp.data.route = grp.data.route
+			table.insert(out, alivegrp)
+		end
 	end
 	for _, grp in ipairs(out) do
+		grp.data.unitId = nil
 		grp.data.groupId = nil
 		if grp.data.units ~= nil then
 			for _, unit in ipairs(grp.data.units) do

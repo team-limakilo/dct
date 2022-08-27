@@ -11,6 +11,7 @@ local dctutils   = require("dct.utils")
 local Mission    = require("dct.ai.Mission")
 local Stats      = require("dct.libs.Stats")
 local Command    = require("dct.Command")
+local Observable = require("dct.libs.Observable")
 local Logger     = dct.Logger.getByName("Commander")
 
 local function heapsort_tgtlist(assetmgr, cmdr, filterlist)
@@ -40,9 +41,10 @@ end
 --[[
 -- For now the commander is only concerned with flight missions
 --]]
-local Commander = require("libs.namedclass")("Commander")
+local Commander = require("libs.namedclass")("Commander", Observable)
 
 function Commander:__init(theater, side)
+	Observable.__init(self, Logger)
 	self.theater      = theater
 	self.owner        = side
 	self.missionstats = Stats(genstatids())
@@ -106,7 +108,6 @@ function Commander:getTheaterUpdate()
 	return theaterUpdate
 end
 
-local MISSION_ID = math.random(1,63)
 local invalidXpdrTbl = {
 	["0000"] = true,
 	["7700"] = true,
@@ -127,25 +128,30 @@ local invalidXpdrTbl = {
 --]]
 function Commander:genMissionCodes(msntype)
 	local id
+	local missionId
 	local digit1 = enum.squawkMissionType[msntype]
 	while true do
-		MISSION_ID = (MISSION_ID + 1) % 64
-		id = string.format("%01o%02o0", digit1, MISSION_ID)
+		missionId = math.random(1, 63)
+		id = string.format("%01o%02o0", digit1, missionId)
 		if invalidXpdrTbl[id] == nil and self:getMission(id) == nil then
 			break
 		end
 	end
 	local m1 = (8*digit1)+(enum.squawkMissionSubType[msntype] or 0)
-	local m3 = (512*digit1)+(MISSION_ID*8)
+	local m3 = (512*digit1)+(missionId*8)
 	return { ["id"] = id, ["m1"] = m1, ["m3"] = m3, }
 end
 
 --[[
--- recommendMission - recommend a mission type given a unit type
--- unittype - (string) the type of unit making request requesting
--- return: mission type value
+-- getTopTargets - list available targets for a given ATO, ordered from highest
+-- to lowest priority
+--
+-- allowedmissions - (table) ATO of asset requesting the mission
+-- num - (number) maximum number of returned results
+--
+-- return: ordered list of target assets
 --]]
-function Commander:recommendMissionType(allowedmissions)
+function Commander:getTopTargets(allowedmissions, num)
 	local assetfilter = {}
 
 	for _, v in pairs(allowedmissions) do
@@ -153,12 +159,71 @@ function Commander:recommendMissionType(allowedmissions)
 	end
 
 	local pq = heapsort_tgtlist(self.theater:getAssetMgr(), self, assetfilter)
+	local tgts = {}
 
-	local tgt = pq:pop()
-	if tgt == nil then
+	for _ = 1, num do
+		local tgt = pq:pop()
+		if tgt ~= nil then
+			table.insert(tgts, tgt)
+		end
+	end
+
+	return tgts
+end
+
+--[[
+-- recommendMission - recommend a mission type for a given asset
+--
+-- allowedmissions - (table) ATO of asset requesting the mission
+--
+-- return: mission type value
+--]]
+function Commander:recommendMissionType(allowedmissions)
+	local tgts = self:getTopTargets(allowedmissions, 1)
+	if next(tgts) == nil then
 		return nil
 	end
-	return dctutils.assettype2mission(tgt.type)
+	return dctutils.assettype2mission(tgts[1].type)
+end
+
+--[[
+-- createMission - create and register a mission targeting a given asset
+--
+-- grpname - the name of the asset that is assigned to the mission.
+-- missiontype - the type of the mission that will be created.
+-- tgt - asset object that will be used as the mission target.
+--
+-- return: a Mission object or nil if the target is invalid
+--]]
+function Commander:createMission(grpname, missiontype, tgt)
+	Logger:debug("createMission() - tgt name: '%s'; isTargeted: %s; priority: %d",
+		tgt.name, tostring(tgt:isTargeted(self.owner)), tgt:getPriority(self.owner))
+
+	-- mission target is not valid, cannot assign
+	if not self:canTarget(tgt) then
+		return nil
+	end
+
+	-- chosen target already has a mission assigned
+	local assetmgr = self.theater:getAssetMgr()
+	local mission = self.missionsByTarget[tgt.name]
+	if mission ~= nil then
+		mission:addAssigned(assetmgr:getAsset(grpname))
+		return mission
+	end
+
+	-- no mission for target, create a new one
+	local plan = { require("dct.ai.actions.KillTarget")(tgt) }
+	mission = Mission(self, missiontype, tgt, plan)
+	mission:addAssigned(assetmgr:getAsset(grpname))
+	self:addMission(mission)
+
+	Logger:debug(
+		"createMission() - assigned target '%s' to mission %d (codename: %s)",
+		tgt.name, mission.id, tgt.codename)
+
+	self:notify(dctutils.buildevent.addMission(self, mission, tgt))
+	return mission
 end
 
 --[[
@@ -169,9 +234,8 @@ end
 -- the mission and handling tracking which asset is assigned to the
 -- mission.
 --
--- grpname - the name of the commander's asset that is assigned to take
---   out the target.
--- missiontype - the type of mission which defines the type of target
+-- grpname - the name of the asset that is assigned to the mission.
+-- missiontype - the type of mission, which defines the type of target
 --   that will be looked for.
 --
 -- return: a Mission object or nil if no target can be found which
@@ -214,8 +278,10 @@ function Commander:requestMission(grpname, missiontype)
 	-- no mission for target, create a new one
 	local plan = { require("dct.ai.actions.KillTarget")(tgt) }
 	mission = Mission(self, missiontype, tgt, plan)
-	mission:addAssigned(assetmgr:getAsset(grpname))
 	self:addMission(mission)
+
+	self:notify(dctutils.buildevent.addMission(self, mission, tgt))
+	mission:addAssigned(assetmgr:getAsset(grpname))
 
 	Logger:debug(
 		"requestMission() - assigned target '%s' to mission %d (codename: %s)",

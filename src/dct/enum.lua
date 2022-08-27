@@ -30,6 +30,7 @@ enum.assetType = {
 	["SEA"]         = 14,
 	["FRONTLINE"]   = 25,
 	["CONVOY"]      = 26,
+	["ARTILLERY"]   = 1027,
 
 	-- extended type set
 	["BUNKER"]      = 15,
@@ -56,6 +57,7 @@ enum.assetTypePriority = {
 	[enum.assetType.C2]          = 30,
 	[enum.assetType.AMMODUMP]    = 40,
 	[enum.assetType.FUELDUMP]    = 40,
+	[enum.assetType.ARTILLERY]   = 40,
 	[enum.assetType.CONVOY]      = 50,
 	[enum.assetType.MISSILE]     = 50,
 	[enum.assetType.SEA]         = 50,
@@ -130,6 +132,7 @@ enum.assetClass = {
 		[enum.assetType.LOGISTICS]   = true,
 		[enum.assetType.FRONTLINE]   = true,
 		[enum.assetType.CONVOY]      = true,
+		[enum.assetType.ARTILLERY]   = true,
 	},
 	-- strategic list is used in calculating ownership of a region
 	-- among other things
@@ -166,6 +169,7 @@ enum.missionTypeMap = {
 		[enum.assetType.BUNKER]     = true,
 		[enum.assetType.CHECKPOINT] = true,
 		[enum.assetType.FACTORY]    = true,
+		[enum.assetType.SHORAD]     = true,
 	},
 	[enum.missionType.SEAD] = {
 		[enum.assetType.EWR]        = true,
@@ -177,6 +181,8 @@ enum.missionTypeMap = {
 	},
 	[enum.missionType.BAI] = {
 		[enum.assetType.LOGISTICS]  = true,
+		[enum.assetType.ARTILLERY]  = true,
+		[enum.assetType.CONVOY]     = true,
 	},
 	[enum.missionType.CAS] = {
 		[enum.assetType.JTAC]       = true,
@@ -223,52 +229,109 @@ enum.weaponCategory = {
 enum.WPNINFCOST = 5000
 enum.UNIT_CAT_SCENERY = Unit.Category.STRUCTURE + 1
 
-local eventbase = world.event.S_EVENT_MAX + 2000
+enum.eventbase = 2000
 enum.event = {
-	["DCT_EVENT_DEAD"] = eventbase + 1,
+	["DCT_EVENT_DEAD"] = enum.eventbase + 1,
 		--[[
 		-- DEAD definition:
 		--   id = id of this event
 		--   initiator = asset sending the death notification
 		--]]
-	["DCT_EVENT_HIT"]  = eventbase + 2,
+	["DCT_EVENT_HIT"] = enum.eventbase + 2,
 		--[[
 		-- HIT definition:
 		--   id = id of this event
 		--   initiator = DCT asset that was hit
 		--   weapon = DCTWeapon object
 		--]]
-	["DCT_EVENT_OPERATIONAL"] = eventbase + 3,
+	["DCT_EVENT_OPERATIONAL"] = enum.eventbase + 3,
 		--[[
 		-- OPERATIONAL definition:
 		--   id = id of this event
 		--   initiator = base sending the operational notification
 		--   state = of the base, true == operational
 		--]]
-	["DCT_EVENT_CAPTURED"] = eventbase + 4,
+	["DCT_EVENT_CAPTURED"] = enum.eventbase + 4,
 		--[[
 		-- CAPTURED definition:
 		--   id = id of this event
 		--   initiator = object that initiated the capture
 		--   target = the base that has been captured
+		--   owner = previous coalition of the base
 		--]]
-	["DCT_EVENT_IMPACT"] = eventbase + 5,
+	["DCT_EVENT_IMPACT"] = enum.eventbase + 5,
 		--[[
 		-- IMPACT definition:
 		--   id = id of the event
 		--   initiator = DCTWeapon class causing the impact
 		--   point = impact point
 		--]]
-	["DCT_EVENT_ADD_ASSET"] = eventbase + 6,
+	["DCT_EVENT_ADD_ASSET"] = enum.eventbase + 6,
 		--[[
 		-- ADD_ASSET definition:
 		--  A new asset was added to the asset manager.
 		--   id = id of this event
 		--   initiator = asset being added
 		--]]
+	["DCT_EVENT_ADD_MISSION"] = enum.eventbase + 7,
+		--[[
+		-- CREATE_MISSION definition:
+		--  A mission was added to the active list of an AI commander.
+		--   id = id of this event
+		--   initiator = commander that owns the mission
+		--   mission = new mission object
+		--   target = mission target asset
+		--]]
+	["DCT_EVENT_REMOVE_MISSION"] = enum.eventbase + 8,
+		--[[
+		-- REMOVE_MISSION definition:
+		--  A mission was removed from the active list of an AI commander.
+		--   id = id of this event
+		--   initiator = commander that owned the mission
+		--   mission = mission object to be destroyed
+		--   reason = reason for mission removal
+		--]]
+	["DCT_EVENT_JOIN_MISSION"] = enum.eventbase + 9,
+		--[[
+		-- JOIN_MISSION definition:
+		--  An asset has joined a mission.
+		--   id = id of this event
+		--   initiator = asset
+		--   mission = mission object
+		--]]
+	["DCT_EVENT_LEAVE_MISSION"] = enum.eventbase + 10,
+		--[[
+		-- LEAVE_MISSION definition:
+		--  An asset has left a mission.
+		--   id = id of this event
+		--   initiator = asset
+		--   mission = mission object
+		--   reason = reason for leaving
+		--]]
+	["DCT_EVENT_MAX"] = enum.eventbase + 11,
 }
 
 enum.kickCode = require("dct.libs.kickinfo").kickCode
+
+enum.markShape = {
+	["Line"]     = 1,
+	["Circle"]   = 2,
+	["Rect"]     = 3,
+	["Arrow"]    = 4,
+	["Text"]     = 5,
+	["Quad"]     = 6,
+	["Freeform"] = 7,
+}
+
+enum.lineType = {
+	["NoLine"]   = 0,
+	["Solid"]    = 1,
+	["Dashed"]   = 2,
+	["Dotted"]   = 3,
+	["DotDash"]  = 4,
+	["LongDash"] = 5,
+	["TwoDash"]  = 6,
+}
 
 for _, msntype in pairs(enum.missionType) do
 	assert(enum.squawkMissionType[msntype],

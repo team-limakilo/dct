@@ -6,18 +6,19 @@
 
 require("os")
 require("math")
-local check = require("libs.check")
-local enum  = require("dct.enum")
-local vector = require("dct.libs.vector")
-local utils = {}
+local check     = require("libs.check")
+local enum      = require("dct.enum")
+local vector    = require("dct.libs.vector")
+local utils     = {}
+
+utils.INTELMAX = 5
+utils.COALITION_CONTESTED = -1
 
 local enemymap = {
 	[coalition.side.NEUTRAL] = false,
 	[coalition.side.BLUE]    = coalition.side.RED,
 	[coalition.side.RED]     = coalition.side.BLUE,
 }
-
-utils.INTELMAX = 5
 
 function utils.getenemy(side)
 	return enemymap[side]
@@ -43,17 +44,22 @@ function utils.assettype2mission(assettype)
 end
 
 local airbase_id2name_map = nil
-function utils.airbaseId2Name(id)
+function utils.airbaseId2Name(id, isAirdrome)
 	if id == nil then
 		return nil
 	end
 	if airbase_id2name_map == nil then
 		airbase_id2name_map = {}
 		for _, ab in pairs(world.getAirbases()) do
-			airbase_id2name_map[tonumber(ab:getID())] = ab:getName()
+			-- note: airdromes (pre-defined airbases) use a different ID namespace
+			-- to user-placed airbases (ships and FARPs), so we need to distinguish
+			-- them before making an ID lookup to avoid mixing them up
+			local airdrome = ab:getDesc().category == Airbase.Category.AIRDROME
+			airbase_id2name_map[airdrome] = airbase_id2name_map[airdrome] or {}
+			airbase_id2name_map[airdrome][tonumber(ab:getID())] = ab:getName()
 		end
 	end
-	return airbase_id2name_map[id]
+	return airbase_id2name_map[isAirdrome][id]
 end
 
 function utils.nearestAirbase(point, radius, filter, data)
@@ -144,12 +150,38 @@ utils.posfmt = {
 	["MGRS"] = 4,
 }
 
+utils.units = {
+	["IMPERIAL"] = 1,
+	["METRIC"]   = 2,
+	["US_ARMY"]  = 3, -- Mix of metric distances and imperial altitude
+	["INHG"]     = 4,
+	["MMHG"]     = 5,
+	["HPA"]      = 6,
+	["MBAR"]     = 7,
+}
+
 -- reduce the accuracy of the position to the precision specified
 function utils.degradeLL(lat, long, precision)
 	local multiplier = math.pow(10, precision)
 	lat  = math.modf(lat * multiplier) / multiplier
 	long = math.modf(long * multiplier) / multiplier
 	return lat, long
+end
+
+-- reduce the accuracy of the position to the precision specified
+function utils.degradeMGRS(mgrs, precision, center)
+	local multiplier = math.pow(10, 5 - precision)
+	local degraded = {
+		UTMZone     = mgrs.UTMZone,
+		MGRSDigraph = mgrs.MGRSDigraph,
+		Easting     = math.floor(mgrs.Easting  / multiplier) * multiplier,
+		Northing    = math.floor(mgrs.Northing / multiplier) * multiplier,
+	}
+	if center then
+		degraded.Easting  = degraded.Easting  + multiplier * 0.5
+		degraded.Northing = degraded.Northing + multiplier * 0.5
+	end
+	return degraded
 end
 
 -- set up formatting args for the LL string
@@ -247,28 +279,47 @@ function utils.MGRStostring(mgrs, precision)
 		return str
 	end
 
+	if precision == 1 then
+		return str..string.format(fmtstr, (mgrs.Easting/divisor))..
+			string.format(fmtstr, (mgrs.Northing/divisor))
+	end
+
 	return str .. " " .. string.format(fmtstr, (mgrs.Easting/divisor)) .. " " ..
 		string.format(fmtstr, (mgrs.Northing/divisor))
 end
 
-function utils.degrade_position(position, precision)
-	local lat, long = coord.LOtoLL(position)
-	lat, long = utils.degradeLL(lat, long, precision)
-	return coord.LLtoLO(lat, long, 0)
+function utils.degrade_position(position, precision, fmt)
+	if precision <= 1 or fmt == utils.posfmt.MGRS then
+		local mgrs = coord.LLtoMGRS(coord.LOtoLL(position))
+		mgrs = utils.degradeMGRS(mgrs, precision, precision <= 1)
+		return coord.LLtoLO(coord.MGRStoLL(mgrs))
+	else
+		local lat, long = coord.LOtoLL(position)
+		lat, long = utils.degradeLL(lat, long, precision)
+		return coord.LLtoLO(lat, long, 0)
+	end
 end
 
 function utils.fmtposition(position, precision, fmt)
 	precision = math.floor(precision)
 	assert(precision >= 0 and precision <= 5,
 		"value error: precision range [0,5]")
+
 	local lat, long = coord.LOtoLL(position)
 
-	if fmt == utils.posfmt.MGRS then
-		return utils.MGRStostring(coord.LLtoMGRS(lat, long),
-			precision)
+	-- Use MGRS grid as reference with DMS/DDM at low precision
+	if fmt ~= utils.posfmt.MGRS and precision <= 1 then
+		local mgrs = coord.LLtoMGRS(lat, long)
+		position = utils.degrade_position(position, precision, utils.posfmt.MGRS)
+		lat, long = coord.LOtoLL(position)
+		return string.format("%s (Approximately %s)",
+			utils.MGRStostring(mgrs, precision),
+			utils.LLtostring(lat, long, precision, fmt))
+	elseif fmt == utils.posfmt.MGRS then
+		return utils.MGRStostring(coord.LLtoMGRS(lat, long), precision)
+	else
+		return utils.LLtostring(lat, long, precision, fmt)
 	end
-
-	return utils.LLtostring(lat, long, precision, fmt)
 end
 
 function utils.trimTypeName(typename)
@@ -306,6 +357,20 @@ function utils.buildevent.operational(base, state)
 	return event
 end
 
+function utils.buildevent.captured(unit, base, owner)
+	if unit ~= nil then
+		check.table(unit)
+	end
+	check.table(base)
+	check.number(owner)
+	local event = {}
+	event.id = enum.event.DCT_EVENT_CAPTURED
+	event.initiator = unit
+	event.target = base
+	event.owner = owner
+	return event
+end
+
 function utils.buildevent.impact(wpn)
 	check.table(wpn)
 	local event = {}
@@ -321,6 +386,51 @@ function utils.buildevent.addasset(asset)
 	event.id = enum.event.DCT_EVENT_ADD_ASSET
 	event.initiator = asset
 	return event
+end
+
+function utils.buildevent.addMission(cmdr, mission, target)
+	check.table(cmdr)
+	check.table(mission)
+	check.table(target)
+	return {
+		id = enum.event.DCT_EVENT_ADD_MISSION,
+		initiator = cmdr,
+		mission = mission,
+		target = target,
+	}
+end
+
+function utils.buildevent.removeMission(cmdr, mission, reason)
+	check.table(cmdr)
+	check.table(mission)
+	check.number(reason)
+	return {
+		id = enum.event.DCT_EVENT_REMOVE_MISSION,
+		initiator = cmdr,
+		mission = mission,
+		reason = reason,
+	}
+end
+
+function utils.buildevent.joinMission(asset, mission)
+	check.table(asset)
+	check.table(mission)
+	return {
+		id = enum.event.DCT_EVENT_JOIN_MISSION,
+		initiator = asset,
+		mission = mission,
+	}
+end
+
+function utils.buildevent.leaveMission(asset, mission, reason)
+	check.table(asset)
+	check.table(mission)
+	return {
+		id = enum.event.DCT_EVENT_LEAVE_MISSION,
+		initiator = asset,
+		mission = mission,
+		reason = reason,
+	}
 end
 
 return utils

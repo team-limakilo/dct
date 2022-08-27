@@ -1,3 +1,9 @@
+---
+layout: default
+title: Administrators
+nav_order: 4
+---
+
 # Administrators
 
 Administration is relatively straight forward. This section will walk
@@ -6,7 +12,7 @@ you through installation and configuration.
 ## Installation
 
 DCT is distributed as a standard DCS module. You can download the
-[latest release](https://github.com/jtoppins/dct/releases/latest)
+[latest release]({{ site.release_link }})
 zip file and copy the `DCT` folder contained in the zip file to your
 DCS saved games directory and place in;
 
@@ -66,6 +72,10 @@ whitelists = {}
 statServerHostname = "localhost"
 statServerPort = 8095
 dctid = "changeme"
+exportperiod = 0
+emptyslottimeout = 0
+renderManager = false
+showErrors = false
 ```
 
 ### Options
@@ -256,10 +266,28 @@ itself times out, while a positive value makes empty slots time out faster.
 Note that because the AssetManager runs only once every 2 minutes, the actual
 timeout value can vary from moment to moment.
 
-#### `showerrors`
+#### `exportperiod`
+
+ * _value:_ time in seconds
+ * _default:_ 0
+
+If greater than 0, writes theater state to a separate, stable JSON
+file (with the extension .export.json) at this interval. 
+
+#### `showErrors`
 
  * _value:_ boolean (true/false)
  * _default:_ false
 
-Shows DCT script errors in a modal message box. Meant for development use only,
-as the game will be unresponsive until the message box is closed.
+Shows DCT script errors in a message box. Meant for development use only,
+if used in a server, it will cause the server to stop responding until the
+message box is closed.
+
+#### `renderManager`
+
+ * _value:_ boolean (true/false)
+ * _default:_ false
+
+Experimental feature. Automatically hides DCT units that are deemed far away
+from players, to reduce unit count and improve overall framerate on both the
+server and clients. May cause stuttering.

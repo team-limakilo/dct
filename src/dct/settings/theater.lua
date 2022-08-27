@@ -74,19 +74,6 @@ local function validate_codenamedb(cfgdata, tbl)
 	return newtbl
 end
 
-local function gridfmt_transform(tbl)
-	local ntbl = {}
-	for k, v in pairs(tbl) do
-		if type(v) == "number" then
-			ntbl[k] = v
-		else
-			ntbl[k] = dctutils.posfmt[string.upper(v)]
-			assert(ntbl[k] ~= nil, "invalid grid format for "..k)
-		end
-	end
-	return ntbl
-end
-
 local function ato_transform(tbl)
 	local ntbl = {}
 	for ac, mlist in pairs(tbl) do
@@ -95,7 +82,7 @@ local function ato_transform(tbl)
 			local mtype = string.upper(v)
 			local mval  = enum.missionType[mtype]
 			assert(mval ~= nil,
-				string.format("invalid mission type: %s for ac: %s",
+				string.format("invalid mission type: %s for ac: '%s'",
 					v, ac))
 			ntbl[ac][mtype] = mval
 		end
@@ -103,18 +90,75 @@ local function ato_transform(tbl)
 	return ntbl
 end
 
-local function validate_ui(cfgdata, tbl)
+local function costs_transform(tbl)
+	for k, v in pairs(tbl) do
+		assert(type(v) == "number", "cost for '"..k.."'' is not a number")
+	end
+	return tbl
+end
+
+local function gridfmt_transform(tbl)
+	local ntbl = {}
+	for k, v in pairs(tbl) do
+		if type(v) == "number" then
+			ntbl[k] = v
+		else
+			ntbl[k] = dctutils.posfmt[string.upper(v)]
+			assert(ntbl[k] ~= nil,
+				"invalid grid format "..tostring(v).." for '"..k.."'")
+		end
+	end
+	return ntbl
+end
+
+local function payloadlimits_transform(tbl, cfgdata)
+	local ntbl = {}
+	for k, v in pairs(tbl) do
+		ntbl[k] = validate_payload_limits(cfgdata, v)
+	end
+	return ntbl
+end
+
+local function units_transform(tbl)
+	local ntbl = {}
+	for k, v in pairs(tbl) do
+		if type(v) == "number" then
+			ntbl[k] = v
+		else
+			ntbl[k] = dctutils.units[string.upper(v)]
+			assert(ntbl[k] ~= nil,
+				"invalid unit system "..tostring(v).." for '"..k.."'")
+		end
+	end
+	return ntbl
+end
+
+local player_transforms = {
+	["ato"]           = ato_transform,
+	["costs"]         = costs_transform,
+	["gridfmt"]       = gridfmt_transform,
+	["payloadlimits"] = payloadlimits_transform,
+	["units"]         = units_transform,
+}
+
+local function validate_players(cfgdata, tbl)
 	local newtbl = {}
 	utils.mergetables(newtbl, cfgdata.default)
 	for k, v in pairs(tbl) do
+		if newtbl[k] == nil then
+			newtbl[k] = {}
+		end
 		utils.mergetables(newtbl[k], v)
-		if k == "gridfmt" then
-			newtbl[k] = gridfmt_transform(newtbl[k])
-		elseif k == "ato" then
-			newtbl[k] = ato_transform(newtbl[k])
+		if player_transforms[k] then
+			newtbl[k] = player_transforms[k](newtbl[k], cfgdata)
 		end
 	end
 	return newtbl
+end
+
+local function validate_ui(cfgdata, tbl)
+	-- env.warning("DCT|Theater: ui.cfg is deprecated; please use players.cfg")
+	return validate_players(cfgdata, tbl)
 end
 
 local function validate_blast_effects(cfgdata, tbl)
@@ -133,6 +177,8 @@ end
 -- theater configs
 --]]
 local function theatercfgs(config)
+	local settings = config.server.theaterpath..utils.sep.."settings"..utils.sep
+
 	local defaultpayload = {}
 	for _,v in pairs(enum.weaponCategory) do
 		defaultpayload[v] = enum.WPNINFCOST - 1
@@ -141,8 +187,7 @@ local function theatercfgs(config)
 	local cfgs = {
 		{
 			["name"] = "restrictedweapons",
-			["file"] = config.server.theaterpath..utils.sep.."settings"..
-				utils.sep.."restrictedweapons.cfg",
+			["file"] = settings.."restrictedweapons.cfg",
 			["cfgtblname"] = "restrictedweapons",
 			["validate"] = validate_weapon_restrictions,
 			["default"] = {
@@ -162,49 +207,41 @@ local function theatercfgs(config)
 			},
 		}, {
 			["name"] = "payloadlimits",
-			["file"] = config.server.theaterpath..utils.sep.."settings"..
-				utils.sep.."payloadlimits.cfg",
+			["file"] = settings.."payloadlimits.cfg",
 			["validate"] = validate_payload_limits,
 			["default"] = defaultpayload,
 		}, {
 			["name"] = "codenamedb",
-			["file"] = config.server.theaterpath..utils.sep.."settings"..
-				utils.sep.."codenamedb.cfg",
+			["file"] = settings.."codenamedb.cfg",
 			["validate"] = validate_codenamedb,
 			["default"] = require("dct.data.codenamedb"),
 		}, {
 			["name"] = "ui",
-			["file"] = config.server.theaterpath..utils.sep.."settings"..
-				utils.sep.."ui.cfg",
+			["file"] = settings.."ui.cfg",
 			["validate"] = validate_ui,
-			["default"] = {
-				["gridfmt"] = {
-					-- default is DMS, no need to list
-					["Ka-50"]         = dctutils.posfmt.DDM,
-					["Mi-8MT"]        = dctutils.posfmt.DDM,
-					["SA342M"]        = dctutils.posfmt.DDM,
-					["SA342L"]        = dctutils.posfmt.DDM,
-					["UH-1H"]         = dctutils.posfmt.DDM,
-					["A-10A"]         = dctutils.posfmt.MGRS,
-					["A-10C"]         = dctutils.posfmt.MGRS,
-					["A-10C_2"]       = dctutils.posfmt.MGRS,
-					["F-5E-3"]        = dctutils.posfmt.DDM,
-					["F-16C_50"]      = dctutils.posfmt.DDM,
-					["FA-18C_hornet"] = dctutils.posfmt.DDM,
-					["M-2000C"]       = dctutils.posfmt.DDM,
-				},
-				["ato"] = {},
-			},
+			["default"] = {},
+		}, {
+			["name"] = "players",
+			["file"] = settings.."players.cfg",
+			["validate"] = validate_players,
+			["default"] = require("dct.data.playerdefaults"),
 		}, {
 			["name"] = "blasteffects",
-			["file"] = config.server.theaterpath..utils.sep.."settings"..
-				utils.sep.."blasteffects.cfg",
+			["file"] = settings.."blasteffects.cfg",
 			["validate"] = validate_blast_effects,
 			["default"] = require("dct.data.blasteffects"),
 		},
 	}
 
 	utils.readconfigs(cfgs, config)
+
+	-- migrate ui.cfg to players.cfg
+	for k, _ in pairs(config.players) do
+		if config.ui[k] ~= nil then
+			utils.mergetables(config.players[k], config.ui[k])
+		end
+	end
+
 	return config
 end
 

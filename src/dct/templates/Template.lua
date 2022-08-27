@@ -83,16 +83,27 @@ local function makeNamesUnique(data)
 	end
 end
 
+local function sanitizeIds(data, tpl)
+	if data ~= nil and data.groupId ~= nil then
+		tpl.groupNames[data.groupId] = data.name
+		data.groupId = nil
+	end
+	if data ~= nil and data.unitId ~= nil then
+		tpl.unitNames[data.unitId] = data.name
+		data.unitId = nil
+	end
+end
+
 local function overrideUnitOptions(unit, key, tpl, basename)
 	if unit.playerCanDrive ~= nil then
 		unit.playerCanDrive = false
 	end
-	unit.unitId = nil
 	unit.dct_deathgoal = goalFromName(unit.name, Goal.objtype.UNIT)
 	if unit.dct_deathgoal ~= nil then
 		tpl.hasDeathGoals = true
 	end
 	unit.name = basename.."-"..key
+	sanitizeIds(unit, tpl)
 end
 
 local function overrideGroupOptions(grp, idx, tpl)
@@ -110,12 +121,24 @@ local function overrideGroupOptions(grp, idx, tpl)
 		if grp[k] ~= nil then grp[k] = v end
 	end
 
-	-- if the group name is a map mark spec, set it as such
+	-- check if the group is intended to be replaced with a map marker
 	local markLabel = string.match(grp.data.name, "^[Mm][Aa][Rr][Kk]=(.+)$")
 	if markLabel ~= nil then
 		grp.mark = {
 			label = markLabel,
 			x = grp.data.x,
+			z = grp.data.y,
+		}
+		return
+	end
+
+	-- check if the group is intended to be replaced with marking smoke
+	local smokeColor = string.match(grp.data.name, "^[Ss][Mm][Oo][Kk][Ee]=(.+)$")
+	if smokeColor ~= nil then
+		grp.smoke = {
+			color = smokeColor,
+			x = grp.data.x,
+			y = land.getHeight(grp.data),
 			z = grp.data.y,
 		}
 		return
@@ -127,8 +150,6 @@ local function overrideGroupOptions(grp, idx, tpl)
 		goaltype = Goal.objtype.STATIC
 	end
 
-	grp.data.groupId = nil
-	grp.data.unitId  = nil
 	grp.data.start_time = 0
 	grp.data.dct_deathgoal = goalFromName(grp.data.name, goaltype)
 	if grp.data.dct_deathgoal ~= nil then
@@ -138,6 +159,8 @@ local function overrideGroupOptions(grp, idx, tpl)
 	local side = coalition.getCountryCoalition(grp.countryid)
 	grp.data.name = string.format("%s_%s %d %s %d", tpl.regionname, tpl.name,
 		side, utils.getkey(Unit.Category, grp.category), idx)
+
+	sanitizeIds(grp.data, tpl)
 
 	for i, unit in ipairs(grp.data.units or {}) do
 		overrideUnitOptions(unit, i, tpl, grp.data.name)
@@ -164,6 +187,7 @@ local function checkbldgdata(keydata, tpl)
 			["dct_deathgoal"] = goalFromName(bldg.goal,
 				Goal.objtype.SCENERY),
 			["name"] = tostring(bldg.id),
+			["desc"] = bldg.name or bldg.desc,
 		}
 		local sceneryobject = { id_ = tonumber(bldgdata.data.name), }
 		utils.mergetables(bldgdata.data,
@@ -256,6 +280,12 @@ local function checkmsntype(keydata, tbl)
 end
 
 local function check_payload_limits(keydata, tbl)
+	if tbl[keydata.name] == nil then
+		return true
+	end
+	if type(tbl[keydata.name]) ~= "table" then
+		return false, "value must be a table or nil"
+	end
 	local newlimits = {}
 	for wpncat, val in pairs(tbl[keydata.name]) do
 		local w = enum.weaponCategory[string.upper(wpncat)]
@@ -298,6 +328,52 @@ local function checkExtraMarks(keydata, tbl)
 		end
 	end
 	return true
+end
+
+local function checkSmoke(keydata, tbl)
+	for _, val in ipairs(tbl[keydata.name]) do
+		if type(val.x) ~= "number" or
+		   type(val.y) ~= "number" or
+		   type(val.z) ~= "number" then
+			return false, "Smoke coordinates must be specified"
+		end
+		if trigger.smokeColor[val.color] == nil then
+			local colors = {}
+			for name, _ in pairs(trigger.smokeColor) do
+				table.insert(colors, string.format("'%s'", name))
+			end
+			return false, string.format(
+				"Invalid smoke color: '%s', accepted values: %s",
+				val.color, table.concat(colors, ", "))
+		end
+	end
+	return true
+end
+
+local function checkTacan(keydata, tbl)
+	local Tacan = require("dct.data.tacan")
+	local channel = tbl[keydata.name]
+	if channel ~= nil then
+		tbl[keydata.name] = Tacan.decodeChannel(channel)
+		if tbl[keydata.name] == nil then
+			return false, string.format(
+				"invalid channel: '%s'; "..
+				"must start with a string containing a number [1-126], followed by X or Y",
+				tostring(channel))
+		end
+	end
+	return true
+end
+
+local function checkIcls(keydata, tbl)
+	local channel = tbl[keydata.name]
+	if channel == nil or
+	   type(channel) == "number" and channel >= 1 and channel <= 20 then
+		return true
+	else
+		return false, string.format("invalid channel: %s; "..
+			"must be a number in the range [1-20]", tostring(channel))
+	end
 end
 
 local function getkeys(objtype)
@@ -379,6 +455,10 @@ local function getkeys(objtype)
 			["default"] = {},
 			["check"]   = checkExtraMarks,
 		}, {
+			["name"]    = "smoke",
+			["default"] = {},
+			["check"]   = checkSmoke,
+		}, {
 			["name"]    = "nocull",
 			["type"]	= "boolean",
 			["default"] = false,
@@ -422,6 +502,16 @@ local function getkeys(objtype)
 			["type"]    = "string",
 			["default"] = "terminal",
 			["check"]   = checkrecovery,})
+		table.insert(keys, {
+			["name"]    = "capturable",
+			["type"]    = "boolean",
+			["default"] = false,})
+		table.insert(keys, {
+			["name"]    = "tacan",
+			["check"]   = checkTacan,})
+		table.insert(keys, {
+			["name"]    = "icls",
+			["check"]   = checkIcls,})
 	end
 
 	if objtype == enum.assetType.SQUADRONPLAYER then
@@ -432,9 +522,7 @@ local function getkeys(objtype)
 
 		table.insert(keys, {
 			["name"]    = "payloadlimits",
-			["type"]    = "table",
 			["check"]   = check_payload_limits,
-			["default"] = dct.settings.payloadlimits,
 		})
 	end
 
@@ -490,6 +578,8 @@ local Template = class()
 function Template:__init(data)
 	assert(data and type(data) == "table", "value error: data required")
 	self.hasDeathGoals = false
+	self.groupNames    = {}
+	self.unitNames     = {}
 	utils.mergetables(self, utils.deepcopy(data))
 	self:validate()
 	self.checklocation = nil
@@ -498,12 +588,17 @@ end
 
 Template.checkLocation = checkLocation
 
--- filter units tagged as map marks into the mark list and out of the template
-function Template:_processMarkUnits()
+-- filter units tagged with special values into those values,
+-- and remove the units from the template
+function Template:_processTagUnits()
 	local del = {}
 	for idx, grp in ipairs(self.tpldata or {}) do
 		if grp.mark ~= nil then
 			table.insert(self.extramarks, grp.mark)
+			table.insert(del, idx)
+		end
+		if grp.smoke ~= nil then
+			table.insert(self.smoke, grp.smoke)
 			table.insert(del, idx)
 		end
 	end
@@ -549,8 +644,15 @@ function Template:validate()
 	},}, self)
 
 	utils.checkkeys(getkeys(self.objtype), self)
-	self:_processMarkUnits()
+	self:_processTagUnits()
 	self:_validateCoalition()
+
+	-- Re-check smoke after processing tag units
+	utils.checkkeys({{
+		["name"]    = "smoke",
+		["default"] = {},
+		["check"]   = checkSmoke,
+	}}, self)
 end
 
 -- PUBLIC INTERFACE

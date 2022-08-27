@@ -11,6 +11,20 @@ local DEBUG = false
 
 local events = {
 	{
+		["id"] = world.event.S_EVENT_TAKEOFF,
+		["object"] = {
+			["name"] = "player1",
+			["objtype"] = Object.Category.UNIT,
+		},
+		["airbase"] = "Kutaisi",
+	},{
+		["id"] = world.event.S_EVENT_BASE_CAPTURED,
+		["object"] = {
+			["name"] = "BMP-2-1",
+			["objtype"] = Object.Category.UNIT,
+		},
+		["airbase"] = "Kutaisi",
+	},{
 		["id"] = world.event.S_EVENT_DEAD,
 		["object"] = {
 			["name"] = "Novorossiysk_NovoShipsinPort 1 SHIP 1-1",
@@ -64,6 +78,20 @@ local events = {
 			["name"] = "Sukhumi_SukhumiAmmoDump 2 GROUND_UNIT 11-1",
 			["objtype"] = Object.Category.UNIT,
 		},
+	},{
+		["id"] = world.event.S_EVENT_BASE_CAPTURED,
+		["object"] = {
+			["name"] = "player1",
+			["objtype"] = Object.Category.UNIT,
+		},
+		["airbase"] = "Kutaisi",
+	},{
+		["id"] = world.event.S_EVENT_LAND,
+		["object"] = {
+			["name"] = "player1",
+			["objtype"] = Object.Category.UNIT,
+		},
+		["airbase"] = "Kutaisi",
 	},
 }
 
@@ -102,12 +130,21 @@ local function createEvent(eventdata, player)
 		event.weapon = nil
 		event.target = objref
 		objref.clife = objref.clife - eventdata.object.life
+	elseif event.id == world.event.S_EVENT_TAKEOFF then
+		event.initiator = objref
+		event.place = Airbase.getByName(eventdata.airbase)
+	elseif event.id == world.event.S_EVENT_LAND then
+		event.initiator = objref
+		event.place = Airbase.getByName(eventdata.airbase)
+	elseif event.id == world.event.S_EVENT_BASE_CAPTURED then
+		event.initiator = objref
+		event.place = Airbase.getByName(eventdata.airbase)
+		event.place.coalition = objref.coalition
 	else
 		assert(false, "other event types not supported: "..tostring(event.id))
 	end
 	return event
 end
-
 
 local function main()
 	local startdate = os.date("!*t")
@@ -123,9 +160,22 @@ local function main()
 		["desc"] = {
 			["displayName"] = "F/A-18C Hornet",
 			["typeName"] = "FA-18C_hornet",
-			["attributes"] = {},
 		},
 	}, playergrp, "bobplayer")
+
+	local enemygrp = Group(1, {
+		["name"] = "BMP-2",
+		["coalition"] = coalition.side.RED,
+		["exists"] = true,
+	})
+	local _ = Unit({
+		["name"]   = "BMP-2-1",
+		["exists"] = true,
+		["desc"] = {
+			["displayName"] = "BMP-2",
+			["typeName"] = "BMP-2",
+		},
+	}, enemygrp)
 
 	local theater = dct.Theater()
 	_G.dct.theater = theater
@@ -150,7 +200,11 @@ local function main()
 	end
 	--]]
 
-	-- kill off some units
+	-- run several events
+	theater:onEvent({
+		["id"]        = world.event.S_EVENT_BIRTH,
+		["initiator"] = player1,
+	})
 	for _, eventdata in ipairs(events) do
 		theater:onEvent(createEvent(eventdata, player1))
 	end
@@ -194,8 +248,8 @@ local function main()
 		["assert"]     = true,
 		["expected"]   = "== Theater Status ==\n"..
 			"Friendly Force Str: Nominal\nEnemy Force Str: Nominal\n\n"..
-			"Airbases:\n  CVN-71 Theodore Roosevelt: Friendly\n  "..
-			"Krymsk: Hostile\n  Kutaisi: Friendly\n  Senaki-Kolkhi: Friendly\n\n"..
+			"Airbases:\n  Friendly: CVN-71 Theodore Roosevelt\n  "..
+			"Friendly: Kutaisi\n  Friendly: Senaki-Kolkhi\n  Hostile: Krymsk\n\n"..
 			"Current Active Air Missions:\n  None\n\n"..
 			"Available missions:\n  CAP:  1\n  "..
 			"SEAD:  1\n  STRIKE:  2\n\n"..
@@ -215,6 +269,15 @@ local function main()
 	end
 	assert(playercnt == 20, "Player asset creation broken")
 
+	local playerasset = newtheater:getAssetMgr():getAsset(playergrp:getName())
+	assert(playerasset ~= nil, "player asset does not exist")
+	assert(playerasset.state.__clsname == "OccupiedState",
+		"player asset did not enter slot correctly")
+	playergrp:destroy()
+	playerasset:update()
+	assert(playerasset.state.__clsname == "EmptyState",
+		"player asset did not leave slot correctly")
+
 	os.remove(settings.statepath)
 	newtheater:export()
 	f = io.open(settings.statepath, "r")
@@ -233,6 +296,24 @@ local function main()
 	end
 	assert(newtheater.statef == true and sumorig == sumsave,
 		"state saving didn't produce the same md5sum")
+
+	-- finish a state and reload it
+	theater:getTickets():loss(1, 5000)
+	theater:export()
+
+	assert(theater:getTickets():isComplete() == true,
+		"theater was not completed")
+
+	-- allow a chance to save a backup of the state
+	theater:onEvent({ id = world.event.S_EVENT_MISSION_END })
+
+	theater = dct.Theater()
+	_G.dct.theater = theater
+	theater:exec(50)
+
+	assert(theater:getTickets():isComplete() == false,
+		"theater was not regenerated after completion")
+
 	return 0
 end
 

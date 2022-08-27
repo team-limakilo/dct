@@ -24,7 +24,9 @@ local AssetManager = require("libs.namedclass")("AssetManager", Observable)
 function AssetManager:__init(theater)
 	Observable.__init(self,
 		require("dct.libs.Logger").getByName("AssetManager"))
+	self.theater = theater
 	self.updaterate = 120
+	self.cleanupdelay = 60 * 60
 	-- The master list of assets, regardless of side, indexed by name.
 	-- Means Asset names must be globally unique.
 	self._assetset = {}
@@ -64,7 +66,7 @@ function AssetManager:__init(theater)
 
 	theater:addObserver(self.onDCSEvent, self, "AssetManager.onDCSEvent")
 	theater:queueCommand(self.updaterate,
-		Command(self.__clsname..".update", self.update, self))
+		Command(self.__clsname..".update", self.update, self, false), true)
 end
 
 function AssetManager:factory(assettype)
@@ -211,10 +213,10 @@ function AssetManager:getTargets(requestingside, assettypelist)
 	return tgtlist
 end
 
-function AssetManager:update()
+function AssetManager:update(deleteOnly)
 	local deletionq = {}
 	for _, asset in pairs(self._assetset) do
-		if type(asset.update) == "function" then
+		if type(asset.update) == "function" and not deleteOnly then
 			asset:update()
 		end
 		if asset:isDead() and not asset:isSpawned() then
@@ -231,15 +233,58 @@ local function handleDead(self, event)
 	self._object2asset[tostring(event.initiator:getName())] = nil
 end
 
-local function handleAssetDeath(_ --[[self]], event)
+local function handleAssetDeath(self, event)
+	self:notify(event)
 	local asset = event.initiator
-	dct.Theater.singleton():getTickets():loss(asset.owner,
-		asset.cost, false)
+	self._logger:debug("'%s' dead; cost = %g", asset.name, asset.cost)
+	self.theater:getTickets():loss(asset.owner, asset.cost, true)
+end
+
+local function handleCaptured(self, event)
+	local airbase = event.place
+	local asset = self:getAsset(airbase:getName())
+	if asset == nil or
+	   asset.owner == airbase:getCoalition() or
+	   not asset.capturable and asset.owner == coalition.side.NEUTRAL then
+		return
+	end
+
+	-- Delete the old airbase
+	if asset:isSpawned() then
+		asset:despawn()
+	end
+	asset:setDead(true)
+	self:update(true)
+
+	-- Create a new airbase asset under the new owner
+	local regionmgr = self.theater:getRegionMgr()
+	local region = regionmgr:getRegion(asset.rgnname)
+	local tpl = region:getTemplateByName(asset.tplname)
+	tpl = utils.shallowclone(tpl)
+
+	if asset.capturable then
+		tpl.coalition = airbase:getCoalition()
+		-- Award tickets according to the owner's *loss* modifier.
+		-- This is because, when a coalition loses and re-captures a base,
+		-- we need to make sure the ticket count returns to the initial value.
+		self.theater:getTickets():reward(airbase:getCoalition(), tpl.cost, "loss")
+	else
+		tpl.coalition = coalition.side.NEUTRAL
+	end
+
+	local newasset = self:factory(tpl.objtype)(tpl, region)
+	self:add(newasset)
+	newasset:generate(self, region)
+	newasset:spawn()
+
+	newasset._logger:debug("captured by %s coalition",
+		utils.getkey(coalition.side, newasset.owner))
 end
 
 local handlers = {
-	[world.event.S_EVENT_DEAD] = handleDead,
-	[enum.event.DCT_EVENT_DEAD] = handleAssetDeath,
+	[world.event.S_EVENT_DEAD]          = handleDead,
+	[world.event.S_EVENT_BASE_CAPTURED] = handleCaptured,
+	[enum.event.DCT_EVENT_DEAD]         = handleAssetDeath,
 }
 
 function AssetManager:doOneObject(obj, event)
@@ -276,8 +321,8 @@ function AssetManager:onDCSEvent(event)
 		[world.event.S_EVENT_HIT]             = true,
 		[world.event.S_EVENT_DEAD]            = true,
 		[world.event.S_EVENT_BASE_CAPTURED]   = true,
-		[enum.event.DCT_EVENT_DEAD]           = true,
 		--[world.event.S_EVENT_UNIT_LOST]     = true,
+		[enum.event.DCT_EVENT_DEAD]           = true,
 	}
 	local objmap = {
 		[world.event.S_EVENT_HIT]  = "target", -- type: Object
@@ -302,6 +347,7 @@ function AssetManager:onDCSEvent(event)
 	for _, obj in ipairs(objs) do
 		self:doOneObject(obj, event)
 	end
+
 	local handler = handlers[event.id]
 	if handler ~= nil then
 		handler(self, event)
@@ -335,7 +381,12 @@ end
 
 function AssetManager:postinit()
 	for assetname, _ in pairs(self._spawnq) do
-		self:getAsset(assetname):spawn(true)
+		local asset = self:getAsset(assetname)
+		if asset ~= nil then
+			asset:spawn(true)
+		else
+			self._logger:warn("'%s' was queued for spawn but is missing", assetname)
+		end
 	end
 	self._spawnq = {}
 end

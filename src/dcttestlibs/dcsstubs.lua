@@ -5,9 +5,11 @@
 --]]
 
 require("os")
-local utils = require("libs.utils")
-
 require("lfs")
+local utils = require("libs.utils")
+local check = require("libs.check")
+local class = require("libs.class")
+
 lfs.dct_testdata = os.getenv("DCT_DATA_ROOT") or "."
 function lfs.writedir()
 	return lfs.dct_testdata
@@ -16,7 +18,6 @@ end
 function lfs.tempdir()
 	return lfs.dct_testdata .. utils.sep .. "mission"
 end
-local class = require("libs.class")
 
 local logfile = io.open(lfs.dct_testdata .. utils.sep .. "dct_test.log", "a+")
 
@@ -25,6 +26,8 @@ dctcheck.spawngroups  = 0
 dctcheck.spawnunits   = 0
 dctcheck.spawnstatics = 0
 _G.dctcheck = dctcheck
+
+_G._APP_VERSION = string.format("0.0.0.00000")
 
 -- DCS Singletons
 --
@@ -218,9 +221,9 @@ Weapon.MissileCategory = {
 }
 
 Weapon.WarheadType = {
-	["AP"]            = 0,
-	["HE"]            = 1,
-	["SHAPED_CHARGE"] = 2,
+	["AP"]               = 0,
+	["HE"]               = 1,
+	["SHAPED_EXPLOSIVE"] = 2,
 }
 _G.Weapon = Weapon
 
@@ -378,6 +381,8 @@ AI.Option = {
 }
 _G.AI = AI
 
+local DEFAULT_ID = 123
+
 local objdefaults = {
 	["name"] = "obj1",
 	["exists"] = false,
@@ -425,10 +430,10 @@ local objdefaults = {
 	},
 	["vel"] = {["x"] = 1, ["y"] = 0, ["z"] = 1},
 	["inair"] = false,
-	["id"] = 123,
+	["id"] = DEFAULT_ID,
 }
 
-local objects = {}
+local objects   = {}
 for _,v in pairs(objectcat) do
 	objects[v] = {}
 end
@@ -451,10 +456,11 @@ function coalition.getAirbases(side)
 end
 
 function coalition.addGroup(cntryid, groupcat, groupdata)
-	--print("new group: "..require("libs.json"):encode_pretty(groupdata))
-	assert(groupdata.groupId == nil, "groupId field defined")
+	assert(groupdata.groupId == nil or groupdata.groupId == DEFAULT_ID,
+		"groupId field defined in template")
 	for _, unit in pairs(groupdata.units or {}) do
-		assert(unit.unitId == nil, "unitId field defined")
+		assert(unit.unitId == nil or unit.unitId == DEFAULT_ID,
+			"unitId field defined in template")
 	end
 	dctcheck.spawngroups = dctcheck.spawngroups + 1
 	dctcheck.spawnunits = dctcheck.spawnunits + #(groupdata.units)
@@ -470,8 +476,8 @@ function coalition.addGroup(cntryid, groupcat, groupdata)
 end
 
 function coalition.addStaticObject(cntryid, groupdata)
-	--print("new static: "..require("libs.json"):encode_pretty(groupdata))
-	assert(groupdata.unitId == nil, "unitId field defined")
+	assert(groupdata.unitId == nil or groupdata.unitId == DEFAULT_ID,
+		"unitId field defined in template")
 	dctcheck.spawnstatics = dctcheck.spawnstatics + 1
 	groupdata.country = cntryid
 	groupdata.exists = true
@@ -727,15 +733,13 @@ _G.Coalition = Coalition
 
 
 local Airbase = class(Coalition)
-function Airbase:__init(objdata)
+function Airbase:__init(objdata, airbaseCategory)
 	objdata.category = Object.Category.BASE
 	Coalition.__init(self, objdata)
 	self.group = nil
 	self.callsign = objdata.callsign
 	self.parking = objdata.parking
-	if self.desc.airbaseCategory == nil then
-		self.desc.airbaseCategory = Airbase.Category.AIRDROME
-	end
+	self.desc.category = airbaseCategory or Airbase.Category.AIRDROME
 end
 Airbase.Category = {
 	["AIRDROME"] = 0,
@@ -773,6 +777,7 @@ local Unit = class(Coalition)
 function Unit:__init(objdata, group, pname)
 	objdata.category = Object.Category.UNIT
 	Coalition.__init(self, objdata)
+	self.coalition = group.coalition
 	self.clife = self.desc.life
 	self.group = group
 	self.ammo = objdata.ammo
@@ -780,6 +785,7 @@ function Unit:__init(objdata, group, pname)
 		group:_addUnit(self)
 	end
 	self.pname = pname
+	objdata.unitId = self:getID()
 end
 Unit.Category = {
 	["AIRPLANE"]    = 0,
@@ -837,6 +843,7 @@ function StaticObject:__init(objdata)
 	objdata.category = Object.Category.STATIC
 	Coalition.__init(self, objdata)
 	self.clife = self.desc.life
+	objdata.unitId = self:getID()
 end
 
 StaticObject.Category = {
@@ -884,6 +891,7 @@ function Group:__init(unitcnt, objdata)
 	self.getVelocity = nil
 	self.inair = nil
 	self.inAir = nil
+	objdata.groupId = self:getID()
 end
 
 Group.Category = {
@@ -935,6 +943,54 @@ function Group:getController()
 end
 _G.Group = Group
 
+-- do not use any of the table keys created by these functions,
+-- they do not exist in DCS
+local groupMenus = {}
+local function addMenu(name, parent, isMenu)
+	assert(type(parent._children) == "table", string.format(
+		"path '%s' is not a menu", parent._path))
+	if name == "" then
+		name = "-"
+	end
+	local menu = { _parent = parent, _path = parent._path..name }
+	if isMenu then
+		menu._path = menu._path.."/"
+		menu._children = {}
+	end
+	table.insert(parent._children, menu)
+	return menu
+end
+local function addGroupMenu(groupId, name, parent, isMenu)
+	if groupMenus[groupId] == nil then
+		groupMenus[groupId] = { _path = "/", _children = {} }
+	end
+	parent = parent or groupMenus[groupId]
+	local menu = addMenu(name, parent, isMenu)
+	return menu
+end
+local function removeMenu(menu)
+	-- ensure we have removed children first befor removing the parent,
+	-- to avoid the in-game menu from getting wonky and selecting wrong things
+	if type(menu._children) == "table" and next(menu._children) ~= nil then
+		local children = {}
+		for _, child in pairs(menu._children) do
+			table.insert(children, string.format("'%s'", child._path))
+		end
+		error(string.format("menu '%s' is being removed but still "..
+			"has %d children: %s", menu._path, #menu._children,
+			table.concat(children, ", ")))
+	end
+	for idx, other in ipairs(menu._parent._children) do
+		if menu == other then
+			return table.remove(menu._parent._children, idx)
+		end
+	end
+	-- removing an item that has been removed prior is also a coding error,
+	-- even if it doesn't cause any bugs in the game (yet)
+	error(string.format("menu '%s' not found in parent, "..
+		"removeItem possibly called twice", menu._path))
+end
+
 local missionCommands = {}
 function missionCommands.addCommand(_, _, _, _)
 end
@@ -954,13 +1010,32 @@ end
 function missionCommands.removeItemForCoalition(_, _)
 end
 
-function missionCommands.addCommandForGroup(_, _, _, _, _)
+function missionCommands.addCommandForGroup(groupId, name, path, fn, _)
+	check.number(groupId)
+	check.string(name)
+	if path ~= nil then
+		check.table(path)
+	end
+	check.func(fn)
+	return addGroupMenu(groupId, name, path, false)
 end
 
-function missionCommands.addSubMenuForGroup(_, _, _)
+function missionCommands.addSubMenuForGroup(groupId, name, path)
+	check.number(groupId)
+	check.string(name)
+	if path ~= nil then
+		check.table(path)
+	end
+	return addGroupMenu(groupId, name, path, true)
 end
 
-function missionCommands.removeItemForGroup(_, _)
+function missionCommands.removeItemForGroup(groupId, item)
+	check.number(groupId)
+	if item ~= nil then
+		check.table(item)
+	end
+	item = item or groupMenus[groupId] or {}
+	return removeMenu(item)
 end
 _G.missionCommands = missionCommands
 
@@ -985,10 +1060,29 @@ function coord.LLtoMGRS(_, _)
 		["Northing"] = 56789,
 	}
 end
+
+function coord.MGRStoLL(_)
+	return 88.123, -63.456, land.getHeight({ x = 0, y = 0 })
+end
 _G.coord = coord
+
+local atmosphere = {}
+function atmosphere.getTemperatureAndPressure(_ --[[pos: vec3]])
+	-- Kelvin, Pascals
+	return 293.15, 101325
+end
+_G.atmosphere = atmosphere
 
 local gblflagtbl = {}
 local trigger = {}
+trigger.smokeColor = {
+	["Green"]  = 0,
+	["Red"]    = 1,
+	["White"]  = 2,
+	["Orange"] = 3,
+	["Blue"]   = 4,
+}
+
 trigger.action = {}
 
 local chkbuffer  = ""
@@ -1029,12 +1123,73 @@ function trigger.action.markToGroup(id, title, pos, grpid,
 	assert(type(grpid) == "number", "value error: grpid must be a number")
 end
 
+function trigger.action.markupToAll(shape, side, id, ...)
+	check.number(shape)
+	check.number(side)
+	check.number(id)
+	local args = { select(1, ...) }
+	-- outline color
+	check.table(args[#args - 2])
+	-- fill color
+	check.table(args[#args - 1])
+	-- line type
+	check.number(args[#args - 0])
+end
+
+function trigger.action.lineToAll(side, id, head, tail, color, lineType)
+	check.number(side)
+	check.number(id)
+	check.table(head)
+	check.table(tail)
+	check.table(color)
+	check.number(lineType)
+end
+
+function trigger.action.textToAll(
+		side, id, point, color,
+		fillColor, size,
+		readOnly, text)
+	check.number(side)
+	check.number(id)
+	check.table(point)
+	check.table(color)
+	check.table(fillColor)
+	check.number(size)
+	check.bool(readOnly)
+	check.string(text)
+end
+
 function trigger.action.removeMark(id)
 	assert(type(id) == "number", "value error: id must be a number")
 end
 
+function trigger.action.setMarkupColor(id, color)
+	check.number(id)
+	check.table(color)
+end
+
+function trigger.action.setMarkupColorFill(id, color)
+	check.number(id)
+	check.table(color)
+end
+
+function trigger.action.setMarkupTypeLine(id, lineType)
+	check.number(id)
+	check.number(lineType)
+end
+
+function trigger.action.setMarkupText(id, text)
+	check.number(id)
+	check.string(text)
+end
+
 function trigger.action.setUserFlag(flagname, value)
 	gblflagtbl[flagname] = tonumber(value)
+end
+
+function trigger.action.smoke(pos, color)
+	assert(type(pos) == "table", "value error: pos must be a table")
+	assert(type(color) == "color", "value error: color must be a string")
 end
 
 function trigger.action.explosion(_, _)
@@ -1060,3 +1215,10 @@ function land.getHeight(_ --[[vec2]])
 	return 10
 end
 _G.land = land
+
+local net = {}
+
+function net.get_player_list()
+	return { 1 }
+end
+_G.net = net

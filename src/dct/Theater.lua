@@ -6,11 +6,10 @@
 
 require("os")
 require("io")
-require("lfs")
+local lfs         = require("lfs")
 local class       = require("libs.namedclass")
 local containers  = require("libs.containers")
 local json        = require("libs.json")
-local enum        = require("dct.enum")
 local dctutils    = require("dct.utils")
 local Observable  = require("dct.libs.Observable")
 local uicmds      = require("dct.ui.cmds")
@@ -41,7 +40,6 @@ function Systems:__init()
 		"dct.assets.AssetManager",
 		"dct.ui.scratchpad",
 		"dct.systems.tickets",
-		"dct.systems.bldgPersist",
 		"dct.systems.weaponstracking",
 		"dct.systems.blasteffects",
 		"dct.systems.dataExport",
@@ -99,7 +97,20 @@ function Systems:addSystem(path)
 	self._systemscnt = self._systemscnt + 1
 end
 
+local resetFilePath = lfs.writedir().."/reset.txt"
+
 local function isStateValid(state)
+	local resetFile = io.open(resetFilePath)
+	if resetFile ~= nil then
+		Logger:info("isStateValid(); state reset requested by reset.txt")
+		resetFile:close()
+		local removed, err = os.remove(resetFilePath)
+		if not removed then
+			Logger:error("Failed to remove reset.txt: %s", err)
+		end
+		return false
+	end
+
 	if state == nil then
 		Logger:info("isStateValid(); state object nil")
 		return false
@@ -146,12 +157,17 @@ function Theater:__init()
 	self:setTimings(settings.schedfreq, settings.tgtfps,
 		settings.percentTimeAllowed)
 	self.statef    = false
+	self.initdone  = false
 	self.qtimer    = require("dct.libs.Timer")(self.quanta, os.clock)
 	self.cmdq      = containers.PriorityQueue()
 	self.cmdrs     = {}
 	self.startdate = os.date("!*t")
 	self.namecntr  = 1000
 	self.scratchpad = {}
+
+	-- Create a weak table (https://www.lua.org/pil/17.html) for
+	-- storing commands that should be requeued on errors
+	self.requeueOnError = setmetatable({}, { __mode = "k" })
 
 	Systems.__init(self)
 	for _, val in pairs(coalition.side) do
@@ -161,17 +177,27 @@ function Theater:__init()
 	self:queueCommand(5, Command(self.__clsname..".delayedInit",
 		self.delayedInit, self))
 	self:queueCommand(100, Command(self.__clsname..".export",
-		self.export, self))
+		self.export, self), true)
 	self.singleton = nil
 	self.playerRequest = nil
 end
 
 function Theater.singleton()
-	if _G.dct.theater ~= nil then
-		return _G.dct.theater
+	if dct.theater ~= nil then
+		return dct.theater
 	end
-	_G.dct.theater = Theater()
-	return _G.dct.theater
+	local ok = xpcall(
+		function()
+			_G.dct.theater = Theater()
+		end,
+		function(err)
+			Logger:error("protected call (init) - %s", debug.traceback(err, 2))
+		end
+	)
+	if not ok then
+		error("failed to initialize DCT theater")
+	end
+	return dct.theater
 end
 
 function Theater:setTimings(cmdfreq, tgtfps, percent)
@@ -202,6 +228,8 @@ function Theater:loadOrGenerate()
 		Logger:info("generating new theater")
 		self:_runsys("generate", self)
 	end
+
+	self.initdone = true
 end
 
 function Theater:delayedInit()
@@ -211,8 +239,7 @@ function Theater:delayedInit()
 	-- TODO: temporary, spawn all generated assets
 	-- eventually we will want to spawn only a set of assets
 	for _, asset in self:getAssetMgr():iterate() do
-		if asset.type ~= enum.assetType.PLAYERGROUP and
-		   not asset:isSpawned() then
+		if not asset:isSpawned() then
 			asset:spawn()
 		end
 	end
@@ -223,9 +250,10 @@ local airbase_cats = {
 	[Airbase.Category.SHIP]    = true,
 }
 
-local function filterfarps(airbase)
+local function filterfarps(airbase, assetmgr)
 	if airbase:getCategory() == Object.Category.BASE and
-	   airbase_cats[airbase:getDesc().category] ~= nil then
+	   airbase_cats[airbase:getDesc().category] ~= nil and
+	   assetmgr:getAsset(airbase:getName()) ~= nil then
 		return true
 	end
 end
@@ -239,12 +267,12 @@ local airbase_events = {
 -- do not trigger takeoff and land events, this function figured out
 -- if there is a FARP near the event and if so uses that FARP as the
 -- place for the event.
-local function fixup_airbase(event)
+local function fixup_airbase(event, assetmgr)
 	if airbase_events[event.id] and
 	   event.place == nil and
 	   event.initiator:isExist() then
 		event.place = dctutils.nearestAirbase(
-			event.initiator:getPoint(), 700, filterfarps)
+			event.initiator:getPoint(), 2500, filterfarps, assetmgr)
 	end
 end
 
@@ -270,28 +298,39 @@ function Theater:onEvent(event)
 	if irrelevants[event.id] ~= nil then
 		return
 	end
-	fixup_airbase(event)
+	fixup_airbase(event, self:getAssetMgr())
 	xpcall(function() self:notify(event) end, function(err)
 		Logger:error("protected call - %s", debug.traceback(err, 2))
 	end)
 	if event.id == world.event.S_EVENT_MISSION_END then
-		-- Only delete the state if there is an end mission event
+		-- Only delete the active state if there is an end mission event
 		-- and tickets are complete, otherwise when a server is
 		-- shutdown gracefully the state will be deleted.
 		if self:getTickets():isComplete() then
+			-- Save the now-ended state with a timestamped filename
+			self:export(nil, os.time())
 			local ok, err = os.remove(settings.statepath)
 			if not ok then
 				Logger:error("unable to remove statefile; "..err)
 			end
+		elseif self.initdone then
+			-- Save the state for reloading after a server restart
+			self:export()
 		end
 	end
 end
 
-function Theater:export(_)
+function Theater:export(_, suffix)
+	local path = settings.statepath
 	local statefile
 	local msg
 
-	statefile, msg = io.open(settings.statepath, "w+")
+	if suffix ~= nil then
+		local noext, ext = string.match(path, "^(.+)(%.[^/\\]+)$")
+		path = noext.."_"..tostring(suffix)..ext
+	end
+
+	statefile, msg = io.open(path, "w+")
 
 	if statefile == nil then
 		Logger:error("export(); unable to open '"..
@@ -299,9 +338,12 @@ function Theater:export(_)
 		return self.savestatefreq
 	end
 
+	local complete, winner = self:getTickets():isComplete()
+
 	local exporttbl = {
 		["version"]  = STATE_VERSION,
-		["complete"] = self:getTickets():isComplete(),
+		["complete"] = complete,
+		["winner"]   = winner,
 		["date"]     = os.date("*t", dctutils.zulutime(timer.getAbsTime())),
 		["theater"]  = env.mission.theatre,
 		["sortie"]   = env.getValueDictByKey(env.mission.sortie),
@@ -376,13 +418,18 @@ end
 --
 -- delay - amount of delay in seconds before the command is run
 -- cmd   - the command to be run
+-- requeueOnError - boolean; requeue this command automatically with
+--   the given delay if it encounters an error
 --]]
-function Theater:queueCommand(delay, cmd)
+function Theater:queueCommand(delay, cmd, requeueOnError)
 	if delay < self.cmdmindelay then
 		Logger:warn("queueCommand(); delay(%2.2f) less than "..
 			"schedular minimum(%2.2f), setting to schedular minumum",
 			delay, self.cmdmindelay)
 		delay = self.cmdmindelay
+	end
+	if requeueOnError then
+		self.requeueOnError[cmd] = delay
 	end
 	self.cmdq:push(timer.getTime() + delay, cmd)
 	Logger:debug("queueCommand(); cmd(%s), delay: %d, cmdq size: %d",
@@ -405,11 +452,20 @@ function Theater:exec(time)
 			end,
 			function(err)
 				Logger:error("protected call - %s", debug.traceback(err, 2))
+				if self.requeueOnError[cmd] ~= nil then
+					self:queueCommand(self.requeueOnError[cmd], cmd, true)
+				end
 			end
 		)
-		if ok and type(requeue) == "number" then
-			self:queueCommand(requeue, cmd)
+
+		if cmd:isDone() then
+			if ok and type(requeue) == "number" then
+				self:queueCommand(requeue, cmd)
+			end
+		else
+			self.cmdq:push(prio + self.cmdmindelay, cmd)
 		end
+
 		cmdctr = cmdctr + 1
 		self.qtimer:update()
 		if self.qtimer:expired() then

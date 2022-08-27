@@ -215,6 +215,11 @@ function Mission:__init(cmdr, missiontype, tgt, plan)
 	self.tgtinfo.region   = tgt.rgnname
 	self.tgtinfo.extramarks = tgt.extramarks
 	self.tgtinfo.coalition  = tgt.owner
+	self.tgtinfo.locations  = {}
+
+	if tgt.getStaticTargetLocations then
+		self.tgtinfo.locations = tgt:getStaticTargetLocations()
+	end
 end
 
 function Mission:getStateName()
@@ -237,6 +242,15 @@ function Mission:getAssigned()
 	return utils.shallowclone(self.assigned)
 end
 
+local function friendlyName(asset)
+	local playerName = asset.getPlayerName and asset:getPlayerName()
+	if playerName ~= nil then
+		return string.format('Player "%s"', playerName)
+	else
+		return string.format('Unit "%s"', tostring(asset.name))
+	end
+end
+
 function Mission:addAssigned(asset)
 	if self:isMember(asset.name) then
 		return
@@ -251,19 +265,42 @@ function Mission:addAssigned(asset)
 		self.isfull = true
 	end
 	asset.missionid = self:getID()
+	asset:notify(dctutils.buildevent.joinMission(asset, self))
+
+	local msg = string.format("%s has joined your mission", friendlyName(asset))
+	for _, assigned in pairs(self.assigned) do
+		if assigned ~= asset.name then
+			local grp = Group.getByName(assigned)
+			if grp ~= nil then
+				trigger.action.outTextForGroup(grp:getID(), msg, 20, false)
+			end
+		end
+	end
 end
 
-function Mission:removeAssigned(asset)
+function Mission:removeAssigned(asset, reason)
 	local member, i = self:isMember(asset.name)
 	if not member then
 		return
 	end
 	table.remove(self.assigned, i)
-	Logger:debug("Mission %d: removeAssigned(%s)", self.id, asset.name)
+	if Logger:isDebugEnabled() then
+		Logger:debug("Mission %d: removeAssigned(%s, %s)",
+			self.id, asset.name, tostring(utils.getkey(enum.missionAbortType, reason)))
+	end
 	if self.backfill and #self.assigned < self.minagents then
 		self.isfull = false
 	end
 	asset.missionid = enum.missionInvalidID
+	asset:notify(dctutils.buildevent.leaveMission(asset, self, reason))
+
+	local msg = string.format("%s has left your mission", friendlyName(asset))
+	for _, assigned in pairs(self.assigned) do
+		local grp = Group.getByName(assigned)
+		if grp ~= nil then
+			trigger.action.outTextForGroup(grp:getID(), msg, 20, false)
+		end
+	end
 end
 
 --[[
@@ -278,11 +315,12 @@ end
 --    - release the targeted asset by resetting the asset's targeted
 --      bit
 --]]
-function Mission:abort(asset)
+function Mission:abort(asset, reason)
 	Logger:debug("%s:abort()", self.__clsname)
-	self:removeAssigned(asset)
+	self:removeAssigned(asset, reason)
 	if next(self.assigned) == nil then
 		self.cmdr:removeMission(self.id)
+		self.cmdr:notify(dctutils.buildevent.removeMission(self.cmdr, self, reason))
 		local tgt = self.cmdr:getAsset(self.target)
 		if tgt then
 			tgt:setTargeted(self.cmdr.owner, false)
@@ -370,6 +408,21 @@ function Mission:getIFFCodes(asset)
 	return { ["m1"] = m1, ["m3"] = m3 }
 end
 
+local function getTargetDetails(tgt, cmdr, fmt)
+	local intel = tgt:getIntel(cmdr.owner)
+	if intel >= 4 and tgt.getStaticTargetLocations then
+		local details = {}
+		for _, location in pairs(tgt:getStaticTargetLocations()) do
+			table.insert(details, string.format("  %s: %s", tostring(location.desc),
+				dctutils.fmtposition(location, intel, fmt)))
+		end
+		if next(details) ~= nil then
+			return table.concat(details, "\n")
+		end
+	end
+	return "Precise locations are currently unavailable."
+end
+
 function Mission:getDescription(fmt)
 	local tgt = self.cmdr:getAsset(self.target)
 	if tgt == nil then
@@ -379,7 +432,9 @@ function Mission:getDescription(fmt)
 		["LOCATION"] = dctutils.fmtposition(
 			tgt:getLocation(),
 			tgt:getIntel(self.cmdr.owner),
-			fmt)
+			fmt),
+		["TARGETS"] = getTargetDetails(tgt, self.cmdr, fmt),
+		["MINAGENTS"] = tostring(self.minagents),
 	}
 	return dctutils.interp(self.briefing, interptbl)
 end

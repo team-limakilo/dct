@@ -38,10 +38,11 @@ local utils   = require("libs.utils")
 local dctenum = require("dct.enum")
 local dctutils= require("dct.utils")
 local AssetBase = require("dct.assets.AssetBase")
+local GroupMenu = require("dct.ui.groupmenu")
 local cmds    = require("dct.ui.cmds")
-local uimenu  = require("dct.ui.groupmenu")
 local loadout = require("dct.systems.loadouts")
 local State   = require("dct.libs.State")
+local vec     = require("dct.libs.vector")
 local settings = _G.dct.settings
 
 local notifymsg =
@@ -61,7 +62,11 @@ local function on_birth(asset, event)
 	asset.groupId = id
 end
 
+-- returns assigned mission, if any
 local function reset_slot(asset)
+	-- update location so it's not nil when the player is despawned
+	asset:getLocation()
+
 	local theater = dct.Theater.singleton()
 	if asset.squadron then
 		asset._logger:debug("squadron set: %s", asset.squadron)
@@ -69,18 +74,22 @@ local function reset_slot(asset)
 		if sqdn then
 			asset._logger:debug("squadron overriding ato and payload")
 			if sqdn:getATO() ~= nil then
+				asset._logger:debug("squadron overriding ato")
 				asset.ato = sqdn:getATO()
+				asset._logger:debug("ato: %s",
+					require("libs.json"):encode_pretty(asset.ato))
 			end
-			asset.payloadlimits = sqdn:getPayloadLimits()
-			asset._logger:debug("payloadlimits: %s",
-				require("libs.json"):encode_pretty(asset.payloadlimits))
-			asset._logger:debug("ato: %s",
-				require("libs.json"):encode_pretty(asset.ato))
+			if sqdn:getPayloadLimits() ~= nil then
+				asset._logger:debug("squadron overriding payload limits")
+				asset.payloadlimits = sqdn:getPayloadLimits()
+				asset._logger:debug("payloadlimits: %s",
+					require("libs.json"):encode_pretty(asset.payloadlimits))
+			end
 		else
 			asset._logger:warn("squadron does not exist, using default settings")
 		end
 	end
-	uimenu.createMenu(asset)
+
 	local cmdr = theater:getCommander(asset.owner)
 	local msn  = cmdr:getAssigned(asset)
 
@@ -93,14 +102,27 @@ local function reset_slot(asset)
 		local missions = cmdr:getAvailableMissions(asset.ato)
 		local missionsfmt = {}
 		for type, count in utils.sortedpairs(missions) do
-			table.insert(missionsfmt, string.format("  %s:  %d", type, count))
+			table.insert(missionsfmt, string.format("%s:  %d", type, count))
 		end
+		if next(missionsfmt) == nil then
+			table.insert(missionsfmt, "None")
+		end
+		local recommended = cmdr:recommendMissionType(asset.ato)
 		trigger.action.outTextForGroup(asset.groupId,
 			"Welcome. Use the F10 Menu to get a theater update and "..
-			"request a mission.\n\nAvailable missions:\n"..
-			table.concat(missionsfmt, "\n"), 20, false)
+			"request a mission.\n\nAvailable missions:\n  "..
+			table.concat(missionsfmt, "\n  ")..
+			"\n\nRecommended Mission Type: "..
+			(utils.getkey(dctenum.missionType, recommended) or "None"), 20, false)
 	end
 	trigger.action.outTextForGroup(asset.groupId, notifymsg, 20, false)
+
+	if not asset:isEnabled() then
+		trigger.action.outTextForGroup(asset.groupId, "Warning: you have spawned "..
+			"in a disabled slot, slot blocker potentially broken.", 20, false)
+	end
+
+	return msn
 end
 
 local OccupiedState = class("OccupiedState", State)
@@ -130,7 +152,7 @@ function EmptyState:update(asset)
 		local cmdr = dct.Theater.singleton():getCommander(asset.owner)
 		local msn = cmdr:getMission(asset.missionid)
 		if msn then
-			msn:abort(asset)
+			msn:abort(asset, dctenum.missionAbortType.ABORT)
 		end
 	end
 end
@@ -145,7 +167,7 @@ end
 
 function OccupiedState:__init(inair)
 	self.inair = inair
-	self.loseticket = false
+	self.loseticket = inair
 	self.bleedctr = 0
 	self.bleedperiod = 5
 	self.bleedwarn = false
@@ -157,16 +179,21 @@ function OccupiedState:__init(inair)
 		[world.event.S_EVENT_PILOT_DEAD]        = self.handleDead,
 		[world.event.S_EVENT_CRASH]             = self.handleDead,
 		[world.event.S_EVENT_LAND]              = self.handleLand,
+		[dctenum.event.DCT_EVENT_DEAD]          = self.handleTheaterChange,
+		[dctenum.event.DCT_EVENT_ADD_ASSET]     = self.handleTheaterChange,
+		[dctenum.event.DCT_EVENT_ADD_MISSION]   = self.handleTheaterChange,
+		[dctenum.event.DCT_EVENT_REMOVE_MISSION]= self.handleTheaterChange,
 	}
 end
 
 function OccupiedState:enter(asset)
 	asset:setDead(false)
-	reset_slot(asset)
+	local msn = reset_slot(asset)
+	asset.menu:create(msn)
 end
 
 function OccupiedState:exit(asset)
-	uimenu.removeMenu(asset)
+	asset.menu:destroy()
 	if self.loseticket then
 		asset:setDead(true)
 	end
@@ -258,13 +285,13 @@ function OccupiedState:update(asset)
 	if grp == nil then
 		return EmptyState(dctenum.kickCode.EMPTY)
 	end
-	-- Periodic ground loadout check
 	if not self.inair then
 		local newstate, _ = self:_checkPayload(asset, true)
 		if newstate ~= nil then
 			return newstate
 		end
 	end
+	asset.menu:update()
 	return self:_bleed(asset)
 end
 
@@ -341,6 +368,10 @@ function OccupiedState:handleSwitchOccupied(asset, event)
 	return OccupiedState()
 end
 
+function OccupiedState:handleTheaterChange(asset)
+	asset.menu:update()
+end
+
 --[[
 -- Player - represents a player slot in DCS
 --]]
@@ -365,14 +396,15 @@ end
 
 local function airbaseId(grp)
 	assert(grp, "value error: grp cannot be nil")
-	local id = nil
-	for _, name in ipairs({"airdromeId", "helipadId", "linkUnit"}) do
-		id = grp.data.route.points[1][name]
-		if id ~= nil then
-			return id
-		end
+	local start = grp.data.route.points[1]
+	-- helipadId can be either a ship (carrier, destroyer, etc) or a FARP
+	if start["helipadId"] ~= nil then
+		return start["helipadId"], false
 	end
-	return id
+	-- airdromeId is an airfield
+	if start["airdromeId"] ~= nil then
+		return start["airdromeId"], true
+	end
 end
 
 local function airbaseParkingId(grp)
@@ -385,15 +417,20 @@ local function airbaseParkingId(grp)
 	return nil
 end
 
-local function findAirbase(grp)
-	local id = airbaseId(grp)
+local function isDCTAirbase(airbase, assetmgr)
+	return assetmgr:getAsset(airbase:getName()) ~= nil
+end
+
+local function findAirbase(grp, assetmgr)
+	-- try to find the airbase based on the template data
+	local id, isAirdrome = airbaseId(grp)
 	if id ~= nil then
-		return dctutils.airbaseId2Name(id)
+		return dctutils.airbaseId2Name(id, isAirdrome)
 	end
 
-	-- in case of a ground start, use the closest airbase or FARP
-	local point = { x = grp.data.x, z = grp.data.y, y = land.getHeight(grp.data) }
-	local nearest = dctutils.nearestAirbase(point, 5000)
+	-- if the slot is a ground spawn, search for the closest DCT airbase or FARP
+	local point = { x = grp.data.x, y = land.getHeight(grp.data), z = grp.data.y }
+	local nearest = dctutils.nearestAirbase(point, 7500, isDCTAirbase, assetmgr)
 	if nearest ~= nil then
 		return nearest:getName()
 	end
@@ -405,21 +442,43 @@ function Player:_completeinit(template)
 	self._tpldata   = template:copyData()
 	self.unittype   = self._tpldata.data.units[1].type
 	self.cmdpending = false
+	self.firstspawn = true
 	self.groupId    = self._tpldata.data.groupId
 	self.squadron   = self.name:match("(%w+)(.+)")
-	self.airbase    = findAirbase(self._tpldata)
-	self.parking    = airbaseParkingId(self._tpldata)
-	self.ato        = settings.ui.ato[self.unittype] or
-		dctenum.missionType
-	self.payloadlimits = settings.payloadlimits
-	self.gridfmt    = settings.ui.gridfmt[self.unittype] or
-		dctutils.posfmt.DMS
-	self._logger:debug("unittype: %s", tostring(self.unittype))
-	self._logger:debug("airbase: %s", tostring(self.airbase))
-	self._logger:debug("payloadlimits: %s",
-		require("libs.json"):encode_pretty(self.payloadlimits))
-	self._logger:debug("ato: %s",
-		require("libs.json"):encode_pretty(self.ato))
+	if settings.players.costs[self.unittype] ~= nil then
+		self.cost = template.cost * settings.players.costs[self.unittype]
+	end
+	self.payloadlimits = settings.players.payloadlimits[self.unittype]
+		or settings.payloadlimits
+	self.ato = settings.players.ato[self.unittype]
+		or dctenum.missionType
+	self.gridfmt = settings.players.gridfmt[self.unittype]
+		or dctutils.posfmt.DMS
+	self.units = settings.players.units[self.unittype] or {}
+
+	if self._logger:isDebugEnabled() then
+		self._logger:debug("unittype: %s", tostring(self.unittype))
+		self._logger:debug("ato: %s",
+			require("libs.json"):encode_pretty(self.ato))
+		self._logger:debug("cost: %g", self.cost, type(self.cost))
+		self._logger:debug("gridfmt: %s",
+			tostring(utils.getkey(dctutils.posfmt, self.gridfmt)))
+		self._logger:debug("payloadlimits: %s",
+			require("libs.json"):encode_pretty(self.payloadlimits))
+
+		local units = {}
+		for key, _ in pairs(self.units) do
+			table.insert(units, tostring(utils.getkey(dctutils.units, key)))
+		end
+		self._logger:debug("units: [ %s ]", table.concat(units, ", "))
+	end
+
+	self.menu = GroupMenu(self)
+end
+
+function Player:registerObservable(observable)
+	local name = string.format("%s.onDCTEvent('%s')", self.__clsname, self.name)
+	observable:addObserver(self.onDCTEvent, self, name)
 end
 
 function Player:_setup()
@@ -444,7 +503,9 @@ end
 
 function Player:getLocation()
 	local p = Group.getByName(self.name)
-	self._location = p:getUnit(1):getPoint()
+	if p ~= nil then
+		self._location = vec.Vector3D(p:getUnit(1):getPoint())
+	end
 	return AssetBase.getLocation(self)
 end
 
@@ -467,10 +528,18 @@ function Player:update()
 	end
 end
 
+function Player:updateOperationalState()
+	local assetmgr = dct.theater:getAssetMgr()
+	local airbase = assetmgr:getAsset(self.airbase)
+	if airbase then
+		self._operstate = airbase:isOperational() and airbase.owner == self.owner
+		self._logger:debug("setting operstate: %s", tostring(self._operstate))
+	end
+end
+
 function Player:handleBaseState(event)
 	if event.initiator.name == self.airbase then
-		self._operstate = event.state
-		self._logger:debug("setting operstate: %s", tostring(event.state))
+		self:updateOperationalState()
 		self:doEnable()
 	else
 		self._logger:warn("received unknown event %s(%d) from initiator(%s)",
@@ -493,11 +562,28 @@ end
 
 function Player:spawn()
 	AssetBase.spawn(self)
+	if self.firstspawn then
+		local assetmgr = dct.theater:getAssetMgr()
+		self.airbase = findAirbase(self._tpldata, assetmgr)
+		self.parking = airbaseParkingId(self._tpldata)
+		self._logger:debug("airbase: %s", tostring(self.airbase))
+		self._logger:debug("parking: %s", tostring(self.parking))
+		self:registerObservable(dct.theater:getAssetMgr())
+		self:registerObservable(dct.theater:getCommander(self.owner))
+		local ab = assetmgr:getAsset(self.airbase)
+		if ab ~= nil and ab.owner == self.owner then
+			ab:addSubordinate(self)
+		end
+		self.firstspawn = false
+	end
+	self:updateOperationalState()
 	self:doEnable()
 end
 
 function Player:despawn()
 	AssetBase.despawn(self)
+	self._logger:debug("setting operstate: false")
+	self._operstate = false
 	self:doEnable()
 end
 

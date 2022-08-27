@@ -22,18 +22,24 @@ function Command:__init(name, func, ...)
 	self.func = check.func(func)
 	self.prio = cmdpriority.NORMAL
 	self.args = {select(1, ...)}
+	self.done = false
 	self.PRIORITY = nil
 end
 
 function Command:execute(time)
-	local args = utils.shallowclone(self.args)
 	Logger:debug("executing: %s", self.name)
+	local args = utils.shallowclone(self.args)
 	table.insert(args, time)
+	self.done = true
 	return self.func(unpack(args))
 end
+
+function Command:isDone()
+	return self.done
+end
+
 Command.PRIORITY = cmdpriority
 
-local cmd = Command
 
 if dct.settings and dct.settings.server and
    dct.settings.server.profile == true then
@@ -41,12 +47,13 @@ if dct.settings and dct.settings.server and
 	local TimedCommand = class("TimedCommand", Command)
 	function TimedCommand:execute(time)
 		local tstart = os.clock()
-		local rc = Command.execute(self, time)
+		local rc = { Command.execute(self, time) }
 		Logger:info("'%s' exec time: %5.2fms", self.name, (os.clock()-tstart)*1000)
-		return rc
+		return unpack(rc)
 	end
 	TimedCommand.PRIORITY = cmdpriority
-	cmd = TimedCommand
+
+	return TimedCommand
 end
 
-return cmd
+return Command

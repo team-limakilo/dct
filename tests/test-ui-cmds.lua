@@ -25,11 +25,12 @@ local unit1 = Unit({
 	},
 }, grp, "bobplayer")
 
-local briefingtxt = "Package: #5720\n"..
-			"IFF Codes: M1(50), M3(5720)\n"..
-			"Target AO: 88°07.38'N 063°27.36'W (HOUSTON)\n"..
+local briefingtxt = "Package: #5410\n"..
+			"IFF Codes: M1(50), M3(5410)\n"..
+			"Target AO: 88°07.38'N 063°27.36'W (ATLANTA)\n"..
+			"Target Altitude/QFE: 33 ft (29.89 inHg)\n"..
 			"Briefing:\n"..
-			"Reconnaissance elements have located"..
+			"A recon flight earlier today discovered"..
 			" a fuel storage facility at 88°07.38'N 063°27.36'W,"..
 			" East of Krasnodar-Center.\n\n"..
 			"Primary Objectives: Destroy the fuel tanks embedded in "..
@@ -38,14 +39,15 @@ local briefingtxt = "Package: #5720\n"..
 			"Recommended Pilots: 2\n\n"..
 			"Recommended Ordnance: Pilot discretion."
 
-local capbriefingtxt = "Package: #2730\n"..
-			"IFF Codes: M1(20), M3(2730)\n"..
-			"Station AO: 88°06'N 063°24'W (SEOUL)\n"..
+local capbriefingtxt = "Package: #2120\n"..
+			"IFF Codes: M1(20), M3(2120)\n"..
+			"Station AO: DD GJ05 (Approximately 88°06'N 063°24'W) (LONDON)\n"..
 			"Briefing:\n"..
 			"Coordinate with friendly forces and provide cover in Krasnodar "..
 			"airspace.\n\n"..
 			"The mission status shows how many ground missions have been completed "..
-			"in the region, however, you can RTB at any time."
+			"in the region, however, you can RTB at any time.\n\n"..
+			"Recommended Pilots: 2"
 
 local assignedPilots = "Assigned Pilots:\nbobplayer (F/A-18C Hornet)"
 
@@ -58,8 +60,8 @@ local testcmds = {
 		["assert"]     = true,
 		["expected"]   = "== Theater Status ==\n"..
 			"Friendly Force Str: Nominal\nEnemy Force Str: Nominal\n\n"..
-			"Airbases:\n  CVN-71 Theodore Roosevelt: Friendly\n  "..
-			"Krymsk: Hostile\n  Kutaisi: Friendly\n  Senaki-Kolkhi: Friendly\n\n"..
+			"Airbases:\n  Friendly: CVN-71 Theodore Roosevelt\n  "..
+			"Friendly: Kutaisi\n  Friendly: Senaki-Kolkhi\n  Hostile: Krymsk\n\n"..
 			"Current Active Air Missions:\n  None\n\n"..
 			"Available missions:\n  CAP:  2\n  "..
 			"SEAD:  2\n  STRIKE:  3\n\n"..
@@ -71,9 +73,10 @@ local testcmds = {
 			["value"]  = enum.missionType.STRIKE,
 		},
 		["assert"]     = true,
-		["expected"]   = "Mission 5720 assigned, use F10 menu to "..
+		["expected"]   = "Mission 5410 assigned, use F10 menu to "..
 			"see this briefing again\n"..
 			briefingtxt.."\n\n"..
+			"BDA: 0% complete\n\n"..
 			assignedPilots
 	}, {
 		["data"] = {
@@ -83,8 +86,8 @@ local testcmds = {
 		["assert"]     = true,
 		["expected"]   = "== Theater Status ==\n"..
 			"Friendly Force Str: Nominal\nEnemy Force Str: Nominal\n\n"..
-			"Airbases:\n  CVN-71 Theodore Roosevelt: Friendly\n  "..
-			"Krymsk: Hostile\n  Kutaisi: Friendly\n  Senaki-Kolkhi: Friendly\n\n"..
+			"Airbases:\n  Friendly: CVN-71 Theodore Roosevelt\n  "..
+			"Friendly: Kutaisi\n  Friendly: Senaki-Kolkhi\n  Hostile: Krymsk\n\n"..
 			"Current Active Air Missions:\n  STRIKE:  1\n\n"..
 			"Available missions:\n  CAP:  2\n  "..
 			"SEAD:  2\n  STRIKE:  2\n\n"..
@@ -103,7 +106,7 @@ local testcmds = {
 		},
 		["assert"]     = true,
 		["expected"]   = "Mission State: Active\n"..
-			"Package: 5720\n"..
+			"Package: 5410\n"..
 			"Timeout: 2016-06-21 14:00z (in 180 mins)\n"..
 			"BDA: 0% complete\n\n"..
 			assignedPilots
@@ -140,7 +143,7 @@ local testcmds = {
 		["modelTime"]  = 300,
 		["assert"]     = true,
 		["expected"]   = "Mission State: Active\n"..
-			"Package: 5720\n"..
+			"Package: 5410\n"..
 			"Timeout: 2016-06-21 14:02z (in 177 mins)\n"..
 			"BDA: 0% complete\n\n"..
 			assignedPilots
@@ -151,7 +154,7 @@ local testcmds = {
 			["value"]  = enum.missionAbortType.ABORT,
 		},
 		["assert"]     = true,
-		["expected"]   = "Mission 5720 aborted",
+		["expected"]   = "Mission 5410 aborted",
 	}, {
 		["data"] = {
 			["name"]   = grp:getName(),
@@ -159,9 +162,10 @@ local testcmds = {
 			["value"]  = enum.missionType.CAP,
 		},
 		["assert"]     = true,
-		["expected"]   = "Mission 2730 assigned, use F10 menu to "..
+		["expected"]   = "Mission 2120 assigned, use F10 menu to "..
 			"see this briefing again\n"..
 			capbriefingtxt.."\n\n"..
+			"BDA: 0% complete\n\n"..
 			assignedPilots
 	}, {
 		-- Allowed payload

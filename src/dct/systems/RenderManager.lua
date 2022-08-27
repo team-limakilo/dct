@@ -2,45 +2,42 @@
 -- SPDX-License-Identifier: LGPL-3.0
 --
 -- Automatically spawns and despawns assets based on their distances from
--- objects of interest (ie. players and stand-off weapons) to reduce
+-- objects of interest (ie. aircraft and stand-off weapons) to reduce
 -- active unit count.
---
--- Terminology:
---  * Asset: a static DCT asset
---  * Object (of interest): objects that are analyzed for proxmity to assets
---    (players and player-launched missiles)
 --]]
 
 -- luacheck: max_cyclomatic_complexity 100
 
 local class     = require("libs.class")
 local utils     = require("dct.utils")
-local Command   = require("dct.Command")
 local vec       = require("dct.libs.vector")
 local Logger    = require("dct.libs.Logger").getByName("RenderManager")
-local StaticAsset = require("dct.assets.StaticAsset")
-local settings    = _G.dct.settings
+local StaticAsset  = require("dct.assets.StaticAsset")
+local CoroutineCmd = require("dct.CoroutineCommand")
+local settings     = _G.dct.settings
+local yield        = coroutine.yield
 
--- How many seconds to wait between render checks
-local CHECK_INTERVAL = 5
+-- Ignore AI aircraft if true
+local PLAYERS_ONLY = true
 
 -- How many seconds to keep an asset in the world after it's out of range
 local DESPAWN_TIMEOUT = 5 * 60
+local ONDEMAND_TIMEOUT = 30 * 60
 
--- Default asset age (ensures everything is culled from the start)
-local AGE_OLD = -DESPAWN_TIMEOUT
+-- Default asset timestamp, ensuring everything is culled from the start
+local AGE_OLD = -99999
 
 local RangeType = {
-	Player     = 1, -- Player flights
+	Aircraft   = 1, -- Flights
 	CruiseMsl  = 2, -- INS, TV, and Radar-guided missiles
 	AntiRadMsl = 3, -- Anti-radiation missiles
 	GuidedBomb = 4, -- Laser and TV-guided bombs
 }
 
 local RadarDistanceFactor = {
-	[RangeType.Player]     = 1.6,
+	[RangeType.Aircraft]   = 2.25,
 	[RangeType.CruiseMsl]  = nil,
-	[RangeType.AntiRadMsl] = 0.4,
+	[RangeType.AntiRadMsl] = 0.50,
 	[RangeType.GuidedBomb] = nil,
 }
 
@@ -52,7 +49,7 @@ local cruiseGuidance = {
 
 -- Maps specific unit types and attributes to minimum render ranges, in meters
 local UnitTypeRanges = {
-	[RangeType.Player]          = {
+	[RangeType.Aircraft] = {
 		["SA-8 Osa LD 9T217"]   = 50000,
 		["Tor 9A331"]           = 40000,
 	},
@@ -61,17 +58,17 @@ local UnitTypeRanges = {
 	[RangeType.GuidedBomb]      = {},
 }
 local AttributeRanges = {
-	[RangeType.Player] = {
+	[RangeType.Aircraft] = {
 		["Ships"]               = 100000,
 	},
 	[RangeType.CruiseMsl] = {
-		["Ships"]               = 50000,
+		["Ships"]               = 20000,
 	},
 	[RangeType.AntiRadMsl]      = {},
 	[RangeType.GuidedBomb]      = {},
 }
 local DefaultRanges = {
-	[RangeType.Player]          = 30000,
+	[RangeType.Aircraft]        = 25000,
 	[RangeType.CruiseMsl]       = 10000,
 	[RangeType.AntiRadMsl]      = 0,
 	[RangeType.GuidedBomb]      = 0,
@@ -86,7 +83,7 @@ local function getRadarRange(unit)
 	if sensors ~= nil and sensors[Unit.SensorType.RADAR] ~= nil then
 		for _, sensor in pairs(sensors[Unit.SensorType.RADAR]) do
 			local detection = sensor.detectionDistanceAir
-			if sensor.type == 1 and detection ~= nil then
+			if detection ~= nil then
 				if detection.upperHemisphere.headOn > range then
 					range = detection.upperHemisphere.headOn
 				end
@@ -158,21 +155,41 @@ local function computeRanges(asset)
 	end
 end
 
-local function isPlayer(object)
-	return object:getPlayerName() ~= nil
-end
-
-local function getAllPlayers()
-	local players = {}
-	for co = 0, 2 do
-		for _, player in pairs(coalition.getPlayers(co)) do
-			table.insert(players, player)
+local function getAllAircraft()
+	local units = {}
+	for co = 1, 2 do
+		if PLAYERS_ONLY then
+			for _, player in pairs(coalition.getPlayers(co)) do
+				table.insert(units, player)
+			end
+		else
+			for _, group in pairs(coalition.getGroups(co, Group.Category.AIRPLANE)) do
+				for _, unit in pairs(group:getUnits()) do
+					if unit:isActive() then
+						table.insert(units, unit)
+					end
+				end
+			end
+			for _, group in pairs(coalition.getGroups(co, Group.Category.HELICOPTER)) do
+				for _, unit in pairs(group:getUnits()) do
+					if unit:isActive() then
+						table.insert(units, unit)
+					end
+				end
+			end
 		end
 	end
-	return players
+	return units
 end
 
 local function weaponRangeType(weapon)
+	if weapon == nil or
+	   PLAYERS_ONLY and
+	   weapon:getLauncher() ~= nil and
+	   weapon:getLauncher():isExist() and
+	   weapon:getLauncher():getPlayerName() == nil then
+		return nil
+	end
 	local desc = weapon:getDesc()
 	if desc.guidance == Weapon.GuidanceType.RADAR_PASSIVE then
 		return RangeType.AntiRadMsl
@@ -193,8 +210,8 @@ function RenderManager:__init(theater)
 	self.lastSeen  = {} -- Time each asset was last seen
 	self.weapons   = {} -- Tracked weapons in flight
 
-	-- Disable automatic execution in tests
-	if _G.DCT_TEST then
+	if not settings.server.renderManager then
+		Logger:info("disabled by server setting")
 		return
 	end
 
@@ -202,31 +219,34 @@ function RenderManager:__init(theater)
 	theater:addObserver(self.onDCSEvent, self, "RenderManager.onDCSEvent")
 
 	-- Run update function continuously
-	theater:queueCommand(30, Command("RenderManager.update",
-		self.update, self, theater))
+	theater:queueCommand(30, CoroutineCmd("RenderManager.update",
+		self.update, self, theater), true)
 end
 
 function RenderManager:onDCSEvent(event)
 	if event.id == world.event.S_EVENT_SHOT then
-		if isPlayer(event.initiator) and weaponRangeType(event.weapon) ~= nil then
+		local rangeType = weaponRangeType(event.weapon)
+		if rangeType ~= nil then
 			Logger:debug("start tracking wpn %d ('%s') released by '%s'",
 				event.weapon.id_,
 				event.weapon:getTypeName(),
-				event.initiator:getPlayerName())
-			table.insert(self.weapons, event.weapon)
+				event.initiator:getPlayerName() or event.initiator:getName())
+			table.insert(self.weapons, { event.weapon, rangeType })
 		end
 	end
 end
 
--- Check conditions on assets that are not range-based
-local function forcedVisibility(asset)
-	if asset.nocull then
+-- Check if the asset should be visible regardless of range to other objects
+function RenderManager:forcedVisibility(asset, time)
+	if asset.nocull and asset:isSpawned() then
 		return true
-	end
-	if asset:isTargeted(utils.getenemy(asset.owner)) then
+	elseif asset:isTargeted(utils.getenemy(asset.owner)) then
 		return true
-	elseif asset.ondemand and not asset:isSpawned() then
-		return false
+	elseif asset.ondemand then
+		-- Force-hide ondemand assets after a while of not being targeted
+		if time - self.lastSeen[asset.name] > ONDEMAND_TIMEOUT then
+			return false
+		end
 	end
 end
 
@@ -239,38 +259,35 @@ function RenderManager:inRange(object, asset)
 	return dist <= assetRanges[asset.name][object.rangeType]
 end
 
---[[
 -- Check if the object is outside of the asset's render bubble + region size
---
--- Since we're using this to early-exit the loop, we'll use the longest of the
--- two ranges between player and missile render range
---]]
+-- at the longest possible visibility range (aircraft)
 function RenderManager:tooFar(object, asset, region)
-	if assetRanges[asset.name][object.rangeType] == nil then
+	if assetRanges[asset.name][RangeType.Aircraft] == nil then
 		return false
 	end
 	local dist = vec.distance(object.location, self.assetPos[asset.name])
-	return dist > assetRanges[asset.name][object.rangeType] + region.radius
+	return dist > assetRanges[asset.name][RangeType.Aircraft] + region.radius
 end
 
-function RenderManager:update(theater)
+function RenderManager:update(theater, time)
 	local assetmgr = theater:getAssetMgr()
 	local regions = theater:getRegionMgr().regions
-	-- Update player and weapon locations
+	-- Update aircraft locations
 	self.objects = {}
-	local players = getAllPlayers()
-	for i = 1, #players do
+	local aircraft = getAllAircraft()
+	for i = 1, #aircraft do
 		table.insert(self.objects, {
-			location = vec.Vector3D(players[i]:getPoint()),
-			rangeType = RangeType.Player,
+			location = vec.Vector3D(aircraft[i]:getPoint()),
+			rangeType = RangeType.Aircraft,
 		})
 	end
+	-- Update weapon locations
 	for i = #self.weapons, 1, -1 do
-		local wpn = self.weapons[i]
+		local wpn, rangeType = unpack(self.weapons[i])
 		if wpn:isExist() then
 			table.insert(self.objects, {
 				location = vec.Vector3D(wpn:getPoint()),
-				rangeType = weaponRangeType(wpn),
+				rangeType = rangeType,
 			})
 		else
 			Logger:debug("end tracking wpn %d", wpn.id_)
@@ -284,19 +301,18 @@ function RenderManager:update(theater)
 		if asset:isa(StaticAsset) then
 			self.assets[asset.rgnname] = self.assets[asset.rgnname] or {}
 			self.lastSeen[asset.name] = self.lastSeen[asset.name] or AGE_OLD
-			self.assetPos[asset.name] = vec.Vector3D(asset:getCurrentLocation())
+			self.assetPos[asset.name] = asset:getCurrentLocation()
 			table.insert(self.assets[asset.rgnname], asset)
 		end
 	end
-	-- Queue region checks
+	yield()
+	-- Check each region individually
 	for name, region in pairs(regions) do
-		local cmdname = string.format("RenderManager.checkRegion(%s)", name)
 		if self.assets[name] ~= nil then
-			theater:queueCommand(theater.cmdmindelay,
-				Command(cmdname, self.checkRegion, self, region))
+			self:checkRegion(region, time)
 		end
 	end
-	return CHECK_INTERVAL
+	return 2
 end
 
 --[[
@@ -323,8 +339,8 @@ function RenderManager:getSortedDistances(region)
 				table.insert(distances[rangeType], dist)
 				-- In the *extremely* unlikely case that we have more than one
 				-- object at the same cached distance from the region center,
-				-- prefer to store a player over any kind of weapon
-				if objdist[dist] == nil or rangeType == RangeType.Player then
+				-- prefer to store aircraft over any kind of weapon
+				if objdist[dist] == nil or rangeType == RangeType.Aircraft then
 					objdist[dist] = obj
 				end
 			end
@@ -335,6 +351,7 @@ function RenderManager:getSortedDistances(region)
 end
 
 function RenderManager:checkRegion(region, time)
+	Logger:debug("checkRegion(%s)", region.name)
 	local assets = self.assets[region.name]
 	if assets ~= nil then
 		local ops = 0
@@ -343,7 +360,7 @@ function RenderManager:checkRegion(region, time)
 		local distances, objdist = self:getSortedDistances(region)
 		for i = 1, #assets do
 			local asset = assets[i]
-			local forcedVis = forcedVisibility(asset)
+			local forcedVis = self:forcedVisibility(asset, time)
 			if forcedVis == nil then
 				computeRanges(asset)
 				if asset:isSpawned() then
@@ -357,7 +374,9 @@ function RenderManager:checkRegion(region, time)
 							end
 							ops = ops + 1
 							if self:inRange(object, asset) then
-								self.lastSeen[asset.name] = time
+								if not asset.ondemand then
+									self.lastSeen[asset.name] = time
+								end
 								seen = true
 								break
 							end
@@ -386,8 +405,11 @@ function RenderManager:checkRegion(region, time)
 						end
 						if seen then
 							self.lastSeen[asset.name] = time
-							spawns = spawns + 1
-							asset:spawn()
+							if not asset:isDead() then
+								spawns = spawns + 1
+								asset:spawn()
+								yield()
+							end
 							break
 						end
 					end
@@ -397,22 +419,25 @@ function RenderManager:checkRegion(region, time)
 					asset:despawn()
 				elseif forcedVis == true then
 					self.lastSeen[asset.name] = time
-					if not asset:isSpawned() then
+					if not asset:isSpawned() and not asset:isDead() then
 						spawns = spawns + 1
 						asset:spawn()
+						yield()
 					end
 				end
 			end
 		end
 		if settings.server.profile == true then
-			Logger:info("checkRegion(%s): players = %d, weapons = %d, "..
-				" assets = %d, ops = %d, spawns = %d, time = %.2fms", region.name,
-				#distances[RangeType.Player],
+			Logger:info("checkRegion(%s): aircraft = %d, weapons = %d, "..
+				" assets = %d, ops = %d, spawns = %d, total time = %.2fms",
+				region.name,
+				#distances[RangeType.Aircraft],
 				#distances[RangeType.AntiRadMsl] +
 				#distances[RangeType.CruiseMsl]  +
 				#distances[RangeType.GuidedBomb],
 				#assets, ops, spawns, (os.clock() - start)*1000)
 		end
+		yield()
 	end
 end
 
