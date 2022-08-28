@@ -12,14 +12,20 @@ enum.assetType = {
 
 	-- strategic types
 	["AMMODUMP"]    = 2,
+	["LRAMMODUMP"]  = 202,
 	["FUELDUMP"]    = 3,
+	["LRFUELDUMP"]  = 203,
 	["C2"]          = 4,
+	["LRC2"]        = 204,
 	["EWR"]         = 5,
 	["MISSILE"]     = 6,
+	["LRMISSILE"]   = 206,
 	["OCA"]         = 7,
+	["LROCA"]       = 207,
 	["PORT"]        = 8,
 	["SAM"]         = 9,
 	["FACILITY"]    = 10,
+	["LRFACILITY"]  = 2010,
 
 	-- bases
 	["BASEDEFENSE"] = 11,
@@ -34,13 +40,16 @@ enum.assetType = {
 
 	-- extended type set
 	["BUNKER"]      = 15,
+	["LRBUNKER"]    = 2015,
 	["CHECKPOINT"]  = 16,
 	["FACTORY"]     = 17,
+	["LRFACTORY"]   = 2017,
 	["AIRSPACE"]    = 18,
 	["SHORAD"]      = 19,
 	["AIRBASE"]     = 20,
 	["PLAYERGROUP"] = 21,
 	["SPECIALFORCES"] = 22,
+	["INSURGENCY"]    = 2022,
 	["FOB"]           = 23,
 	["SQUADRONPLAYER"]= 24,
 }
@@ -55,78 +64,95 @@ enum.assetTypePriority = {
 	[enum.assetType.EWR]         = 20,
 	[enum.assetType.SAM]         = 20,
 	[enum.assetType.C2]          = 30,
+	[enum.assetType.LRC2]        = 30,
 	[enum.assetType.AMMODUMP]    = 40,
+	[enum.assetType.LRAMMODUMP]  = 40,
 	[enum.assetType.FUELDUMP]    = 40,
+	[enum.assetType.LRFUELDUMP]  = 40,
 	[enum.assetType.ARTILLERY]   = 40,
 	[enum.assetType.CONVOY]      = 50,
 	[enum.assetType.MISSILE]     = 50,
+	[enum.assetType.LRMISSILE]   = 50,
 	[enum.assetType.SEA]         = 50,
 	[enum.assetType.FRONTLINE]   = 60,
 	[enum.assetType.BASEDEFENSE] = 60,
 	[enum.assetType.OCA]         = 70,
+	[enum.assetType.LROCA]       = 70,
 	[enum.assetType.PORT]        = 70,
 	[enum.assetType.LOGISTICS]   = 70,
 	[enum.assetType.AIRBASE]     = 70,
 	[enum.assetType.SHORAD]      = 100,
 	[enum.assetType.FACILITY]    = 100,
+	[enum.assetType.LRFACILITY]  = 100,
 	[enum.assetType.BUNKER]      = 100,
+	[enum.assetType.LRBUNKER]    = 100,
 	[enum.assetType.CHECKPOINT]  = 100,
 	[enum.assetType.SPECIALFORCES] = 100,
+	[enum.assetType.INSURGENCY]  = 100,
 	[enum.assetType.FOB]         = 100,
 	[enum.assetType.FACTORY]     = 100,
+	[enum.assetType.LRFACTORY]   = 100,
 	[enum.assetType.KEEPOUT]     = 10000,
 }
 
 enum.missionInvalidID = nil
 
 enum.missionType = {
-	["CAS"]        = 1,
-	["CAP"]        = 2,
-	["STRIKE"]     = 3,
-	["SEAD"]       = 4,
-	["BAI"]        = 5,
-	["OCA"]        = 6,
-	["ARMEDRECON"] = 7,
-	["ANTISHIP"]   = 8,
+	["CAP/SEAD"]     = 1,
+	["DEEP STRIKE"]  = 2,
+	["STRIKE"]       = 3,
+	["ANTI-SHIP"]    = 4,
+	["INTERDICTION"] = 5,
+	["CAS"]          = 6,
+	["ATTACK/RECON"] = 7,
 }
 
 enum.squawkMissionType = {
-	[enum.missionType.CAP]        = 2,
-	[enum.missionType.SEAD]       = 3,
-	[enum.missionType.ANTISHIP]   = 4,
-	[enum.missionType.CAS]        = 5,
-	[enum.missionType.STRIKE]     = 5,
-	[enum.missionType.BAI]        = 5,
-	[enum.missionType.OCA]        = 5,
-	[enum.missionType.ARMEDRECON] = 5,
+	[enum.missionType["CAP/SEAD"]]        = 2,
+	[enum.missionType["DEEP STRIKE"]]     = 3,
+	[enum.missionType["STRIKE"]]          = 3,
+	[enum.missionType["ANTI-SHIP"]]       = 3,
+	[enum.missionType["INTERDICTION"]]    = 5,
+	[enum.missionType["CAS"]]             = 5,
+	[enum.missionType["ATTACK/RECON"]]    = 5,
 }
 
 enum.squawkMissionSubType = {
-	[enum.missionType.STRIKE]     = 0,
-	[enum.missionType.OCA]        = 0,
-	[enum.missionType.BAI]        = 1,
-	[enum.missionType.ARMEDRECON] = 2,
-	[enum.missionType.CAS]        = 3,
+	[enum.missionType["STRIKE"]]       = 0,
+	[enum.missionType["DEEP STRIKE"]]  = 1,
+	[enum.missionType["ANTI-SHIP"]]    = 2,
+	[enum.missionType["INTERDICTION"]] = 0,
+	[enum.missionType["CAS"]]          = 1,
+	[enum.missionType["ATTACK/RECON"]] = 2,
 }
 
 enum.assetClass = {
 	["INITIALIZE"] = {
-		[enum.assetType.AMMODUMP]    = true,
-		[enum.assetType.FUELDUMP]    = true,
-		[enum.assetType.C2]          = true,
+		[enum.assetType.AMMODUMP]      = true,
+		[enum.assetType.LRAMMODUMP]    = true,
+		[enum.assetType.FUELDUMP]      = true,
+		[enum.assetType.LRFUELDUMP]    = true,
+		[enum.assetType.C2]            = true,
+		[enum.assetType.LRC2]          = true,
 		[enum.assetType.EWR]         = true,
 		[enum.assetType.MISSILE]     = true,
+		[enum.assetType.LRMISSILE]   = true,
 		[enum.assetType.OCA]         = true,
+		[enum.assetType.LROCA]       = true,
 		[enum.assetType.SEA]         = true,
 		[enum.assetType.PORT]        = true,
 		[enum.assetType.SAM]         = true,
 		[enum.assetType.FACILITY]    = true,
+		[enum.assetType.LRFACILITY]  = true,
 		[enum.assetType.BUNKER]      = true,
+		[enum.assetType.LRBUNKER]    = true,
 		[enum.assetType.CHECKPOINT]  = true,
 		[enum.assetType.FACTORY]     = true,
+		[enum.assetType.LRFACTORY]   = true,
 		[enum.assetType.SHORAD]      = true,
 		[enum.assetType.AIRBASE]     = true,
 		[enum.assetType.SPECIALFORCES] = true,
+		[enum.assetType.INSURGENCY]  = true,
 		[enum.assetType.FOB]         = true,
 		[enum.assetType.AIRSPACE]    = true,
 		[enum.assetType.LOGISTICS]   = true,
@@ -138,19 +164,28 @@ enum.assetClass = {
 	-- among other things
 	["STRATEGIC"] = {
 		[enum.assetType.AMMODUMP]    = true,
+		[enum.assetType.LRAMMODUMP]  = true,
 		[enum.assetType.FUELDUMP]    = true,
+		[enum.assetType.LRFUELDUMP]  = true,
 		[enum.assetType.C2]          = true,
+		[enum.assetType.LRC2]        = true,
 		[enum.assetType.EWR]         = true,
 		[enum.assetType.MISSILE]     = true,
+		[enum.assetType.LRMISSILE]   = true,
 		[enum.assetType.PORT]        = true,
 		[enum.assetType.SAM]         = true,
 		[enum.assetType.SEA]         = true,
 		[enum.assetType.FACILITY]    = true,
+		[enum.assetType.LRFACILITY]  = true,
 		[enum.assetType.BUNKER]      = true,
+		[enum.assetType.LRBUNKER]    = true,
 		[enum.assetType.CHECKPOINT]  = true,
 		[enum.assetType.FACTORY]     = true,
+		[enum.assetType.LRFACTORY]   = true,
 		[enum.assetType.AIRBASE]     = true,
 		[enum.assetType.FOB]         = true,
+		[enum.assetType.OCA]         = true,
+		[enum.assetType.LROCA]       = true,
 	},
 	-- agents never get serialized to the state file
 	["AGENTS"] = {
@@ -159,44 +194,49 @@ enum.assetClass = {
 }
 
 enum.missionTypeMap = {
-	[enum.missionType.STRIKE] = {
+	[enum.missionType["CAP/SEAD"]] = {
+		[enum.assetType.AIRSPACE]   = true,
+	},
+	[enum.missionType["DEEP STRIKE"]]  = {
+		[enum.assetType.PORT]       = true,
+		[enum.assetType.EWR]        = true,
+		[enum.assetType.LRAMMODUMP]   = true,
+		[enum.assetType.LRFUELDUMP]   = true,
+		[enum.assetType.LRC2]         = true,
+		[enum.assetType.LRMISSILE]    = true,
+		[enum.assetType.LRFACILITY]   = true,
+		[enum.assetType.LRBUNKER]     = true,
+		[enum.assetType.LRFACTORY]    = true,
+		[enum.assetType.LROCA]        = true,
+		[enum.assetType.AIRBASE]      = true,
+	},
+	[enum.missionType["STRIKE"]]       = {
 		[enum.assetType.AMMODUMP]   = true,
 		[enum.assetType.FUELDUMP]   = true,
 		[enum.assetType.C2]         = true,
 		[enum.assetType.MISSILE]    = true,
-		[enum.assetType.PORT]       = true,
 		[enum.assetType.FACILITY]   = true,
 		[enum.assetType.BUNKER]     = true,
-		[enum.assetType.CHECKPOINT] = true,
 		[enum.assetType.FACTORY]    = true,
-		[enum.assetType.SHORAD]     = true,
-	},
-	[enum.missionType.SEAD] = {
-		[enum.assetType.EWR]        = true,
-		[enum.assetType.SAM]        = true,
-	},
-	[enum.missionType.OCA] = {
 		[enum.assetType.OCA]        = true,
-		[enum.assetType.AIRBASE]    = true,
 	},
-	[enum.missionType.BAI] = {
+	[enum.missionType["ANTI-SHIP"]]    = {
+		[enum.assetType.SEA]        = true,
+	},
+	[enum.missionType["INTERDICTION"]] = {
+		[enum.assetType.CHECKPOINT] = true,
 		[enum.assetType.LOGISTICS]  = true,
 		[enum.assetType.ARTILLERY]  = true,
 		[enum.assetType.CONVOY]     = true,
 	},
-	[enum.missionType.CAS] = {
+	[enum.missionType["CAS"]]          = {
 		[enum.assetType.JTAC]       = true,
 		[enum.assetType.FRONTLINE]  = true,
 	},
-	[enum.missionType.CAP] = {
-		[enum.assetType.AIRSPACE]   = true,
-	},
-	[enum.missionType.ARMEDRECON] = {
+	[enum.missionType["ATTACK/RECON"]] = {
 		[enum.assetType.SPECIALFORCES] = true,
+		[enum.assetType.INSURGENCY]    = true,
 		[enum.assetType.FOB]           = true,
-	},
-	[enum.missionType.ANTISHIP] = {
-		[enum.assetType.SEA]        = true,
 	},
 }
 

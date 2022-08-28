@@ -68,7 +68,7 @@ end
 function ActiveState:enter(msn)
 	Logger:debug("%s:enter()", self.__clsname)
 	-- Special case: CAP missions end on next scheduled mission restart
-	if msn.type == enum.missionType.CAP and dct.settings.server.period > 0 then
+	if msn.type == enum.missionType["CAP/SEAD"] and dct.settings.server.period > 0 then
 		local timeLeft = dct.settings.server.period - timer.getTime()
 		if timeLeft > 0 then
 			self.timer = Timer(timeLeft)

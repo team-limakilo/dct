@@ -75,7 +75,7 @@ local function createMissionMenu(groupMenu, mission)
 		local menu = addMenu(groupMenu, "Mission")
 
 		local requestTypeMenu = addMenu(groupMenu, "Request (Type)", menu)
-		for typename, msntype in utils.sortedpairs(groupMenu.asset.ato) do
+		for typename, msntype in utils.sortedpairs(groupMenu.asset.ato, dctutils.missionPairs) do
 			addRqstCmd(groupMenu, typename, requestTypeMenu,
 				enum.uiRequestType.MISSIONREQUEST, msntype)
 		end

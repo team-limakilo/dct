@@ -130,7 +130,7 @@ function TheaterUpdateCmd:_execute(_, cmdr)
 
 	local activeMsnList = {}
 	if next(update.missions) ~= nil then
-		for msntype, count in utils.sortedpairs(update.missions) do
+		for msntype, count in utils.sortedpairs(update.missions, dctutils.missionPairs) do
 			table.insert(activeMsnList, string.format("%s:  %d", msntype, count))
 		end
 	else
@@ -139,7 +139,7 @@ function TheaterUpdateCmd:_execute(_, cmdr)
 
 	local availableMsnList = {}
 	if next(available) ~= nil then
-		for msntype, count in utils.sortedpairs(available) do
+		for msntype, count in utils.sortedpairs(available, dctutils.missionPairs) do
 			table.insert(availableMsnList, string.format("%s:  %d", msntype, count))
 		end
 	else
