@@ -99,12 +99,12 @@ enum.missionInvalidID = nil
 
 enum.missionType = {
 	["CAP/SEAD"]     = 1,
-	["DEEP STRIKE"]  = 2,
-	["STRIKE"]       = 3,
-	["ANTI-SHIP"]    = 4,
-	["INTERDICTION"] = 5,
-	["CAS"]          = 6,
-	["ATTACK/RECON"] = 7,
+	["ATTACK/RECON"] = 2,
+	["CAS"]          = 3,
+	["INTERDICTION"] = 4,
+	["STRIKE"]       = 5,
+	["DEEP STRIKE"]  = 6,
+	["ANTI-SHIP"]    = 7,
 }
 
 enum.squawkMissionType = {
