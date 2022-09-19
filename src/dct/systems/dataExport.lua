@@ -125,6 +125,7 @@ local function getAssignedUnitInfo(mission, assetmgr)
         if asset ~= nil and type(asset.getPlayerName) == "function" then
             output[idx] = {
                 group = groupname,
+                type = asset:getTypeName(),
                 player = asset:getPlayerName(),
                 aircraft = asset:getAircraftName(),
                 iffmode3 = mission:getIFFCodes(asset).m3,

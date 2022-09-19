@@ -612,6 +612,11 @@ function Player:getAircraftName()
 	return nil
 end
 
+function Player:getTypeName()
+	local desc = callOnUnit(self.name, Unit.getDesc)
+	return desc and desc["typeName"]
+end
+
 --[[
 -- kick - request player to be kicked from slot
 --
