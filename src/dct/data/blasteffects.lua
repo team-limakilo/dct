@@ -71,6 +71,7 @@ local wpnmass = {
 	-- French weapons
 	-- Source: Jane's Air-Launched Weapons
 	-- Composition B assumed based on other French bombs of the era according to same source
+	["BAT-120"]      = tnt_equiv_mass( 6,  tntrel.CompB),
 	["SAMP125LD"]    = tnt_equiv_mass(58,  tntrel.CompB),
 	["SAMP250LD"]    = tnt_equiv_mass(124, tntrel.CompB),
 	["SAMP400LD"]    = tnt_equiv_mass(200, tntrel.CompB), -- Assumed based on explosive filling in other series bombs
@@ -133,6 +134,9 @@ local wpnmass = {
 	-- Swedish weapons
 	-- Source: Jane's Air-Launched Weapons
 	["ARAKM70BHE"]      = tnt_equiv_mass( 21, tntrel.CompB), -- filler composition referenced online but no solid source
+	-- Italian Weapons
+	-- Source: Jane's Air-Launched Weapons
+	["ARF8M3HEI"]       = tnt_equiv_mass( 2, tntrel.Tritonal), -- "SNIA BPD" 51mm rocket system
 	-- British weapons
 	-- WWII
 	-- Source: AP 2802, Vol 1 (1944)
@@ -172,9 +176,11 @@ wpnmass["MK_82SNAKEYE"]                       = wpnmass["Mk_82"]
 wpnmass["Mk_82Y"]                             = wpnmass["Mk_82"]
 wpnmass["GBU_12"]                             = wpnmass["Mk_82"]
 wpnmass["GBU_38"]                             = wpnmass["Mk_82"]
+wpnmass["GBU_54_V_1B"]                        = wpnmass["Mk_82"]
 wpnmass["GBU_16"]                             = wpnmass["Mk_83"]
 wpnmass["GBU_32_V_2B"]                        = wpnmass["Mk_83"]
 wpnmass["AGM_123"]                            = wpnmass["Mk_83"] -- Skipper missile
+wpnmass["Mk_84AIR_GP"]                        = wpnmass["Mk_84"]
 wpnmass["AGM_130"]                            = wpnmass["Mk_84"]
 wpnmass["GBU_10"]                             = wpnmass["Mk_84"]
 wpnmass["GBU_31"]                             = wpnmass["Mk_84"]
