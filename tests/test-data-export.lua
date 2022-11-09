@@ -22,6 +22,10 @@ local function main()
     local export = theater:getSystem("dct.systems.dataExport")
     export:update()
 
+    export.suffix = ".ended"
+    export:onEvent({ id = world.event.S_EVENT_MISSION_END })
+    export:update()
+
 	return 0
 end
 
