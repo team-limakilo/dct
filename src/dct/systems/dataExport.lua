@@ -264,7 +264,10 @@ end
 function DataExport:onEvent(event)
     if event.id == world.event.S_EVENT_MISSION_END then
         self.ended = true
-        self:update()
+        -- This check prevents an extra error if the theater fails to initialize
+        if self.theater:getRegionMgr() ~= nil then
+            self:update()
+        end
     end
 end
 
