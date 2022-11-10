@@ -300,21 +300,24 @@ function utils.degrade_position(position, precision, fmt)
 	end
 end
 
+-- Produces an MGRS grid coordinate with secondary DMS/DDM for reference
+function utils.LLtostringMGRS(lat, long, position, precision, fmt)
+	local mgrs = coord.LLtoMGRS(lat, long)
+	position = utils.degrade_position(position, precision, utils.posfmt.MGRS)
+	lat, long = coord.LOtoLL(position)
+	return string.format("%s (Around %s)",
+		utils.MGRStostring(mgrs, precision),
+		utils.LLtostring(lat, long, 2, fmt))
+end
+
 function utils.fmtposition(position, precision, fmt)
 	precision = math.floor(precision)
 	assert(precision >= 0 and precision <= 5,
 		"value error: precision range [0,5]")
 
 	local lat, long = coord.LOtoLL(position)
-
-	-- Use MGRS grid as reference with DMS/DDM at low precision
 	if fmt ~= utils.posfmt.MGRS and precision <= 1 then
-		local mgrs = coord.LLtoMGRS(lat, long)
-		position = utils.degrade_position(position, precision, utils.posfmt.MGRS)
-		lat, long = coord.LOtoLL(position)
-		return string.format("%s (Approximately %s)",
-			utils.MGRStostring(mgrs, precision),
-			utils.LLtostring(lat, long, precision, fmt))
+		return utils.LLtostringMGRS(lat, long, position, precision, fmt)
 	elseif fmt == utils.posfmt.MGRS then
 		return utils.MGRStostring(coord.LLtoMGRS(lat, long), precision)
 	else

@@ -41,7 +41,7 @@ local briefingtxt = "Package: #5410\n"..
 
 local capbriefingtxt = "Package: #2120\n"..
 			"IFF Codes: M1(20), M3(2120)\n"..
-			"Station AO: DD GJ05 (Approximately 88°06'N 063°24'W) (LONDON)\n"..
+			"Station AO: DD GJ05 (Around 88°07.2'N 063°27.0'W) (LONDON)\n"..
 			"Briefing:\n"..
 			"Coordinate with friendly forces and provide cover in Krasnodar "..
 			"airspace.\n\n"..
