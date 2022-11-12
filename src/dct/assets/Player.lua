@@ -32,17 +32,20 @@
 --                                  occupied
 --]]
 
+-- luacheck: max cyclomatic complexity 12
+
 require("math")
-local class   = require("libs.namedclass")
-local utils   = require("libs.utils")
-local dctenum = require("dct.enum")
-local dctutils= require("dct.utils")
+local class     = require("libs.namedclass")
+local utils     = require("libs.utils")
+local dctenum   = require("dct.enum")
+local dctutils  = require("dct.utils")
 local AssetBase = require("dct.assets.AssetBase")
+local Squadron  = require("dct.assets.Squadron")
 local GroupMenu = require("dct.ui.groupmenu")
-local cmds    = require("dct.ui.cmds")
-local loadout = require("dct.systems.loadouts")
-local State   = require("dct.libs.State")
-local vec     = require("dct.libs.vector")
+local cmds      = require("dct.ui.cmds")
+local loadout   = require("dct.systems.loadouts")
+local State     = require("dct.libs.State")
+local vec       = require("dct.libs.vector")
 local settings = _G.dct.settings
 
 local notifymsg =
@@ -71,7 +74,7 @@ local function reset_slot(asset)
 	if asset.squadron then
 		asset._logger:debug("squadron set: %s", asset.squadron)
 		local sqdn = theater:getAssetMgr():getAsset(asset.squadron)
-		if sqdn then
+		if sqdn and sqdn:isa(Squadron) then
 			asset._logger:debug("squadron overriding ato and payload")
 			if sqdn:getATO() ~= nil then
 				asset._logger:debug("squadron overriding ato")
