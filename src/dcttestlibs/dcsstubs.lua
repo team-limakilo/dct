@@ -1217,8 +1217,26 @@ end
 _G.land = land
 
 local net = {}
+local player_info = {
+	id = 1,
+	name = 'Player',
+	side = 0,
+	slot = nil,
+	ping = 0,
+	ipaddr = '127.0.0.1',
+	ucid = '00000000000000000000000000000000',
+}
 
 function net.get_player_list()
 	return { 1 }
+end
+function net.get_player_info(id, type)
+	if id == 1 then
+		if type then
+			return player_info[type]
+		else
+			return player_info
+		end
+	end
 end
 _G.net = net

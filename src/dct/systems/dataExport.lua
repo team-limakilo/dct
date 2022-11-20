@@ -35,12 +35,17 @@ for msnTypeId, assetTypes in pairs(dctenum.missionTypeMap) do
     end
 end
 
-local function countPlayers()
-    local num = 0
-    for _ in pairs(net.get_player_list()) do
-        num = num + 1
+local function getPlayers()
+    local players = {}
+    for _, id in pairs(net.get_player_list()) do
+        table.insert(players, {
+            id = net.get_player_info(id, 'id'),
+            name = net.get_player_info(id, 'name'),
+            slot = net.get_player_info(id, 'slot'),
+            side = net.get_player_info(id, 'side'),
+        })
     end
-    return num
+    return players
 end
 
 local function formatDcsMissionDate(date)
@@ -53,7 +58,8 @@ local function formatLuaDate(date)
         date.hour, date.min, date.sec)
 end
 
-local function createExportData(exportDataObject)
+local function createExportData(theater, dcsServerSettings, ended)
+    local players = getPlayers()
     local data = {
         coalitions  = {},
         version     = dct._VERSION,
@@ -61,15 +67,16 @@ local function createExportData(exportDataObject)
         sortie      = env.getValueDictByKey(env.mission.sortie),
         period      = dct.settings.server.period,
         date        = os.date("!%F %TZ"),
-        startdate   = formatLuaDate(exportDataObject.theater.startdate),
+        startdate   = formatLuaDate(theater.startdate),
         modeldate   = formatDcsMissionDate(env.mission.date),
         modeltime   = timer.getTime(),
         abstime     = timer.getAbsTime(),
         dcs_version = _G._APP_VERSION,
-        ended       = exportDataObject.ended,
+        ended       = ended,
         players     = {
-            current = countPlayers(),
-            max = exportDataObject.maxPlayers,
+            current = #players,
+            max = dcsServerSettings.maxPlayers,
+            list = players,
         },
     }
     if data.ended then
@@ -85,10 +92,10 @@ function DataExport:__init(theater)
     self.ended = false
     self.suffix = ""
     if settings.exportperiod > 0 then
-        local dcsServerSettings =
+        self.dcsServerSettings =
             utils.readlua(lfs.writedir().."/Config/serverSettings.lua", "cfg")
-        self.maxPlayers = dcsServerSettings.maxPlayers
-        self.cachedData = createExportData(self)
+        self.cachedData = createExportData(theater,
+            self.dcsServerSettings, self.ended)
         Logger:debug("running data export every %d seconds",
             settings.exportperiod)
         theater:queueCommand(settings.exportperiod,
@@ -233,7 +240,7 @@ function DataExport:update()
     local assetmgr = theater:getAssetMgr()
     local regionmgr = theater:getRegionMgr()
     local tickets = theater:getSystem("dct.systems.tickets")
-    local data = createExportData(self)
+    local data = createExportData(theater, self.dcsServerSettings, self.ended)
     local coalitions = data.coalitions
 
     for _, coalition in pairs(coalition.side) do

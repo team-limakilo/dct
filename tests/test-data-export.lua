@@ -9,6 +9,9 @@ local Mission = require("dct.ai.Mission")
 local enum    = require("dct.enum")
 
 local function main()
+    local settings = _G.dct.settings.server
+    settings.exportperiod = 600
+
 	local theater = dct.Theater()
 	_G.dct.theater = theater
 	theater:exec(50)
