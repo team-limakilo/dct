@@ -58,9 +58,10 @@ end
 
 local function on_birth(asset, event)
 	local grp = event.initiator:getGroup()
-	local id = grp:getID()
+	local id = grp and grp:getID()
 	if asset.groupId ~= id then
-		asset._logger:warn("asset.groupId(%d) != object:getID(%d)", asset.groupId, id)
+		asset._logger:warn("asset.groupId(%d) != object:getID(%s)",
+			asset.groupId, tostring(id))
 	end
 	asset.groupId = id
 end
