@@ -43,7 +43,8 @@ end
 --]]
 function BaseGoal:onSpawn()
 	if self.objtype == enums.objtype.UNIT then
-		self.groupname = Unit.getByName(self.name):getGroup():getName()
+		local grp = Unit.getByName(self.name):getGroup()
+		self.groupname = grp and grp:getName()
 	end
 
 	if type(self._afterspawn) == 'function' then

@@ -377,9 +377,10 @@ function StaticAsset:handleDead(event)
 	-- remove dead units and their respective goals
 	local unitname = tostring(obj:getName())
 	if obj:getCategory() == Object.Category.UNIT then
-		local grpname = obj:getGroup():getName()
-		local grp = self._assets[grpname]
-		local units = grp.data.units
+		local grp = obj:getGroup()
+		local grpname = grp and grp:getName()
+		local asset = self._assets[grpname]
+		local units = asset.data.units
 		for i = #units, 1, -1 do
 			if units[i].name == unitname then
 				self:_removeDeathGoal(unitname)

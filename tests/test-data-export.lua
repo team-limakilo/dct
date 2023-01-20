@@ -9,6 +9,9 @@ local Mission = require("dct.ai.Mission")
 local enum    = require("dct.enum")
 
 local function main()
+    local settings = _G.dct.settings.server
+    settings.exportperiod = 600
+
 	local theater = dct.Theater()
 	_G.dct.theater = theater
 	theater:exec(50)
@@ -20,6 +23,10 @@ local function main()
     cmdr:addMission(mission)
 
     local export = theater:getSystem("dct.systems.dataExport")
+    export:update()
+
+    export.suffix = ".ended"
+    export:onEvent({ id = world.event.S_EVENT_MISSION_END })
     export:update()
 
 	return 0

@@ -25,6 +25,7 @@ return {
     ["gridfmt"] = {
         -- default is DMS
         ["Ka-50"]         = utils.posfmt.DDM,
+        ["Ka-50_3"]       = utils.posfmt.DDM,
         ["Mi-8MT"]        = utils.posfmt.DDM,
         ["SA342M"]        = utils.posfmt.DDM,
         ["SA342L"]        = utils.posfmt.DDM,
