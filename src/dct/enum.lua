@@ -59,7 +59,6 @@ enum.assetType = {
 -- a higher number is lower priority
 --]]
 enum.assetTypePriority = {
-	[enum.assetType.AIRSPACE]    = 10,
 	[enum.assetType.JTAC]        = 10,
 	[enum.assetType.EWR]         = 20,
 	[enum.assetType.SAM]         = 20,
@@ -92,6 +91,7 @@ enum.assetTypePriority = {
 	[enum.assetType.FOB]         = 100,
 	[enum.assetType.FACTORY]     = 100,
 	[enum.assetType.LRFACTORY]   = 100,
+	[enum.assetType.AIRSPACE]    = 200,
 	[enum.assetType.KEEPOUT]     = 10000,
 }
 
