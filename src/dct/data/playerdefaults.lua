@@ -42,6 +42,7 @@ return {
         ["F-14A-95-GR"]   = utils.posfmt.DDM,
         ["F-14A-135-GR"]  = utils.posfmt.DDM,
         ["F-14B"]         = utils.posfmt.DDM,
+        ["F-15ESE"]       = utils.posfmt.DDM,
         ["F-16C_50"]      = utils.posfmt.DDM,
         ["FA-18C_hornet"] = utils.posfmt.DDM,
         ["M-2000C"]       = utils.posfmt.DDM,
