@@ -82,6 +82,7 @@ function StaticAsset.assettypes()
 		enum.assetType.LRFACILITY,
 		enum.assetType.BUNKER,
 		enum.assetType.LRBUNKER,
+		enum.assetType.STRATEGIC,
 		enum.assetType.CHECKPOINT,
 		enum.assetType.FACTORY,
 		enum.assetType.LRFACTORY,
