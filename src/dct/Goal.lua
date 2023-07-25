@@ -26,7 +26,7 @@ local Logger     = dct.Logger.getByName("Goal")
 -- name - the name of the DCS object
 --]]
 local Goal = {}
-function Goal.factory(name, data)
+function Goal.factory(name, data, desc)
 	-- TODO: validate all fields either here or in BaseGoal.__init()
 	assert(type(name) == 'string', "value error, name")
 	assert(type(data) == 'table', "value error, data")
@@ -34,6 +34,7 @@ function Goal.factory(name, data)
 	local goal = nil
 
 	data.name = name
+	data.desc = desc
 	if data.goaltype == goalenums.goaltype.DAMAGE then
 		goal = DamageGoal(data)
 	else

@@ -9,8 +9,26 @@ local enums    = require("dct.goals.enum")
 local BaseGoal = require("dct.goals.BaseGoal")
 local Logger   = require("dct.libs.Logger").getByName("DamageGoal")
 
-local function get_scenery_id(id)
-	return { id_ = tonumber(id), }
+local scenery_mark_id = 56000
+local marked_scenery = {}
+
+local function postostring(pos)
+	return string.format("{ x = %s, y = %s, z = %s }", tostring(pos.x), tostring(pos.y), tostring(pos.z))
+end
+
+local function get_scenery_id(tplname, desc)
+	return function(id)
+		if not marked_scenery[id] then
+			local tbl = { id_ = tonumber(id), }
+			local pos = SceneryObject.getPoint(tbl)
+			local fmt = string.format("%s: %s", tostring(desc), tostring(id))
+			Logger:info("SceneryObject - %s - %s", fmt, postostring(pos))
+			trigger.action.markToAll(scenery_mark_id, fmt, pos)
+			scenery_mark_id = scenery_mark_id + 1
+		end
+		marked_scenery[id] = true
+		return { id_ = tonumber(id), }
+	end
 end
 
 -- counts the number of alive units in the group manually, because
@@ -27,12 +45,12 @@ local function get_group_size(grp)
 	return alive
 end
 
-local function getobject(objtype, name)
+local function getobject(objtype, name, tplname, desc)
 	local getobj = {
 		[enums.objtype.UNIT]    = Unit.getByName,
 		[enums.objtype.STATIC]  = StaticObject.getByName,
 		[enums.objtype.GROUP]   = Group.getByName,
-		[enums.objtype.SCENERY] = get_scenery_id,
+		[enums.objtype.SCENERY] = get_scenery_id(tplname, desc),
 	}
 	local getlifefncs = {
 		[enums.objtype.UNIT]    = Unit.getLife,
@@ -53,12 +71,14 @@ function DamageGoal:__init(data)
 		"value error: data.value must be between 0 and 100")
 	BaseGoal.__init(self, data)
 	self._tgtdamage = data.value
+	self.tplname = data.tplname
+	self.desc = data.desc
 end
 
 function DamageGoal:_afterspawn()
 	if self._maxlife ~= nil then return end
 
-	local obj, getlife = getobject(self.objtype, self.name)
+	local obj, getlife = getobject(self.objtype, self.name, self.tplname, self.desc)
 	if obj == nil or not Object.isExist(obj) and not Group.isExist(obj) then
 		Logger:error("_afterspawn() - object '%s' doesn't exist, presumed dead",
 			self.name)

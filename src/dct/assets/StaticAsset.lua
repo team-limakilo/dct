@@ -100,7 +100,7 @@ end
 --[[
 -- Adds a death goal to the asset if it's a primary goal
 --]]
-function StaticAsset:_addDeathGoal(name, goalspec)
+function StaticAsset:_addDeathGoal(name, goalspec, tplname, desc)
 	assert(name ~= nil and type(name) == "string",
 		"value error: name must be provided")
 	assert(goalspec ~= nil, "value error: goalspec must be provided")
@@ -109,7 +109,7 @@ function StaticAsset:_addDeathGoal(name, goalspec)
 		return
 	end
 
-	self._deathgoals[name] = Goal.factory(name, goalspec)
+	self._deathgoals[name] = Goal.factory(name, goalspec, tostring(tplname), tostring(desc))
 	self._curdeathgoals = self._curdeathgoals + 1
 	self._maxdeathgoals = math.max(self._curdeathgoals, self._maxdeathgoals)
 end
@@ -143,11 +143,11 @@ end
 function StaticAsset:_setupDeathGoal(grpdata, category, country)
 	if self._hasDeathGoals then
 		if grpdata.dct_deathgoal ~= nil then
-			self:_addDeathGoal(grpdata.name, grpdata.dct_deathgoal)
+			self:_addDeathGoal(grpdata.name, grpdata.dct_deathgoal, grpdata.tplname, grpdata.desc)
 		end
 		for _, unit in ipairs(grpdata.units or {}) do
 			if unit.dct_deathgoal ~= nil then
-				self:_addDeathGoal(unit.name, unit.dct_deathgoal)
+				self:_addDeathGoal(unit.name, unit.dct_deathgoal, grpdata.tplname, grpdata.desc)
 			end
 		end
 	elseif country ~= nil and
