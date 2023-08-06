@@ -17,7 +17,7 @@ Mission Editor.
 
 ## Getting Started
 
-See our documentation [here](https://jtoppins.github.io/dct/quick-start).
+See docs: https://team-limakilo.github.io/dct/
 
 ## Features
 
@@ -44,14 +44,14 @@ See our documentation [here](https://jtoppins.github.io/dct/quick-start).
 
 ## Contribution Guide
 
-See our [documentation](https://jtoppins.github.io/dct/), in sort contributions
-can be made with a github pull request but features and/or changes need to be
-discussed first. Code is licensed under LGPLv3 and contributions must be
-licensed under the same. For any issues or feature requests please use the
-issue tracker and file a new issue. Please make sure to provide as much detail
+See [Quick Start](https://team-limakilo.github.io/dct/quick-start) page. Contributions
+can be made through github pull requests, but features and/or changes need to be
+discussed first. The code is licensed under LGPLv3, and contributions must be
+under the same license. For any issues or feature requests, please use the
+GitHub issue tracker to file a new issue. Please make sure to provide as much detail
 about the problem or feature as possible. New development is done in feature
-branches which are eventually merged into `master`, base your features and
-fixes off `master`.
+branches, which are eventually merged into `master`, so base your features and
+fixes on `master`.
 
 ## Contact Us
 
