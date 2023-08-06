@@ -2,6 +2,7 @@ title: Dynamic Campaign Tools [LK]
 tagline: Dynamic Campaigns for DCS
 description: Mission scripting framework for persistent Digital Combat Simulator (DCS) missions.
 remote_theme: pmarsceill/just-the-docs
+color_scheme: dark
 github_link: "https://github.com/team-limakilo/dct"
 discord_link: "https://discord.gg/dPG9pNuxJc"
 dct_discord_link: "https://discord.gg/kG38MDqDrN"
@@ -14,4 +15,18 @@ aux_links:
     - "https://discord.gg/kG38MDqDrN"
   "Lima Kilo Discord Server":
     - "https://discord.gg/dPG9pNuxJc"
-color_scheme: dark
+callouts:
+  highlight:
+    color: yellow
+  important:
+    title: Important
+    color: blue
+  new:
+    title: New
+    color: green
+  note:
+    title: Note
+    color: purple
+  warning:
+    title: Warning
+    color: red
