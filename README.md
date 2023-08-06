@@ -55,9 +55,12 @@ fixes off `master`.
 
 ## Contact Us
 
-You can join the VMFA-169 discord (https://discord.gg/6z8uERVW5Y) if you
-would like to discuss DCT topics. The channel is
-`#dynamic-campaign-tools-discussion`.
+This fork of DCT is maintained by kukiric for the Lima Kilo DCS servers. As such, it
+has many differences from the upstream versions of DCT. There is a `#dct-forks`
+channel in the official DCT Discord server for discussion and support of forks like
+this, and a `#mission-making` channel in the Lima Kilo Discord server, where support
+can be given to anything specific to Lima Kilo code and tools.
 
-This branch is maintained by kukiric#5535 on Discord for the LK Flashpoint Levant
-sever.
+Official DCT Discord Server: https://discord.gg/kG38MDqDrN
+
+Lima Kilo Discord Server: https://discord.gg/dPG9pNuxJc
