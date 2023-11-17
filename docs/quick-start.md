@@ -7,7 +7,7 @@ permalink: /quick-start
 
 # Quick Start Guide
 
-1. **Download:** [latest release]({{ site.release_link }})
+1. **Download:** [latest dev build]({{ site.release_link }})
 2. **Unzip** downloaded release into your `Saved Games\DCS` folder
     - **NOTE:** if updating DCT, do not replace the Config folder!
 3. **Prepare DCS** by deleting the marked lines in your

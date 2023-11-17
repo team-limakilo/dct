@@ -83,7 +83,7 @@ function STM.processCoalition(tbl, namefunc, grpfilter, grpmodify)
 		["grpmodify"] = grpmodify,
 	}
 
-	for _, cntrytbl in ipairs(tbl.country) do
+	for _, cntrytbl in pairs(tbl.country) do
 		for cat, unitcat in pairs(categorymap) do
 			processCategory(grplist,
 				cntrytbl[string.lower(cat)],

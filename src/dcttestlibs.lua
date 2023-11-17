@@ -102,7 +102,7 @@ local catmap = {
 }
 -- create all mission placed airbases; ships & farps
 for coa, coatbl in pairs(env.mission.coalition) do
-	for _, cntrytbl in ipairs(coatbl.country) do
+	for _, cntrytbl in pairs(coatbl.country) do
 		for _, cat in pairs(catmap) do
 			processCategory(cntrytbl[cat], coa, Airbase.Category.SHIP)
 		end

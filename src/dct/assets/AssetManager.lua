@@ -294,7 +294,7 @@ function AssetManager:doOneObject(obj, event)
 
 	local name = tostring(obj:getName())
 	if obj.className_ ~= "Airbase" and
-	   obj:getCategory() == Object.Category.UNIT and
+	   Object.getCategory(obj) == Object.Category.UNIT and
 	   obj:getGroup() ~= nil then
 		name = obj:getGroup():getName()
 	end

@@ -5,7 +5,7 @@ nav_order: 1
 permalink: /
 ---
 
-# Dynamic Campaign Tools (DCT)
+# Dynamic Campaign Tools (DCT) - Lima Kilo Fork
 
 Mission scripting framework for persistent Digital Combat Simulator (DCS)
 missions.
@@ -22,9 +22,10 @@ created in the Mission Editor and configuration files. There is an initial
 learning curve but it is no more difficult than initially learning the DCS
 Mission Editor.
 
-## Quick Start Guide
+{: .note }
+> This is a fork maintained separately for the Lima Kilo DCS servers.
+> Behavior and feature availability may be different from the upstream verisons of DCT.
 
-See our documentation [here](quick-start.md).
 
 ## Features and Capabilities
 
@@ -61,6 +62,12 @@ development is done in feature branches which are eventually merged into
 
 ## Contact Us
 
-You can join the VMFA-169 [discord]({{ site.discord_link }}) if you
-would like to discuss DCT topics. The channel is
-`#dynamic-campaign-tools-discussion`.
+See the `#dct-forks` in the DCT Discord Server for support.
+
+Official DCT Discord Server: {{site.dct_discord_link}}
+
+Lima Kilo Discord Server: {{site.discord_link}}
+
+## Getting Started
+
+[Go to Quick Start page](quick-start.md)

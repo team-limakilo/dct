@@ -251,7 +251,7 @@ local airbase_cats = {
 }
 
 local function filterfarps(airbase, assetmgr)
-	if airbase:getCategory() == Object.Category.BASE and
+	if Object.getCategory(airbase) == Object.Category.BASE and
 	   airbase_cats[airbase:getDesc().category] ~= nil and
 	   assetmgr:getAsset(airbase:getName()) ~= nil then
 		return true
