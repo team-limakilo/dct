@@ -367,7 +367,7 @@ function StaticAsset:handleDead(event)
 
 	-- remove dead units and their respective goals
 	local unitname = tostring(obj:getName())
-	if obj:getCategory() == Object.Category.UNIT then
+	if Object.getCategory(obj) == Object.Category.UNIT then
 		local grp = obj:getGroup()
 		local grpname = grp and grp:getName()
 		local asset = self._assets[grpname]

@@ -71,7 +71,7 @@ end
 
 local function isARM(object)
 	return object ~= nil and
-	       object:getCategory() == Object.Category.WEAPON and
+	       Object.getCategory(object) == Object.Category.WEAPON and
 	       object:getDesc().guidance == Weapon.GuidanceType.RADAR_PASSIVE
 end
 
@@ -276,7 +276,7 @@ function IADS:addtrkFile(site, target)
 		site.trkFiles[trkName]["Velocity"] = target.object:getVelocity()
 	end
 	if target.type then
-		site.trkFiles[trkName]["Category"] = target.object:getCategory()
+		site.trkFiles[trkName]["Category"] = Object.getCategory(target)
 		site.trkFiles[trkName]["Type"] = target.object:getTypeName()
 	end
 	if site.Datalink then
@@ -415,7 +415,7 @@ function IADS:checkGroupRole(gp)
 	local hasDL = false
 	local numSAMRadars = 0
 	local numEWRRadars = 0
-	if gp:getCategory() == Group.Category.GROUND then
+	if Group.getCategory(gp) == Group.Category.GROUND then
 		for _, unt in pairs(gp:getUnits()) do
 			if unt:hasAttribute("EWR") then
 				isEWR = true
@@ -487,7 +487,7 @@ function IADS:checkGroupRole(gp)
 end
 
 function IADS:onDeath(event)
-	if event.initiator:getCategory() == Object.Category.UNIT and
+	if Object.getCategory(event.initiator) == Object.Category.UNIT and
 	   event.initiator:getGroup() ~= nil then
 		local eventUnit = event.initiator
 		local eventGroup = event.initiator:getGroup()
@@ -554,7 +554,7 @@ function IADS:onShot(event)
 end
 
 function IADS:onBirth(event)
-	if event.initiator:getCategory() ~= Object.Category.UNIT then
+	if Object.getCategory(event.initiator) ~= Object.Category.UNIT then
 		return
 	end
 	local gp = event.initiator:getGroup()

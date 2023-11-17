@@ -43,6 +43,38 @@ local objectcat = {
 	["GROUP"] = 7,
 }
 
+local unitcat = {
+	["AIRPLANE"]    = 0,
+	["HELICOPTER"]  = 1,
+	["GROUND_UNIT"] = 2,
+	["SHIP"]        = 3,
+	["STRUCTURE"]   = 4,
+}
+
+local staticcat = {
+	["VOID"]    = 0,
+	["UNIT"]    = 1,
+	["WEAPON"]  = 2,
+	["STATIC"]  = 3,
+	["BASE"]    = 4,
+	["SCENERY"] = 5,
+	["CARGO"]   = 6,
+}
+
+local airbasecat = {
+	["AIRDROME"] = 0,
+	["HELIPAD"]  = 1,
+	["SHIP"]     = 2,
+}
+
+local weaponcat = {
+	["SHELL"]   = 0,
+	["MISSILE"] = 1,
+	["ROCKET"]  = 2,
+	["BOMB"]    = 3,
+	["TORPEDO"] = 4,
+}
+
 local function readfile(path)
 	local f = io.open(path)
 	local t = f:read()
@@ -192,13 +224,11 @@ radio.modulation = {AM = 0, FM = 1}
 _G.radio = radio
 
 local Weapon = {}
-Weapon.Category = {
-	["SHELL"]   = 0,
-	["MISSILE"] = 1,
-	["ROCKET"]  = 2,
-	["BOMB"]    = 3,
-	["TORPEDO"] = 4,
-}
+Weapon.Category = weaponcat
+
+function Weapon:getCategory()
+	return self.category
+end
 
 Weapon.GuidanceType = {
 	["INS"]               = 1,
@@ -386,7 +416,8 @@ local DEFAULT_ID = 123
 local objdefaults = {
 	["name"] = "obj1",
 	["exists"] = false,
-	["category"] = objectcat.UNIT,
+	["objectCategory"] = objectcat.UNIT,
+	["category"] = unitcat.GROUND_UNIT,
 	["desc"] = {
 		["massEmpty"] = 34000,
 		["riverCrossing"] = true,
@@ -628,7 +659,7 @@ function Object:__init(objdata)
 			self[k] = utils.deepcopy(v)
 		end
 	end
-	objects[self.category][self.name] = self
+	objects[self.objectCategory][self.name] = self
 end
 Object.Category = objectcat
 
@@ -644,11 +675,11 @@ function Object:isExist()
 end
 
 function Object:destroy()
-	objects[self.category][self.name] = nil
+	objects[self.objectCategory][self.name] = nil
 end
 
 function Object:getCategory()
-	return self.category
+	return self.objectCategory
 end
 
 function Object:getTypeName()
@@ -694,18 +725,23 @@ _G.Object = Object
 
 local SceneryObject = class(Object)
 function SceneryObject:__init(objdata)
-	objdata.category = Object.Category.SCENERY
+	objdata.objectCategory = Object.Category.SCENERY
+	objdata.category = 0
 	Object.__init(self, objdata)
 	self.clife = self.desc.life or 1
+end
+
+function SceneryObject.getByName(name)
+	return objects[Object.Category.SCENERY][name]
+end
+
+function SceneryObject:getCategory()
+	return self.category
 end
 
 function SceneryObject:getLife()
 	assert(type(self.id_) == "number", "id_ is not a number")
 	return 10
-end
-
-function SceneryObject.getByName(name)
-	return objects[Object.Category.SCENERY][name]
 end
 _G.SceneryObject = SceneryObject
 
@@ -734,21 +770,22 @@ _G.Coalition = Coalition
 
 local Airbase = class(Coalition)
 function Airbase:__init(objdata, airbaseCategory)
-	objdata.category = Object.Category.BASE
+	objdata.objectCategory = Object.Category.BASE
+	objdata.category = airbasecat.AIRDROME
 	Coalition.__init(self, objdata)
 	self.group = nil
 	self.callsign = objdata.callsign
 	self.parking = objdata.parking
 	self.desc.category = airbaseCategory or Airbase.Category.AIRDROME
 end
-Airbase.Category = {
-	["AIRDROME"] = 0,
-	["HELIPAD"]  = 1,
-	["SHIP"]     = 2,
-}
+Airbase.Category = airbasecat
 
 function Airbase.getByName(name)
 	return objects[Object.Category.BASE][name]
+end
+
+function Airbase:getCategory()
+	return self.category
 end
 
 function Airbase:getParking(_ --[[available]])
@@ -775,7 +812,8 @@ _G.Airbase = Airbase
 
 local Unit = class(Coalition)
 function Unit:__init(objdata, group, pname)
-	objdata.category = Object.Category.UNIT
+	objdata.objectCategory = Object.Category.UNIT
+	objdata.category = unitcat.AIRPLANE
 	Coalition.__init(self, objdata)
 	self.coalition = group.coalition
 	self.clife = self.desc.life
@@ -787,13 +825,7 @@ function Unit:__init(objdata, group, pname)
 	self.pname = pname
 	objdata.unitId = self:getID()
 end
-Unit.Category = {
-	["AIRPLANE"]    = 0,
-	["HELICOPTER"]  = 1,
-	["GROUND_UNIT"] = 2,
-	["SHIP"]        = 3,
-	["STRUCTURE"]   = 4,
-}
+Unit.Category = unitcat
 Unit.RefuelingSystem = {
 	["BOOM_AND_RECEPTACLE"] = 1,
 	["PROBE_AND_DROGUE"]    = 2,
@@ -807,6 +839,10 @@ Unit.SensorType = {
 
 function Unit.getByName(name)
 	return objects[Object.Category.UNIT][name]
+end
+
+function Unit:getCategory()
+	return self.category
 end
 
 function Unit:getLife()
@@ -840,24 +876,20 @@ _G.Unit = Unit
 
 local StaticObject = class(Coalition)
 function StaticObject:__init(objdata)
-	objdata.category = Object.Category.STATIC
+	objdata.objectCategory = Object.Category.STATIC
+	objdata.category = staticcat.STATIC
 	Coalition.__init(self, objdata)
 	self.clife = self.desc.life
 	objdata.unitId = self:getID()
 end
-
-StaticObject.Category = {
-	["VOID"]    = 0,
-	["UNIT"]    = 1,
-	["WEAPON"]  = 2,
-	["STATIC"]  = 3,
-	["BASE"]    = 4,
-	["SCENERY"] = 5,
-	["CARGO"]   = 6,
-}
+StaticObject.Category = staticcat
 
 function StaticObject.getByName(name)
 	return objects[Object.Category.STATIC][name]
+end
+
+function StaticObject:getCategory()
+	return self.category
 end
 
 function StaticObject:getLife()
@@ -872,7 +904,7 @@ _G.StaticObject = StaticObject
 
 local Group = class(Coalition)
 function Group:__init(unitcnt, objdata)
-	objdata.category = Object.Category.GROUP
+	objdata.objectCategory = Object.Category.GROUP
 	Coalition.__init(self, objdata)
 	self.units = {}
 	self.unitcnt = unitcnt
