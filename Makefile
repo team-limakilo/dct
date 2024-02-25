@@ -25,7 +25,7 @@ build:
 	cp -a "$(SRCPATH)"/mission/* "$(BUILDPATH)"/Scripts/
 	cp -a "$(SRCPATH)"/hooks/* "$(BUILDPATH)"/Scripts/Hooks/
 	mkdir -p "$(BUILDPATH)"/Config/
-	cp -a "$(SRCPATH)"/data/Config/dct.cfg "$(BUILDPATH)"/Config/dct.cfg
+	cp -a "$(SRCPATH)"/data/Config/dct.cfg "$(BUILDPATH)"/Config/dct.example.cfg
 	mkdir -p "$(BUILDPATH)"/DCT/
 	cp -a "$(SRCPATH)"/data/DCT/* "$(BUILDPATH)"/DCT/
 	mkdir -p "$(BUILDPATH)"/Missions
