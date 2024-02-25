@@ -243,6 +243,40 @@ function Theater:delayedInit()
 			asset:spawn()
 		end
 	end
+
+	if settings.showAllMissions then
+		for _, side in pairs(coalition.side) do
+			Logger:info("showAllMissions(%d): processing coalition", side)
+			self:debugShowAllMissions(side)
+		end
+	end
+end
+
+function Theater:debugShowAllMissions(side)
+	local StaticAsset = require("dct.assets.StaticAsset")
+	local utils = require("libs.utils")
+	local enum  = require("dct.enum")
+	local markerId = 9999000
+
+	for _, asset in self:getAssetMgr():iterate() do
+		if asset.owner == dctutils.getenemy(side) and
+		   asset:isa(StaticAsset) then
+			Logger:info("showAllMissions(%d): marking mission asset '%s'",
+				side, tostring(asset.name))
+			local text = string.format("Name: %s\nRegion: %s\nTemplate: %s\n"..
+				"Codename: %s\nType: %s\nCost: %d\nIntel: %d",
+				asset.name,
+				asset.rgnname,
+				asset.tplname,
+				asset.codename,
+				utils.getkey(enum.assetType, asset.type),
+				asset.cost,
+				asset:getIntel(side))
+			trigger.action.markToCoalition(
+				markerId, text, asset:getLocation(), side, true)
+			markerId = markerId + 1
+		end
+	end
 end
 
 local airbase_cats = {

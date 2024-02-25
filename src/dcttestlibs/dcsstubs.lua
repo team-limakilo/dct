@@ -1147,12 +1147,24 @@ function trigger.action.outTextForGroup(grpid, msg, time, bool)
 	end
 end
 
-function trigger.action.markToGroup(id, title, pos, grpid,
-	_ --[[readonly]], _ --[[msg]])
+function trigger.action.markToGroup(id, text, pos, grpid, readonly,
+	_ --[[msg]])
 	assert(type(id) == "number", "value error: id must be a number")
-	assert(type(title) == "string", "value error: string must be a string")
+	assert(type(text) == "string", "value error: text must be a string")
 	assert(type(pos) == "table", "value error: pos must be a table")
 	assert(type(grpid) == "number", "value error: grpid must be a number")
+	assert(type(readonly) == "boolean" or readonly == nil,
+		"value error: readonly must be a boolean or nil")
+end
+
+function trigger.action.markToCoalition(id, text, pos, side, readonly,
+	_ --[[msg]])
+	assert(type(id) == "number", "value error: id must be a number")
+	assert(type(text) == "string", "value error: text must be a string")
+	assert(type(pos) == "table", "value error: pos must be a table")
+	assert(type(side) == "number", "value error: side must be a number")
+	assert(type(readonly) == "boolean" or readonly == nil,
+		"value error: readonly must be a boolean or nil")
 end
 
 function trigger.action.markupToAll(shape, side, id, ...)

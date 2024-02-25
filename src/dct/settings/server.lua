@@ -98,7 +98,11 @@ local function validate_server_config(cfgdata, tbl)
 			["name"] = "showErrors",
 			["type"] = "boolean",
 			["default"] = cfgdata.default["showErrors"],
-		}
+		}, {
+			["name"] = "showAllMissions",
+			["type"] = "boolean",
+			["default"] = cfgdata.default["showAllMissions"],
+		},
 	}
 	tbl.path = cfgdata.file
 	utils.checkkeys(keys, tbl)
@@ -149,6 +153,7 @@ local function servercfgs(config)
 				["exportperiod"] = 0, -- seconds
 				["renderManager"] = false,
 				["showErrors"] = false,
+				["showAllMissions"] = false,
 			},
 		},}, config)
 	return config
