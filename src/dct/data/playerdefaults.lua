@@ -46,6 +46,7 @@ return {
         ["F-16C_50"]      = utils.posfmt.DDM,
         ["FA-18C_hornet"] = utils.posfmt.DDM,
         ["M-2000C"]       = utils.posfmt.DDM,
+        ["OH58D"]         = utils.posfmt.MGRS,
     },
     ["payloadlimits"] = {},
     ["units"] = {
