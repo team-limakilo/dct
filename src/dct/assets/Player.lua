@@ -311,8 +311,8 @@ function OccupiedState:onDCTEvent(asset, event)
 end
 
 function OccupiedState:handleTakeoff(asset, _ --[[event]])
-	self.loseticket = true
 	self.inair = true
+	self.loseticket = true
 	local ok, _, nuke = loadout.check(asset)
 	if nuke then
 		return self:_kickForNuke(asset)
@@ -332,22 +332,32 @@ end
 
 -- If returned to an authorized airbase clear loseticket flag.
 -- An authorized airbase is any base defined as an asset for
--- the same side.
+-- the same side, or that the asset belongs to.
 function OccupiedState:handleLand(asset, event)
+	self.inair = false
+
 	if event.place == nil then
+		-- TODO: FARP handling
 		return nil
 	end
 
 	local assetmgr = dct.Theater.singleton():getAssetMgr()
 	local airbase = assetmgr:getAsset(event.place:getName())
+	local homebase = event.place:getName() == asset.airbase
 
-	if (airbase and airbase.owner == asset.owner) or
-	   event.place:getName() == asset.airbase then
+	if airbase and airbase.owner == dctutils.getenemy(asset.owner) then
+		trigger.action.outTextForGroup(asset.groupId,
+			"You have landed at an enemy airbase! Please leave immediately.", 20, true)
+	elseif homebase or airbase and airbase.owner == asset.owner then
 		self.loseticket = false
-		self.inair = false
 		trigger.action.outTextForGroup(asset.groupId,
 			"Welcome home. You are able to safely disconnect"..
-			" without costing your side tickets.",
+			" without costing your side tickets.", 20, true)
+	else
+		trigger.action.outTextForGroup(asset.groupId,
+			"You have landed at an airbase not in use in this operation. "..
+			"Please return to your home base, or a base listed as friendly in "..
+			"F10 Other - Theather Update before logging off.",
 			20, true)
 	end
 	return nil

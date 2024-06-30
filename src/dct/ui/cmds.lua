@@ -219,7 +219,7 @@ function CheckPayloadCmd:_execute(_ --[[time]], _ --[[cmdr]])
 		local ok, costs = loadout.check(self.asset)
 		return self:buildMessage(ok, costs)
 	end
-	return "Payload check is only allowed when landed at a friendly airbase"
+	return "Payload check is only allowed when landed."
 end
 
 local MissionCmd = class("MissionCmd", UICmd)
