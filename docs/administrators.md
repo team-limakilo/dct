@@ -283,6 +283,14 @@ Shows DCT script errors in a message box. Meant for development use only,
 if used in a server, it will cause the server to stop responding until the
 message box is closed.
 
+#### `showAllMissions`
+
+ * _value:_ boolean (true/false)
+ * _default:_ false
+
+Shows map markers for all mission locations (enemy assets) in the theater.
+This should always be disabled in production to not confuse or spoil players.
+
 #### `renderManager`
 
  * _value:_ boolean (true/false)

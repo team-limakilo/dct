@@ -29,7 +29,7 @@ function Logger:__init(name)
 	elseif settings.logger ~= nil and settings.logger["default"] ~= nil then
 		self:setLevel(Logger.level[settings.logger["default"]])
 	else
-		self:setLevel(Logger.level["warn"])
+		self:setLevel(Logger.level["info"])
 	end
 	self.getByName = nil
 	self.level = nil

@@ -207,7 +207,9 @@ function human.updateBorders(region, borders)
 end
 
 local function markToGroup(label, pos, missionId, groupId, readonly)
-	local markId = human.getMarkID()
+	-- Makes sure the first 4 digits of the ID are always the mission ID
+	-- so that DCS displays it as the mark title
+	local markId = tonumber(missionId) * 1000 + human.getMarkID()
 	trigger.action.markToGroup(markId, label, pos, groupId, readonly)
 	if marks[groupId] == nil then
 		marks[groupId] = {}

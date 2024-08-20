@@ -276,7 +276,7 @@ function IADS:addtrkFile(site, target)
 		site.trkFiles[trkName]["Velocity"] = target.object:getVelocity()
 	end
 	if target.type then
-		site.trkFiles[trkName]["Category"] = Object.getCategory(target)
+		site.trkFiles[trkName]["Category"] = Object.getCategory(target.object)
 		site.trkFiles[trkName]["Type"] = target.object:getTypeName()
 	end
 	if site.Datalink then

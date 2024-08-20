@@ -292,10 +292,16 @@ function AssetManager:doOneObject(obj, event)
 		return
 	end
 
-	local name = tostring(obj:getName())
+	if not Object.isExist(obj) then
+		self._logger:warn("onDCSEvent - non existing initiator in event: %s",
+			tostring(utils.getkey(world.event, event.id)))
+	end
+
+	local name = tostring(Object.getName(obj))
+
 	if obj.className_ ~= "Airbase" and
 	   Object.getCategory(obj) == Object.Category.UNIT and
-	   obj:getGroup() ~= nil then
+	   Unit.getGroup(obj) ~= nil then
 		name = obj:getGroup():getName()
 	end
 
@@ -305,6 +311,7 @@ function AssetManager:doOneObject(obj, event)
 		self._object2asset[name] = nil
 		return
 	end
+
 	asset:onDCTEvent(event)
 end
 
