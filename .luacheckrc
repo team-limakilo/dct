@@ -4,6 +4,9 @@ jobs  = 3
 self  = false
 max_line_length = 80
 max_cyclomatic_complexity = 10
+exclude_files = {
+	"lua-libs"
+}
 read_globals = {
 	-- common lua globals
 	"lfs",

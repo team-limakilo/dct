@@ -9,10 +9,16 @@ LUALIBSURL := https://github.com/ricmzn/lua-libs/archive/refs/heads/$(LUALIBSVER
 LUALIBSDIR := lua-libs-$(LUALIBSVER)
 
 .PHONY: check build
+
+test: check
 check:
 	luacheck -q .
 	rm -f "$(SRCPATH)"/data/*.state
 	@$(MAKE) -C tests
+
+docker-test:
+	docker build -t dct-test -f Dockerfile.test .
+	docker rmi dct-test
 
 build:
 	mkdir -p "$(BUILDPATH)"/Mods/Tech/DCT/lua

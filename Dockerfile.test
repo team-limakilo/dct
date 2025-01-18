@@ -1,0 +1,10 @@
+FROM ubuntu:22.04
+WORKDIR /dct
+
+RUN apt-get update -yq && apt-get install -yq make lua5.1 lua-md5 lua-filesystem lua-check
+
+COPY . .
+
+RUN make check
+
+CMD ["sh", "-c", "echo '>> All tests passed on build, this image can be deleted.' && exit"]

@@ -17,7 +17,7 @@ if ! test -d "${DCT_TEMPLATE_PATH}"; then
 	unset DCT_TEMPLATE_PATH
 fi
 LUA_EXEC="${LUA_EXEC:-lua5.1}"
-LUA_LIB_PATH="${LUA_LIB_PATH:-${srcroot}/../lua-libs/src/?.lua}"
+LUA_LIB_PATH="${LUA_LIB_PATH:-${srcroot}/lua-libs/src/?.lua};${srcroot}/../lua-libs/src/?.lua};"
 LUA_PATH="${srcroot}/src/?.lua;${LUA_LIB_PATH}"
 LUA_PATH="${LUA_PATH};;"
 export LUA_PATH
