@@ -68,6 +68,10 @@ function BlastEffects:_unmarshalpost()
 	end
 end
 
+function BlastEffects.explosion(explosionData)
+	trigger.action.explosion(explosionData.point, explosionData.power)
+end
+
 function BlastEffects:addImpact(point, powers)
 	local impact = {
 		["point"] = point,
@@ -84,7 +88,15 @@ function BlastEffects:event(event)
 
 	local power = getCorrectedExplosiveMass(event.initiator.type)
 	if power ~= nil then
-		trigger.action.explosion(event.point, power)
+		local explosionData = {
+			["point"] = {
+				["x"] = event.point.x,
+				["y"] = event.point.y,
+				["z"] = event.point.z
+			},
+			["power"] = power
+		}
+		timer.scheduleFunction(self.explosion, explosionData, timer.getTime() + 0.4)
 	end
 	self:addImpact(event.point,
 		{ power, event.initiator:getWarheadPower() })
