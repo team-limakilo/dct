@@ -61,6 +61,7 @@ return {
         ["FW-190D9"] = UNITS_METRIC_HPA,
         ["I-16"] = UNITS_METRIC_MMHG,
         ["Ka-50"] = UNITS_METRIC_MMHG,
+        ["Ka-50_3"] = UNITS_METRIC_MMHG,
         ["M-2000C"] = UNITS_IMPERIAL_MBAR,
         ["Mi-8MT"] = UNITS_METRIC_MMHG,
         ["Mi-24P"] = UNITS_METRIC_MMHG,
