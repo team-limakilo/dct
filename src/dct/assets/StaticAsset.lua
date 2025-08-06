@@ -81,6 +81,7 @@ function StaticAsset.assettypes()
 		enum.assetType.FRONTLINE,
 		enum.assetType.CONVOY,
 		enum.assetType.ARTILLERY,
+		enum.assetType.DAS
 	}
 end
 

@@ -31,6 +31,7 @@ enum.assetType = {
 	["FRONTLINE"]   = 25,
 	["CONVOY"]      = 26,
 	["ARTILLERY"]   = 1027,
+	["DAS"]         = 1037,
 
 	-- extended type set
 	["BUNKER"]      = 15,
@@ -67,6 +68,7 @@ enum.assetTypePriority = {
 	[enum.assetType.PORT]        = 70,
 	[enum.assetType.LOGISTICS]   = 70,
 	[enum.assetType.AIRBASE]     = 70,
+	[enum.assetType.DAS]         = 80,
 	[enum.assetType.SHORAD]      = 100,
 	[enum.assetType.FACILITY]    = 100,
 	[enum.assetType.BUNKER]      = 100,
@@ -88,6 +90,7 @@ enum.missionType = {
 	["OCA"]        = 6,
 	["ARMEDRECON"] = 7,
 	["ANTISHIP"]   = 8,
+	["DAS"]        = 9,
 }
 
 enum.squawkMissionType = {
@@ -97,6 +100,7 @@ enum.squawkMissionType = {
 	[enum.missionType.CAS]        = 5,
 	[enum.missionType.STRIKE]     = 5,
 	[enum.missionType.BAI]        = 5,
+	[enum.missionType.DAS]        = 5,
 	[enum.missionType.OCA]        = 5,
 	[enum.missionType.ARMEDRECON] = 5,
 }
@@ -105,6 +109,7 @@ enum.squawkMissionSubType = {
 	[enum.missionType.STRIKE]     = 0,
 	[enum.missionType.OCA]        = 0,
 	[enum.missionType.BAI]        = 1,
+	[enum.missionType.DAS]        = 1,
 	[enum.missionType.ARMEDRECON] = 2,
 	[enum.missionType.CAS]        = 3,
 }
@@ -133,6 +138,7 @@ enum.assetClass = {
 		[enum.assetType.FRONTLINE]   = true,
 		[enum.assetType.CONVOY]      = true,
 		[enum.assetType.ARTILLERY]   = true,
+		[enum.assetType.DAS]         = true,
 	},
 	-- strategic list is used in calculating ownership of a region
 	-- among other things
@@ -197,6 +203,9 @@ enum.missionTypeMap = {
 	},
 	[enum.missionType.ANTISHIP] = {
 		[enum.assetType.SEA]        = true,
+	},
+	[enum.missionType.DAS] = {
+		[enum.assetType.DAS]        = true,
 	},
 }
 

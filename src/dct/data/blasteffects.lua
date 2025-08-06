@@ -71,7 +71,7 @@ local wpnmass = {
 	-- French weapons
 	-- Source: Jane's Air-Launched Weapons
 	-- Composition B assumed based on other French bombs of the era according to same source
-	["BAT-120"]      = tnt_equiv_mass( 6,  tntrel.CompB),
+    ["BAT-120"]      = tnt_equiv_mass( 6,  tntrel.CompB),
 	["SAMP125LD"]    = tnt_equiv_mass(58,  tntrel.CompB),
 	["SAMP250LD"]    = tnt_equiv_mass(124, tntrel.CompB),
 	["SAMP400LD"]    = tnt_equiv_mass(200, tntrel.CompB), -- Assumed based on explosive filling in other series bombs
@@ -99,6 +99,7 @@ local wpnmass = {
 	-- US weapons
 	-- Source: Jane's Air-Launched Weapons
 	["AGM_62"]       = tnt_equiv_mass(424, tntrel.H6),   -- it has a linear star shaped charge warhead designed to affect an area around the impact point, so I left it at full power
+	["AGM_62_I"]       = tnt_equiv_mass(424, tntrel.H6),   -- same as above
 	["AGM_154C"]     = tnt_equiv_mass(245, tntrel.TNT),  -- Total warhead weight 245kg, containing WDU-44 shaped charge and WDU-45 follow-on bomb. Exact weights unknown so estimated at that.
 	-- Soviet/Russian weapons
 	-- Source: Jane's Air-Launched Weapons
@@ -121,9 +122,9 @@ local wpnmass = {
 	["C_8OFP2"]          = tnt_equiv_mass( 10, tntrel.TGAF5), -- Source: DCS Mi-8 manual
 	["C_13"]             = tnt_equiv_mass( 33, tntrel.TGAF5), -- S-13OF. Source: "Russia's Arms and Technologies: The XXI Century Encyclopaedia"
 	["C_24"]             = tnt_equiv_mass(125, tntrel.TGAF5), -- Source: "Russia's Arms and Technologies: The XXI Century Encyclopaedia"
-	-- These really don't need any help
-	--["S-24A"]          = tnt_equiv_mass(123, tntrel.TGAF5),
-	--["S-24B"]          = tnt_equiv_mass(125, tntrel.TGAF5),
+	-- These got fixed I think
+	["S-24A"]          = tnt_equiv_mass(123, tntrel.TGAF5),
+	["S-24B"]          = tnt_equiv_mass(125, tntrel.TGAF5),
 	["C_25"]             = tnt_equiv_mass(151, tntrel.TGAF5), -- S-25OFM
 	["S-25O"]            = tnt_equiv_mass(151, tntrel.TGAF5),
 	-- French weapons
@@ -134,9 +135,9 @@ local wpnmass = {
 	-- Swedish weapons
 	-- Source: Jane's Air-Launched Weapons
 	["ARAKM70BHE"]      = tnt_equiv_mass( 21, tntrel.CompB), -- filler composition referenced online but no solid source
-	-- Italian Weapons
-	-- Source: Jane's Air-Launched Weapons
-	["ARF8M3HEI"]       = tnt_equiv_mass( 2, tntrel.Tritonal), -- "SNIA BPD" 51mm rocket system
+    -- Italian Weapons
+    -- Source: Jane's Air-Launched Weapons
+    ["ARF8M3HEI"]       = tnt_equiv_mass( 2, tntrel.Tritonal), -- "SNIA BPD" 51mm rocket system
 	-- British weapons
 	-- WWII
 	-- Source: AP 2802, Vol 1 (1944)
@@ -147,9 +148,12 @@ local wpnmass = {
 	-- Whenever explosive composition is unknown, total warhead weight is divided by half and a typical filler composition is used
 	-- US weapons
 	-- Source: Jane's Air-Launched Weapons
+	["AGM_12A"]        = tnt_equiv_mass( 57, tntrel.Tritonal),
+	["AGM_12C_ED"]     = tnt_equiv_mass(227, tntrel.Tritonal),
 	["AGM_84D"]        = tnt_equiv_mass( 98, tntrel.Tritonal), -- Source: https://man.fas.org/dod-101/sys/smart/agm-84.htm. DESTEX is desensitized tritonal.
 	["AGM_84H"]        = tnt_equiv_mass(109, tntrel.Tritonal), -- Exact filler unknown, assumed equivalent explosive fraction in 247kg warhead (Source: Jane's)
 	["AGM_88C"]        = tnt_equiv_mass( 21, tntrel.PBXC116),  -- Source: https://man.fas.org/dod-101/sys/smart/agm-88.htm
+	["AGM_45A"]        = tnt_equiv_mass( 21, tntrel.PBXC116),  -- Exact filler unknown, assumed similar to HARM
 	["AGM_119"]        = tnt_equiv_mass( 60, tntrel.Tritonal),  --  120kg Penguin 2 WDU-39/B warhead/2.
 	["AGM_122"]        = tnt_equiv_mass(  5, tntrel.PBXN5),     -- Similar AIM-9D uses "HMX-nylon high explosive" according to OP 3352 so PBXN-5 assumed. 10kg WDU-31/B warhead/2.
 	-- Soviet/Russian weapons
@@ -161,7 +165,7 @@ local wpnmass = {
 	["X_28"]           = tnt_equiv_mass( 74, tntrel.TGAF5),
 	["X_58"]           = tnt_equiv_mass( 59, tntrel.TGAF5),
 	["Ataka_9M120F"]   = tnt_equiv_mass(  7, tntrel.TGAF5), -- Total warhead weight used as with rockets
-	--["KH-66_Grom"]   = tnt_equiv_mass(51),  -- This doesn't need help either. Source: Jane's Air-Launched Weapons.
+	["KH-66_Grom"]   = tnt_equiv_mass(51),  -- This got fixed I think
 	-- Swedish weapons
 	["Rb 05A"]         = tnt_equiv_mass(80, tntrel.CompB), -- Source: Wiki, I have nothing better. 160kg warhead/2.
 
@@ -181,7 +185,10 @@ wpnmass["GBU_16"]                             = wpnmass["Mk_83"]
 wpnmass["GBU_32_V_2B"]                        = wpnmass["Mk_83"]
 wpnmass["AGM_123"]                            = wpnmass["Mk_83"] -- Skipper missile
 wpnmass["Mk_84AIR_GP"]                        = wpnmass["Mk_84"]
-wpnmass["AGM_130"]                            = wpnmass["Mk_84"]
+wpnmass["Mk_84AIR_GP"]                        = wpnmass["Mk_84"]
+wpnmass["GBU_8_B"]                            = wpnmass["Mk_84"]
+wpnmass["GBU_15_V_1_B"]                       = wpnmass["Mk_84"]
+wpnmass["GBU_15_V_31_B"]                      = wpnmass["Mk_84"]
 wpnmass["GBU_10"]                             = wpnmass["Mk_84"]
 wpnmass["GBU_31"]                             = wpnmass["Mk_84"]
 wpnmass["GBU_31_V_2B"]                        = wpnmass["Mk_84"]
@@ -204,8 +211,11 @@ wpnmass["S-25OFM"]                            = wpnmass["C_25"] -- This shouldn'
 wpnmass["SNEB_TYPE251_H1"]                    = wpnmass["SNEB_TYPE251_F1B"]
 wpnmass["SNEB_TYPE256_H1"]                    = wpnmass["SNEB_TYPE256_F1B"]
 wpnmass["SNEB_TYPE257_H1"]                    = wpnmass["SNEB_TYPE257_F1B"]
+wpnmass["AGM_12B"]                            = wpnmass["AGM_12A"]
+wpnmass["AGM_45B"]                            = wpnmass["AGM_45A"]
 wpnmass["AGM_84A"]                            = wpnmass["AGM_84D"]
 wpnmass["AGM_84E"]                            = wpnmass["AGM_84D"]
+wpnmass["AGM_130"]                            = wpnmass["Mk_84"]
 wpnmass["S_25L"]                              = wpnmass["C_25"] -- this is inconsistent with other missiles but the in-game damage value is already high so it doesn't matter
 wpnmass["Kh25MP_PRGS1VP"]                     = wpnmass["X_25ML"]
 wpnmass["X_25MP"]                             = wpnmass["X_25ML"]
