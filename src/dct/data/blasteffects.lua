@@ -181,6 +181,7 @@ wpnmass["Mk_82Y"]                             = wpnmass["Mk_82"]
 wpnmass["GBU_12"]                             = wpnmass["Mk_82"]
 wpnmass["GBU_38"]                             = wpnmass["Mk_82"]
 wpnmass["GBU_54_V_1B"]                        = wpnmass["Mk_82"]
+wpnmass["Mk_83AIR"]                           = wpnmass["Mk_83"]
 wpnmass["GBU_16"]                             = wpnmass["Mk_83"]
 wpnmass["GBU_32_V_2B"]                        = wpnmass["Mk_83"]
 wpnmass["AGM_123"]                            = wpnmass["Mk_83"] -- Skipper missile
