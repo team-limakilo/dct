@@ -68,7 +68,7 @@ local AttributeRanges = {
 	[RangeType.GuidedBomb]      = {},
 }
 local DefaultRanges = {
-	[RangeType.Aircraft]        = 25000,
+	[RangeType.Aircraft]        = 60000,
 	[RangeType.CruiseMsl]       = 10000,
 	[RangeType.AntiRadMsl]      = 0,
 	[RangeType.GuidedBomb]      = 0,
