@@ -436,12 +436,4 @@ function utils.buildevent.leaveMission(asset, mission, reason)
 	}
 end
 
-function utils.missionPairs(first, second)
-	if enum.missionType[first] < enum.missionType[second] then
-		return true
-	else
-		return false
-	end
-end
-
 return utils

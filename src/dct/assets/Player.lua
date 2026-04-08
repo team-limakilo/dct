@@ -105,7 +105,7 @@ local function reset_slot(asset)
 	else
 		local missions = cmdr:getAvailableMissions(asset.ato)
 		local missionsfmt = {}
-		for type, count in utils.sortedpairs(missions, dctutils.missionPairs) do
+		for type, count in utils.sortedpairs(missions) do
 			table.insert(missionsfmt, string.format("%s:  %d", type, count))
 		end
 		if next(missionsfmt) == nil then
