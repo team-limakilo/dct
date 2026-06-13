@@ -38,6 +38,7 @@ return {
         ["Mirage-F1BE"]   = utils.posfmt.DDM,
         ["Mirage-F1EE"]   = utils.posfmt.DDM,
         ["Mirage-F1M"]    = utils.posfmt.DDM,
+        ["F-100D"]        = utils.posfmt.DDM,
         ["F-5E-3"]        = utils.posfmt.DDM,
         ["F-14A-95-GR"]   = utils.posfmt.DDM,
         ["F-14A-135-GR"]  = utils.posfmt.DDM,

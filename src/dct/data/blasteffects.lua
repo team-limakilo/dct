@@ -178,6 +178,7 @@ local wpnmass = {
 wpnmass["MK_82AIR"]                           = wpnmass["Mk_82"]
 wpnmass["MK_82SNAKEYE"]                       = wpnmass["Mk_82"]
 wpnmass["Mk_82Y"]                             = wpnmass["Mk_82"]
+wpnmass["BOLT-117"]                           = wpnmass["M_117"]
 wpnmass["GBU_12"]                             = wpnmass["Mk_82"]
 wpnmass["GBU_38"]                             = wpnmass["Mk_82"]
 wpnmass["GBU_54_V_1B"]                        = wpnmass["Mk_82"]
